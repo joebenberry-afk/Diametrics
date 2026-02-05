@@ -1,0 +1,61 @@
+﻿Based on the meeting notes and question list provided, here is a synthesis of the client’s requirements and a recommendation for the simplest starting point.
+Part 1: What Dr. Rocke Wants (Project Requirements)
+Dr. Rocke is requesting a research-based Proof of Concept (PoC) application designed to demonstrate the potential of digital diabetes management to policy makers (specifically the Ministry of Health). The primary goal is to collect data to correlate food intake with blood glucose trends.
+
+
+1. Core Objective & Scope
+* Nature of Project: A research tool and Proof of Concept, not a commercial deployment.
+
+* Goal: Demonstrate national-level potential to secure funding for a larger pilot study.
+
+* Target Audience: Diabetic patients (Type 1, Type 2, Gestational, etc.) , with specific attention to the "East Indian" demographic predisposition.
+
+2. Key Functional Requirements
+   * Glucose Monitoring (Critical):
+   * Integration with Continuous Glucose Monitors (CGM) is a critical priority if possible.
+
+   * The app must generate graphs showing glucose levels before and after eating.
+
+   * It needs to track long-term trends and identify specific phenomena like the "Dawn Effect" or unusual spikes.
+
+      * Food Logging:
+      * The most important data points are Time of consumption and Quantity.
+
+      * Users should be able to capture food images, which can be used to infer portion sizes or diet types.
+
+      * Dietary recommendations are not strictly necessary at this stage.
+
+         * Alerts & Safety:
+         * Customizable alerts for user-defined glucose thresholds and medically recommended warning levels.
+
+         * Medication reminders (insulin, pills) and critical notifications sent to family members.
+
+3. UX & Accessibility Requirements
+            * Demographic Considerations: Many potential users are older and visually impaired.
+
+            * Design Mandates: The interface must prioritize ease of use, readability, and simple interaction flows.
+
+4. Technical & Security
+               * Data Security: Store data in a secure cloud platform using standard security measures; custom encryption is not required for this PoC.
+
+               * Compliance: HIPAA considerations should be researched, but if they fall outside the current scope, they can be listed as "future work".
+
+________________
+Part 2: The Simplest Issue to Resolve First
+Recommendation: Build the "User Profile & Onboarding" Module First
+While the core value of the app is glucose/food tracking, the User Profile and Setup is the simplest issue to resolve immediately.
+Why is this the simplest?
+                  1. The Requirements are Fully Defined: Document 2 ("Diabetes App questions.pdf") provides a literal checklist of every field required, including Age, Gender, Diabetes Type, and Preferred Units. You do not need to guess or clarify these requirements.
+
+                  2. Low Technical Complexity: This requires only standard form building and data storage. It avoids the complexities of external hardware integration (CGM) or computer vision (Food Images).
+
+                  3. It Unblocks Other Features: You cannot accurately set "Target Glucose Ranges" or "Medication Reminders" until you know the user's diabetes type and medication regimen.
+
+Implementation Steps for this Module:
+                     * Step 1: Create the account setup screen collecting basic demographics (Age, Gender) to satisfy the "Patient Compliance" requirement.
+
+                     * Step 2: Build the medical profile screen using the fields provided in Document 2 (Diabetes Type, Insulin usage, CGM usage).
+
+                     * Step 3: Implement the "Safety & Medical Disclaimer" acknowledgement.
+
+By starting here, you secure an "easy win" that establishes the database structure needed for the complex features (logging and graphs) that will follow.
