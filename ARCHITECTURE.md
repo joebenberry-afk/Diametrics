@@ -1,61 +1,70 @@
-# DIABETES RESEARCH APP - MASTER ARCHITECTURE
-**Objective:** Build a Proof-of-Concept (PoC) diabetes logging app for elderly/visually impaired users in Trinidad.
-**Tech Stack:** Flutter (Dart), SQLite (Drift), DeepSeek API, Google Drive Backup (googleapis).
+# TRINI-DIABETES RESEARCH APP - MASTER ARCHITECTURE
 
-## CORE CONSTRAINTS (Strict Adherence Required)
-1.  **Accessibility First:** All UI elements must use `Semantics()` for screen readers. Minimum font size 18sp. High contrast (Black/White/Yellow).
-2.  **Offline First:** All data lives locally in `drift` database. No external servers except for optional backup.
-3.  **Privacy:** No patient data is sent to the cloud *except* anonymized JSON snippets for DeepSeek analysis, which are discarded immediately after.
+**Objective:** Build a Proof-of-Concept (PoC) diabetes logging app for elderly users (60+) in Trinidad.
+**Core Philosophy:** Accessibility First, Offline First, Zero-Cost Operation.
 
-## DATA STRUCTURE (Schema)
-**Table: Logs**
-- `id` (Int, AutoIncrement)
-- `timestamp` (DateTime) - Vital for "Dawn Effect" detection.
-- `bg_value` (Double) - Blood Glucose.
-- `bg_unit` (String) - "mg/dL" or "mmol/L".
-- `context_tags` (String) - JSON List ["Before Breakfast", "Feeling Shaky", "Post-Walk"].
-- `food_volume` (String) - "Fist-size", "Half-plate".
-- `finished_meal` (Boolean) - *Did they finish the food?*
-- `image_path` (String) - Local path to food photo.
+## 1. TECH STACK
+- **Framework:** Flutter (Mobile).
+- **Database:** Drift (SQLite) - Local storage.
+- **AI Engine (Local):** `mediapipe_genai` running `DeepSeek-R1-Distill-1.5B-Q4.gguf`.
+- **AI Engine (Cloud):** DeepSeek V3 API (Fallback only).
+- **Backup:** Google Drive API (User-controlled, "WhatsApp-style").
 
-## PHASES OF IMPLEMENTATION (Agent Tasks)
+## 2. ENGINEERING GUIDELINES (Strict Enforcement)
+*Critical for Grant Approval & Medical Safety (IEC 62366)*
+1.  **Touch Targets:** ALL tappable widgets must be wrapped in `SizedBox(minWidth: 48, minHeight: 48)`.
+2.  **Typography Scaling:** NEVER use fixed height containers. Use `Expanded` or `Flexible`.
+3.  **Color Safety:**
+    - Critical (<70 or >250): `Color(0xFFD32F2F)` [Red]
+    - Normal (70-180): `Color(0xFF388E3C)` [Green]
+    - Action Buttons: `Color(0xFF003366)` [Navy]
+4.  **Spacing:** Minimum padding between interactive elements: 16dp.
 
-### PHASE 1: Project Skeleton & Accessibility
-- **Action:** Initialize Flutter project.
-- **Dependency:** Add `drift`, `sqlite3_flutter_libs`, `path_provider`, `google_fonts`.
-- **UI System:** Create a `styles.dart` file defining a "Senior Theme":
-    - Primary Color: High Contrast Blue (#004488).
-    - Font: 'Poppins' or 'Roboto', minimal weight 500.
-    - Component: `BigButton` widget (Height: 60px, TextSize: 20px).
-
-### PHASE 2: The "Drift" Database
-- **Action:** Create `database.dart`.
-- **Logic:** Implement the `Logs` table defined above.
-- **Query:** Write a specific query `getLogsForAnalysis(Duration window)` that returns the last 48 hours of data formatted as a simplified JSON string for the AI.
-
-### PHASE 3: Voice & Input (The "Unstated Needs")
-- **Action:** Implement a large "Microphone" Floating Action Button.
-- **Logic:**
-    1. Record audio.
-    2. Transcribe (Device Native STT).
-    3. Send text to DeepSeek Agent for extraction.
-    4. **Prompt for Extraction:** "Extract: 1) Food Name, 2) Volume/Portion, 3) Did they finish? (True/False). Return JSON."
-
-### PHASE 4: The Hybrid AI Engine (On-Demand Strategy)
-- **Objective:** Switch between Cloud (API) and Local (Device) AI.
-- **Constraint:** App size on App Store must be <100MB. Model must be downloaded post-install.
+## 3. UI/UX GUIDELINES ("Big Design" System)
+- **Typography:**
+  - Body Text: Minimum **18sp** (Roboto/Poppins).
+  - Headings: Minimum **24sp** (Bold).
 - **Components:**
-    1.  `DeepSeekCloudService`: Standard API calls (Default).
-    2.  `ModelManager`:
-        - Function `isModelDownloaded()`: Checks if file exists locally.
-        - Function `downloadModel()`: Downloads the 1.2GB quantized model (DeepSeek 1.5B) with a progress bar.
-    3.  `LocalLlamaService`:
-        - Initializes ONLY if `ModelManager.isModelDownloaded()` is true.
-        - Uses `flutter_llama_cpp` (or `mediapipe_genai`) to load the file from the Documents directory.
+  - `BigButton`: Height 64px, rounded corners, label + icon.
+  - `VoiceFAB`: 120px circular microphone button for main input.
+  - `StatusCard`: Large card showing "Last Glucose" with 40sp font.
+- **Accessibility:** All widgets must have `Semantics()` labels for TalkBack.
 
-### PHASE 5: The "WhatsApp" Backup
-- **Action:** Implement Google Drive Backup.
+## 4. IMPLEMENTATION PHASES (Agent Instructions)
+
+### PHASE 1: Project Skeleton & Theme
+- Initialize Flutter project.
+- Implement `theme.dart` with the High Contrast palette.
+- Create the `BigButton`, `VoiceFAB` and `StatusCard` widgets.
+- **Constraint:** Ensure all text scales automatically.
+
+### PHASE 2: Local Database (Drift)
+- Create `database.dart`.
+- **Table `Logs`:**
+  - `id` (Int), `timestamp` (DateTime), `bg_value` (Double).
+  - `food_items` (String/JSON), `portion_size` (String).
+  - `finished_meal` (Bool) - *Critical for research.*
+  - `context_tags` (String) - e.g., "Post-Exercise", "Fasting".
+- **Query:** `getRecentLogs(Duration)` returns last 48h for AI analysis.
+
+### PHASE 3: Voice Input & Extraction
+- **Action:** Record audio -> Native Speech-to-Text -> Text.
+- **AI Task:** Send text to AI with `extraction_system.txt` prompt.
+- **Goal:** Convert *"I ate a bowl of callaloo but felt shaky"* into:
+  - `{"food": "Callaloo", "symptoms": ["Shaky"], "portion": "1 bowl"}`.
+
+### PHASE 4: The Hybrid AI Engine (Strategy Pattern)
+- **Component:** `AIServiceRepository`.
 - **Logic:**
-    - On button press -> Close Database.
-    - Encrypt `app.db`.
-    - Upload to User's Google Drive AppFolder.
+  1. **Check:** Is `DeepSeek-1.5B.gguf` downloaded?
+  2. **IF YES (Local):** Load model via MediaPipe. Run inference on device. (Cost: $0).
+  3. **IF NO (Cloud):** Send anonymized JSON to DeepSeek API. (Cost: Low).
+- **Model Management:**
+  - Create `ModelDownloader` service to fetch the .gguf file.
+  - Show "Download AI" progress bar in Settings.
+- **Safety:** Regex filter to block medical advice (words like "dose", "inject").
+
+### PHASE 5: Privacy & Backup
+- **Encryption:** Use `sqlcipher` to encrypt the local database.
+- **Cloud:** "Backup to Drive" button.
+- **Auth:** `google_sign_in` with `drive.file` scope (App Data folder only).
