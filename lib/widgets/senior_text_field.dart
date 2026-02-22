@@ -74,13 +74,13 @@ class SeniorTextField extends StatelessWidget {
                 color: Colors.grey.shade500,
               ),
               filled: true,
-              fillColor: Colors.grey.shade200,
+              fillColor: SeniorTheme.surfaceWhite,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(30),
                 borderSide: BorderSide.none,
               ),
               contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
+                horizontal: 20,
                 vertical: 18,
               ),
             ),

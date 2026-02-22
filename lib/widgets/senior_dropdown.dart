@@ -24,6 +24,9 @@ class SeniorDropdown<T> extends StatelessWidget {
   /// Semantic label for screen readers.
   final String? semanticLabel;
 
+  /// Whether the dropdown should have a cyan background
+  final bool isCyan;
+
   const SeniorDropdown({
     super.key,
     required this.items,
@@ -31,6 +34,7 @@ class SeniorDropdown<T> extends StatelessWidget {
     this.value,
     this.onChanged,
     this.semanticLabel,
+    this.isCyan = true,
   });
 
   @override
@@ -40,27 +44,29 @@ class SeniorDropdown<T> extends StatelessWidget {
       child: Container(
         constraints: const BoxConstraints(minHeight: 56),
         decoration: BoxDecoration(
-          color: Colors.grey.shade200,
-          borderRadius: BorderRadius.circular(8),
+          color: isCyan ? SeniorTheme.primaryCyan : SeniorTheme.surfaceWhite,
+          borderRadius: BorderRadius.circular(30),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
         child: DropdownButtonHideUnderline(
           child: DropdownButton<T>(
             value: value,
             hint: Text(
               hint,
               style: SeniorTheme.bodyStyle.copyWith(
-                color: Colors.grey.shade600,
+                color: isCyan ? SeniorTheme.surfaceBlack : Colors.grey.shade600,
               ),
             ),
             items: items,
             onChanged: onChanged,
             isExpanded: true,
-            style: SeniorTheme.bodyStyle,
-            dropdownColor: Colors.white,
+            style: SeniorTheme.bodyStyle.copyWith(
+              color: SeniorTheme.surfaceBlack,
+            ),
+            dropdownColor: SeniorTheme.surfaceWhite,
             icon: Icon(
               Icons.arrow_drop_down,
-              color: Colors.grey.shade600,
+              color: isCyan ? SeniorTheme.surfaceBlack : Colors.grey.shade600,
               size: 28,
             ),
           ),

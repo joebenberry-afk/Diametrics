@@ -20,6 +20,9 @@ class Logs extends Table {
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
+  /// Constructor for testing with custom executor (e.g., in-memory database)
+  AppDatabase.forTesting(super.e);
+
   @override
   int get schemaVersion => 1;
 
@@ -56,8 +59,9 @@ Future deleteLog(int id) =>
 
   Future<List<Log>> getRecentLogs(Duration window) {
     final cutoff = DateTime.now().subtract(window);
-    return (select(logs)..where((l) => l.timestamp.isBiggerThanValue(cutoff)))
-        .get();
+    return (select(
+      logs,
+    )..where((l) => l.timestamp.isBiggerThanValue(cutoff))).get();
   }
 }
 

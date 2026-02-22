@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme.dart';
 import '../widgets/senior_text_field.dart';
-import 'personal_info_screen.dart';
+import 'onboarding/permissions_screen.dart';
 
 /// LoginScreen - Entry point for user authentication.
 ///
@@ -29,7 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void _navigateToOnboarding() {
     Navigator.of(
       context,
-    ).push(MaterialPageRoute(builder: (context) => const PersonalInfoScreen()));
+    ).push(MaterialPageRoute(builder: (context) => const PermissionsScreen()));
   }
 
   @override

@@ -10,25 +10,28 @@ import 'package:google_fonts/google_fonts.dart';
 /// - Primary Color: #004488 (High Contrast Blue)
 class SeniorTheme {
   // ============================================================================
-  // COLOR PALETTE - High Contrast for Low Vision
+  // COLOR PALETTE - New UI Design
   // ============================================================================
 
-  /// Primary brand color - High Contrast Blue
-  static const Color primaryBlue = Color(0xFF004488);
+  /// Primary brand color - Bright Cyan
+  static const Color primaryCyan = Color(0xFF5CE1E6);
 
-  /// Surface colors for maximum contrast
+  /// Base Grey for the Glassy Cards
+  static const Color cardGrey = Color(0xFFB3B3B3);
+
+  /// Surface colors
   static const Color surfaceWhite = Color(0xFFFFFFFF);
   static const Color surfaceBlack = Color(0xFF000000);
 
-  /// Accent color for warnings/alerts - High visibility yellow
-  static const Color accentYellow = Color(0xFFFFD700);
+  /// Background Color
+  static const Color backgroundLight = Color(0xFFE8F9F9);
 
   /// Text colors
   static const Color textOnLight = Color(0xFF000000);
   static const Color textOnDark = Color(0xFFFFFFFF);
 
   /// Error states
-  static const Color errorRed = Color(0xFFB00020);
+  static const Color errorRed = Color(0xFFE53935);
   static const Color successGreen = Color(0xFF2E7D32);
 
   // ============================================================================
@@ -36,34 +39,26 @@ class SeniorTheme {
   // ============================================================================
 
   /// Base text style with Poppins font
-  static TextStyle get _baseTextStyle => GoogleFonts.poppins(
-        fontWeight: FontWeight.w500,
-        color: textOnLight,
-      );
+  static TextStyle get _baseTextStyle =>
+      GoogleFonts.poppins(fontWeight: FontWeight.w500, color: textOnLight);
 
   /// Heading - Large, prominent text (24sp)
-  static TextStyle get headingStyle => _baseTextStyle.copyWith(
-        fontSize: 24,
-        fontWeight: FontWeight.w600,
-      );
+  static TextStyle get headingStyle =>
+      _baseTextStyle.copyWith(fontSize: 24, fontWeight: FontWeight.w600);
 
   /// Body text - Standard readable size (18sp minimum)
-  static TextStyle get bodyStyle => _baseTextStyle.copyWith(
-        fontSize: 18,
-      );
+  static TextStyle get bodyStyle => _baseTextStyle.copyWith(fontSize: 18);
 
   /// Button text - Slightly larger for touch targets (20sp)
   static TextStyle get buttonTextStyle => _baseTextStyle.copyWith(
-        fontSize: 20,
-        fontWeight: FontWeight.w600,
-        color: textOnDark,
-      );
+    fontSize: 20,
+    fontWeight: FontWeight.w600,
+    color: textOnLight, // With bright cyan, dark text is better for contrast
+  );
 
   /// Label text - For form fields and small labels (18sp minimum)
-  static TextStyle get labelStyle => _baseTextStyle.copyWith(
-        fontSize: 18,
-        fontWeight: FontWeight.w500,
-      );
+  static TextStyle get labelStyle =>
+      _baseTextStyle.copyWith(fontSize: 18, fontWeight: FontWeight.w500);
 
   // ============================================================================
   // THEME DATA - Complete Flutter ThemeData
@@ -71,119 +66,73 @@ class SeniorTheme {
 
   /// Light theme for the app
   static ThemeData get lightTheme => ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.light,
-        primaryColor: primaryBlue,
-        scaffoldBackgroundColor: surfaceWhite,
-        colorScheme: const ColorScheme.light(
-          primary: primaryBlue,
-          onPrimary: textOnDark,
-          secondary: accentYellow,
-          onSecondary: textOnLight,
-          surface: surfaceWhite,
-          onSurface: textOnLight,
-          error: errorRed,
-          onError: textOnDark,
-        ),
-        textTheme: TextTheme(
-          headlineLarge: headingStyle,
-          headlineMedium: headingStyle.copyWith(fontSize: 22),
-          bodyLarge: bodyStyle,
-          bodyMedium: bodyStyle,
-          labelLarge: buttonTextStyle,
-          labelMedium: labelStyle,
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: primaryBlue,
-            foregroundColor: textOnDark,
-            textStyle: buttonTextStyle,
-            minimumSize: const Size(double.infinity, 60),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ),
-        appBarTheme: AppBarTheme(
-          backgroundColor: primaryBlue,
-          foregroundColor: textOnDark,
-          titleTextStyle: headingStyle.copyWith(color: textOnDark),
-          elevation: 0,
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: primaryBlue, width: 2),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: primaryBlue, width: 3),
-          ),
-          labelStyle: labelStyle,
-          hintStyle: labelStyle.copyWith(color: Colors.grey),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 18,
-          ),
-        ),
-      );
+    useMaterial3: true,
+    brightness: Brightness.light,
+    primaryColor: primaryCyan,
+    scaffoldBackgroundColor: surfaceWhite,
+    colorScheme: const ColorScheme.light(
+      primary: primaryCyan,
+      onPrimary: textOnLight,
+      secondary: cardGrey,
+      onSecondary: textOnLight,
+      surface: surfaceWhite,
+      onSurface: textOnLight,
+      error: errorRed,
+      onError: textOnDark,
+    ),
+    textTheme: TextTheme(
+      headlineLarge: headingStyle,
+      headlineMedium: headingStyle.copyWith(fontSize: 22),
+      bodyLarge: bodyStyle,
+      bodyMedium: bodyStyle,
+      labelLarge: buttonTextStyle,
+      labelMedium: labelStyle,
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: primaryCyan,
+        foregroundColor: textOnLight,
+        textStyle: buttonTextStyle,
+        minimumSize: const Size(double.infinity, 56),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+      ),
+    ),
+    appBarTheme: AppBarTheme(
+      backgroundColor: primaryCyan,
+      foregroundColor: textOnLight,
+      titleTextStyle: headingStyle.copyWith(color: textOnLight),
+      elevation: 0,
+      centerTitle: true,
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: surfaceWhite,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(30),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(30),
+        borderSide: const BorderSide(color: primaryCyan, width: 2),
+      ),
+      labelStyle: labelStyle,
+      hintStyle: labelStyle.copyWith(color: Colors.grey),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+    ),
+  );
 
-  /// Dark theme (high contrast mode) for the app
-  static ThemeData get darkTheme => ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        primaryColor: accentYellow,
-        scaffoldBackgroundColor: surfaceBlack,
-        colorScheme: const ColorScheme.dark(
-          primary: accentYellow,
-          onPrimary: textOnLight,
-          secondary: primaryBlue,
-          onSecondary: textOnDark,
-          surface: surfaceBlack,
-          onSurface: textOnDark,
-          error: errorRed,
-          onError: textOnDark,
-        ),
-        textTheme: TextTheme(
-          headlineLarge: headingStyle.copyWith(color: textOnDark),
-          headlineMedium: headingStyle.copyWith(fontSize: 22, color: textOnDark),
-          bodyLarge: bodyStyle.copyWith(color: textOnDark),
-          bodyMedium: bodyStyle.copyWith(color: textOnDark),
-          labelLarge: buttonTextStyle.copyWith(color: textOnLight),
-          labelMedium: labelStyle.copyWith(color: textOnDark),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: accentYellow,
-            foregroundColor: textOnLight,
-            textStyle: buttonTextStyle.copyWith(color: textOnLight),
-            minimumSize: const Size(double.infinity, 60),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ),
-        appBarTheme: AppBarTheme(
-          backgroundColor: surfaceBlack,
-          foregroundColor: textOnDark,
-          titleTextStyle: headingStyle.copyWith(color: textOnDark),
-          elevation: 0,
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: accentYellow, width: 2),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: accentYellow, width: 3),
-          ),
-          labelStyle: labelStyle.copyWith(color: textOnDark),
-          hintStyle: labelStyle.copyWith(color: Colors.grey),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 18,
-          ),
-        ),
-      );
+  /// Dark theme (Currently mirroring light theme structure just with dark bg, but can be adapted)
+  static ThemeData get darkTheme => lightTheme.copyWith(
+    brightness: Brightness.dark,
+    scaffoldBackgroundColor: surfaceBlack,
+    colorScheme: const ColorScheme.dark(
+      primary: primaryCyan,
+      onPrimary: textOnLight,
+      secondary: cardGrey,
+      onSecondary: textOnDark,
+      surface: surfaceBlack,
+      onSurface: textOnDark,
+    ),
+    // Can override other specific dark mode defaults here later if requested
+  );
 }
