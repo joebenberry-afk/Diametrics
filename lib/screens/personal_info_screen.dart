@@ -1,49 +1,76 @@
 import 'package:flutter/material.dart';
-import '../../theme.dart';
-import '../../widgets/senior_text_field.dart';
-import '../../widgets/senior_dropdown.dart';
-import 'medical_settings_screen.dart';
+import '../theme.dart';
+import '../widgets/senior_text_field.dart';
+import '../widgets/senior_dropdown.dart';
+import 'health_info_screen.dart';
 
-/// HealthInfoScreen - Collects health-related information.
+/// PersonalInfoScreen - Collects basic user information.
 ///
-/// Fields: Weight, Height, Type of Diabetes
-class HealthInfoScreen extends StatefulWidget {
-  const HealthInfoScreen({super.key});
+/// Fields: Name, Date of Birth, Gender
+class PersonalInfoScreen extends StatefulWidget {
+  const PersonalInfoScreen({super.key});
 
   @override
-  State<HealthInfoScreen> createState() => _HealthInfoScreenState();
+  State<PersonalInfoScreen> createState() => _PersonalInfoScreenState();
 }
 
-class _HealthInfoScreenState extends State<HealthInfoScreen> {
-  final _weightController = TextEditingController();
-  final _heightController = TextEditingController();
-  String? _selectedDiabetesType;
+class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
+  final _nameController = TextEditingController();
+  final _dobController = TextEditingController();
+  String? _selectedGender;
 
-  final List<String> _diabetesTypes = [
-    'Type 1',
-    'Type 2',
-    'Gestational',
-    'Pre-diabetes',
-    'Not diabetic',
+  final List<String> _genderOptions = [
+    'Male',
+    'Female',
+    'Other',
+    'Prefer not to say',
   ];
 
   @override
   void dispose() {
-    _weightController.dispose();
-    _heightController.dispose();
+    _nameController.dispose();
+    _dobController.dispose();
     super.dispose();
   }
 
-  void _navigateToNext() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const MedicalSettingsScreen()),
+  Future<void> _selectDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime(1960),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: SeniorTheme.lightTheme.copyWith(
+            textTheme: SeniorTheme.lightTheme.textTheme.copyWith(
+              headlineMedium: SeniorTheme.headingStyle,
+              bodyLarge: SeniorTheme.bodyStyle,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
+    if (picked != null) {
+      setState(() {
+        _dobController.text =
+            '${picked.day.toString().padLeft(2, '0')}/'
+            '${picked.month.toString().padLeft(2, '0')}/'
+            '${picked.year}';
+      });
+    }
+  }
+
+  void _navigateToNext() {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => const HealthInfoScreen()));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFB8D4E8), // Light blue from prototype
+      backgroundColor: const Color(0xFFE8D4F0), // Light purple from prototype
       body: SafeArea(
         child: Column(
           children: [
@@ -60,7 +87,6 @@ class _HealthInfoScreenState extends State<HealthInfoScreen> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.black, width: 1),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.1),
@@ -70,8 +96,10 @@ class _HealthInfoScreenState extends State<HealthInfoScreen> {
                   ],
                 ),
                 child: Text(
-                  'Health Information',
-                  style: SeniorTheme.headingStyle,
+                  'Personal Information',
+                  style: SeniorTheme.headingStyle.copyWith(
+                    fontStyle: FontStyle.italic,
+                  ),
                 ),
               ),
             ),
@@ -84,49 +112,49 @@ class _HealthInfoScreenState extends State<HealthInfoScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF9CC4D8), // Slightly darker blue
+                    color: const Color(0xFFD4B8E0), // Slightly darker purple
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: SingleChildScrollView(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Weight Field
+                        // Name Field
                         SeniorTextField(
-                          controller: _weightController,
-                          label: 'Weight',
-                          hint: 'kg/lbs',
-                          keyboardType: TextInputType.number,
-                          semanticLabel: 'Enter your weight',
+                          controller: _nameController,
+                          label: 'Name',
+                          hint: 'Your name',
+                          semanticLabel: 'Enter your full name',
                         ),
                         const SizedBox(height: 24),
-                        // Height Field
+                        // Date of Birth Field
                         SeniorTextField(
-                          controller: _heightController,
-                          label: 'Height',
-                          hint: 'ft/cm',
-                          keyboardType: TextInputType.number,
-                          semanticLabel: 'Enter your height',
+                          controller: _dobController,
+                          label: 'Date of Birth',
+                          hint: 'DD/MM/YYYY',
+                          readOnly: true,
+                          onTap: _selectDate,
+                          semanticLabel: 'Select your date of birth',
                         ),
                         const SizedBox(height: 24),
-                        // Diabetes Type Dropdown
-                        Text('Type of Diabetes', style: SeniorTheme.labelStyle),
+                        // Gender Dropdown
+                        Text('Gender', style: SeniorTheme.labelStyle),
                         const SizedBox(height: 8),
                         SeniorDropdown<String>(
-                          value: _selectedDiabetesType,
+                          value: _selectedGender,
                           hint: 'Select',
-                          items: _diabetesTypes
+                          items: _genderOptions
                               .map(
-                                (t) =>
-                                    DropdownMenuItem(value: t, child: Text(t)),
+                                (g) =>
+                                    DropdownMenuItem(value: g, child: Text(g)),
                               )
                               .toList(),
                           onChanged: (value) {
                             setState(() {
-                              _selectedDiabetesType = value;
+                              _selectedGender = value;
                             });
                           },
-                          semanticLabel: 'Select your type of diabetes',
+                          semanticLabel: 'Select your gender',
                         ),
                       ],
                     ),

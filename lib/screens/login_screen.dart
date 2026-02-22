@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../theme.dart';
-import '../../widgets/senior_text_field.dart';
+import '../theme.dart';
+import '../widgets/senior_text_field.dart';
 import 'personal_info_screen.dart';
 
 /// LoginScreen - Entry point for user authentication.

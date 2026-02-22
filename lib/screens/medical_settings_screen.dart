@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../theme.dart';
-import '../../widgets/senior_text_field.dart';
-import '../../widgets/senior_dropdown.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../theme.dart';
+import '../widgets/senior_text_field.dart';
+import '../widgets/senior_dropdown.dart';
+import 'package:diametrics/screens/onboarding/dashboard_screen.dart';
 
 /// MedicalSettingsScreen - Collects medical and glucose settings.
 ///
@@ -45,23 +47,29 @@ class _MedicalSettingsScreenState extends State<MedicalSettingsScreen> {
     super.dispose();
   }
 
-  void _finishOnboarding() {
-    // TODO: Save user preferences to database
-    // For now, show a success message and navigate to home
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Setup complete! Welcome to DiaMetrics.',
-          style: SeniorTheme.bodyStyle.copyWith(color: Colors.white),
-        ),
-        backgroundColor: SeniorTheme.successGreen,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+Future<void> _finishOnboarding() async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setBool('onboardingComplete', true);
 
-    // Navigate to home (replace with actual home screen later)
-    Navigator.of(context).popUntil((route) => route.isFirst);
-  }
+  if (!mounted) return;
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(
+        'Setup complete! Welcome to DiaMetrics.',
+        style: SeniorTheme.bodyStyle.copyWith(color: Colors.white),
+      ),
+      backgroundColor: SeniorTheme.successGreen,
+      duration: const Duration(seconds: 2),
+    ),
+  );
+
+  // Go to dashboard and remove onboarding/login from back stack
+  Navigator.of(context).pushAndRemoveUntil(
+    MaterialPageRoute(builder: (_) => const DashboardScreen()),
+    (route) => false,
+  );
+}
 
   @override
   Widget build(BuildContext context) {

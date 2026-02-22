@@ -1,13 +1,23 @@
 import 'package:flutter/material.dart';
-import 'theme.dart';
-import 'screens/onboarding/login_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
-  runApp(const DiametricsApp());
+import 'theme.dart';
+import 'screens/login_screen.dart';
+import 'package:diametrics/screens/onboarding/dashboard_screen.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final prefs = await SharedPreferences.getInstance();
+  final onboardingComplete = prefs.getBool('onboardingComplete') ?? false;
+
+  runApp(DiametricsApp(onboardingComplete: onboardingComplete));
 }
 
 class DiametricsApp extends StatelessWidget {
-  const DiametricsApp({super.key});
+  final bool onboardingComplete;
+
+  const DiametricsApp({super.key, required this.onboardingComplete});
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +27,7 @@ class DiametricsApp extends StatelessWidget {
       theme: SeniorTheme.lightTheme,
       darkTheme: SeniorTheme.darkTheme,
       themeMode: ThemeMode.light,
-      home: const LoginScreen(),
+      home: onboardingComplete ? const DashboardScreen() : const LoginScreen(),
     );
   }
 }
