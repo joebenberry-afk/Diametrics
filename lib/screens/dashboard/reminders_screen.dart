@@ -42,24 +42,21 @@ class _RemindersScreenState extends State<RemindersScreen> {
               // Title row with + button
               Row(
                 children: [
-                  Text(
-                    'Reminders',
-                    style: SeniorTheme.headingStyle.copyWith(fontSize: 22),
-                  ),
+                  Text('Reminders', style: SeniorTheme.headingStyle),
                   const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: _addReminder,
-                    child: Container(
-                      width: 28,
-                      height: 28,
-                      decoration: BoxDecoration(
-                        color: SeniorTheme.primaryCyan,
-                        shape: BoxShape.circle,
+                  SizedBox(
+                    width: 48,
+                    height: 48,
+                    child: IconButton(
+                      onPressed: _addReminder,
+                      style: IconButton.styleFrom(
+                        backgroundColor: const Color(0xFF003366),
+                        shape: const CircleBorder(),
                       ),
-                      child: const Icon(
+                      icon: const Icon(
                         Icons.add,
-                        size: 18,
-                        color: Colors.black,
+                        size: 24,
+                        color: Colors.white,
                       ),
                     ),
                   ),
@@ -94,33 +91,21 @@ class _RemindersScreenState extends State<RemindersScreen> {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _reminders[index]['done'] =
-                                    !(reminder['done'] as bool);
-                              });
-                            },
-                            child: Container(
-                              width: 28,
-                              height: 28,
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: Colors.black54,
-                                  width: 2,
-                                ),
-                                borderRadius: BorderRadius.circular(4),
-                                color: (reminder['done'] as bool)
-                                    ? Colors.black87
-                                    : Colors.white,
+                          SizedBox(
+                            width: 48,
+                            height: 48,
+                            child: Checkbox(
+                              value: reminder['done'] as bool,
+                              onChanged: (val) {
+                                setState(() {
+                                  _reminders[index]['done'] = val ?? false;
+                                });
+                              },
+                              activeColor: const Color(0xFF003366),
+                              side: const BorderSide(
+                                color: Colors.black54,
+                                width: 2,
                               ),
-                              child: (reminder['done'] as bool)
-                                  ? const Icon(
-                                      Icons.check,
-                                      size: 18,
-                                      color: Colors.white,
-                                    )
-                                  : null,
                             ),
                           ),
                         ],

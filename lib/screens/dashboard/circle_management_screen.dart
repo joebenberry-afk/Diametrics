@@ -57,7 +57,6 @@ class _CircleManagementScreenState extends State<CircleManagementScreen> {
                 'Manage the users on your account here.',
                 style: SeniorTheme.bodyStyle.copyWith(
                   fontWeight: FontWeight.bold,
-                  fontSize: 15,
                 ),
               ),
               const SizedBox(height: 20),
@@ -70,9 +69,9 @@ class _CircleManagementScreenState extends State<CircleManagementScreen> {
                   children: [
                     Text(
                       'Current Linked Accounts',
-                      style: SeniorTheme.labelStyle.copyWith(
+                      style: SeniorTheme.headingStyle.copyWith(
                         fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                        fontSize: 20,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -101,14 +100,15 @@ class _CircleManagementScreenState extends State<CircleManagementScreen> {
                             ElevatedButton(
                               onPressed: () => _removeUser(index),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: SeniorTheme.surfaceBlack,
+                                backgroundColor: const Color(0xFFD32F2F),
                                 foregroundColor: Colors.white,
+                                minimumSize: const Size(0, 48),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 16,
-                                  vertical: 10,
+                                  vertical: 12,
                                 ),
                               ),
                               child: const Text('Remove'),
@@ -130,9 +130,9 @@ class _CircleManagementScreenState extends State<CircleManagementScreen> {
                   children: [
                     Text(
                       'Add other users',
-                      style: SeniorTheme.labelStyle.copyWith(
+                      style: SeniorTheme.bodyStyle.copyWith(
                         fontWeight: FontWeight.bold,
-                        fontSize: 15,
+                        fontSize: 18,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -158,8 +158,9 @@ class _CircleManagementScreenState extends State<CircleManagementScreen> {
                         ElevatedButton(
                           onPressed: _addUser,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: SeniorTheme.primaryCyan,
-                            foregroundColor: Colors.black,
+                            backgroundColor: const Color(0xFF003366),
+                            foregroundColor: Colors.white,
+                            minimumSize: const Size(0, 48),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),

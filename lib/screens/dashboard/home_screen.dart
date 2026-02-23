@@ -35,9 +35,8 @@ class HomeScreen extends StatelessWidget {
                         children: [
                           Text(
                             'Track glucose\nhere.',
-                            style: SeniorTheme.labelStyle.copyWith(
+                            style: SeniorTheme.bodyStyle.copyWith(
                               fontWeight: FontWeight.bold,
-                              fontSize: 14,
                             ),
                           ),
                           const Align(
@@ -59,9 +58,8 @@ class HomeScreen extends StatelessWidget {
                           Expanded(
                             child: Text(
                               'Check out your\nsticker collection!',
-                              style: SeniorTheme.labelStyle.copyWith(
+                              style: SeniorTheme.bodyStyle.copyWith(
                                 fontWeight: FontWeight.bold,
-                                fontSize: 13,
                               ),
                             ),
                           ),
@@ -184,10 +182,10 @@ class HomeScreen extends StatelessWidget {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
+                          Text(
                             'Daily glucose and insulin levels',
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 14,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -215,9 +213,8 @@ class HomeScreen extends StatelessWidget {
                         child: Text(
                           'Did you take your\nmedication today?',
                           textAlign: TextAlign.center,
-                          style: SeniorTheme.labelStyle.copyWith(
+                          style: SeniorTheme.bodyStyle.copyWith(
                             fontWeight: FontWeight.bold,
-                            fontSize: 13,
                           ),
                         ),
                       ),
@@ -236,9 +233,8 @@ class HomeScreen extends StatelessWidget {
                         child: Text(
                           'How are you\nfeeling? Journal\nhere.',
                           textAlign: TextAlign.center,
-                          style: SeniorTheme.labelStyle.copyWith(
+                          style: SeniorTheme.bodyStyle.copyWith(
                             fontWeight: FontWeight.bold,
-                            fontSize: 13,
                           ),
                         ),
                       ),

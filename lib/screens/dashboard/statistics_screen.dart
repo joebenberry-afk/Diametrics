@@ -27,7 +27,6 @@ class StatisticsScreen extends StatelessWidget {
                 'See your insulin and glucose levels for this month here.',
                 style: SeniorTheme.bodyStyle.copyWith(
                   fontWeight: FontWeight.bold,
-                  fontSize: 15,
                 ),
               ),
               const SizedBox(height: 20),
@@ -179,9 +178,9 @@ class StatisticsScreen extends StatelessWidget {
                   Expanded(
                     flex: 3,
                     child: Container(
-                      height: 80,
+                      constraints: const BoxConstraints(minHeight: 80),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFB2EBF2),
+                        color: const Color(0xFF003366),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       padding: const EdgeInsets.all(14),
@@ -191,9 +190,9 @@ class StatisticsScreen extends StatelessWidget {
                         children: [
                           Text(
                             'See your trend analysis here.',
-                            style: SeniorTheme.labelStyle.copyWith(
+                            style: SeniorTheme.bodyStyle.copyWith(
                               fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                              color: Colors.white,
                             ),
                           ),
                           Align(
@@ -212,7 +211,6 @@ class StatisticsScreen extends StatelessWidget {
                   Expanded(
                     flex: 2,
                     child: GlassyCard(
-                      height: 80,
                       padding: const EdgeInsets.all(14),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -220,16 +218,15 @@ class StatisticsScreen extends StatelessWidget {
                         children: [
                           Text(
                             'Generate pdf of results.',
-                            style: SeniorTheme.labelStyle.copyWith(
+                            style: SeniorTheme.bodyStyle.copyWith(
                               fontWeight: FontWeight.bold,
-                              fontSize: 13,
                             ),
                           ),
                           Align(
                             alignment: Alignment.bottomRight,
                             child: Icon(
                               Icons.arrow_forward,
-                              size: 14,
+                              size: 18,
                               color: Colors.grey.shade600,
                             ),
                           ),

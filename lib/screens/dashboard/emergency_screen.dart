@@ -70,7 +70,6 @@ class EmergencyScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: SeniorTheme.bodyStyle.copyWith(
                   fontWeight: FontWeight.bold,
-                  fontSize: 16,
                 ),
               ),
               const Spacer(),
