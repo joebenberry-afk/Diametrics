@@ -43,3 +43,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Raw food database files (only the cleaned CSV in assets/database/ is needed)
+Food Database/FoodData_Central_sr_legacy_food_csv_2018-04/
+Food Database/FoodData_Central_sr_legacy_food_csv_2018-04.zip
+Food Database/N5K_google/

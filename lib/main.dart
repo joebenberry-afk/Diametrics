@@ -11,6 +11,8 @@ Future<void> main() async {
 
   // Initialize the AES-256 encrypted database
   await initDatabase();
+  // Populate the offline generic food database if it is empty
+  await db.populateLocalFoodsIfEmpty();
 
   final prefs = await SharedPreferences.getInstance();
   final onboardingComplete = prefs.getBool('onboardingComplete') ?? false;

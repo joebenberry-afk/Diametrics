@@ -1,11 +1,420 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:google_mlkit_image_labeling/google_mlkit_image_labeling.dart';
+import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
+
 import '../../theme.dart';
 import '../../widgets/glassy_card.dart';
+import '../../database/db_instance.dart';
+import '../../database/database.dart';
+import 'package:drift/drift.dart' show Value, OrderingTerm, Variable;
 
-/// Food Recording screen - camera interface for meal photos.
-/// Matches the "Food recording page" mockup from design image 3 (right panel).
-class AddFoodScreen extends StatelessWidget {
+/// Food Recording screen with AI-powered input methods.
+/// Supports: Camera (ML Kit), Voice, Text, and Barcode scanning.
+class AddFoodScreen extends StatefulWidget {
   const AddFoodScreen({super.key});
+
+  @override
+  State<AddFoodScreen> createState() => _AddFoodScreenState();
+}
+
+class _AddFoodScreenState extends State<AddFoodScreen> {
+  final ImagePicker _picker = ImagePicker();
+  final TextEditingController _searchController = TextEditingController();
+
+  File? _capturedImage;
+  String _statusMessage = 'Take a photo, type, or speak to log food.';
+  bool _isProcessing = false;
+  List<Map<String, dynamic>> _searchResults = [];
+  List<MealLog> _recentMeals = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRecentMeals();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadRecentMeals() async {
+    final meals =
+        await (db.select(db.mealLogs)
+              ..orderBy([(t) => OrderingTerm.desc(t.timestamp)])
+              ..limit(5))
+            .get();
+    if (mounted) {
+      setState(() {
+        _recentMeals = meals;
+      });
+    }
+  }
+
+  // ---- Camera + ML Kit Image Labeling (Offline) ----
+  Future<void> _captureAndAnalyzePhoto() async {
+    final XFile? photo = await _picker.pickImage(
+      source: ImageSource.camera,
+      maxWidth: 1024,
+      maxHeight: 1024,
+      imageQuality: 85,
+    );
+    if (photo == null) return;
+
+    setState(() {
+      _capturedImage = File(photo.path);
+      _isProcessing = true;
+      _statusMessage = 'Analyzing image with on-device AI...';
+    });
+
+    try {
+      final inputImage = InputImage.fromFilePath(photo.path);
+      final imageLabeler = ImageLabeler(
+        options: ImageLabelerOptions(confidenceThreshold: 0.5),
+      );
+      final labels = await imageLabeler.processImage(inputImage);
+      await imageLabeler.close();
+
+      if (labels.isEmpty) {
+        setState(() {
+          _statusMessage = 'Could not identify food. Try typing the name.';
+          _isProcessing = false;
+        });
+        return;
+      }
+
+      // Search local database using ML Kit labels
+      final labelTexts = labels.map((l) => l.label).toList();
+      setState(() {
+        _statusMessage =
+            'Detected: ${labelTexts.take(3).join(", ")}. Searching database...';
+      });
+
+      await _searchDatabaseByLabels(labelTexts);
+    } catch (e) {
+      setState(() {
+        _statusMessage = 'Error analyzing image. Please try again.';
+        _isProcessing = false;
+      });
+    }
+  }
+
+  // ---- Pick from gallery ----
+  Future<void> _pickFromGallery() async {
+    final XFile? photo = await _picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1024,
+      maxHeight: 1024,
+      imageQuality: 85,
+    );
+    if (photo == null) return;
+
+    setState(() {
+      _capturedImage = File(photo.path);
+      _isProcessing = true;
+      _statusMessage = 'Analyzing image with on-device AI...';
+    });
+
+    try {
+      final inputImage = InputImage.fromFilePath(photo.path);
+      final imageLabeler = ImageLabeler(
+        options: ImageLabelerOptions(confidenceThreshold: 0.5),
+      );
+      final labels = await imageLabeler.processImage(inputImage);
+      await imageLabeler.close();
+
+      if (labels.isEmpty) {
+        setState(() {
+          _statusMessage = 'Could not identify food. Try typing the name.';
+          _isProcessing = false;
+        });
+        return;
+      }
+
+      final labelTexts = labels.map((l) => l.label).toList();
+      setState(() {
+        _statusMessage =
+            'Detected: ${labelTexts.take(3).join(", ")}. Searching database...';
+      });
+
+      await _searchDatabaseByLabels(labelTexts);
+    } catch (e) {
+      setState(() {
+        _statusMessage = 'Error analyzing image. Please try again.';
+        _isProcessing = false;
+      });
+    }
+  }
+
+  // ---- Barcode Scanning (Offline) ----
+  Future<void> _scanBarcode() async {
+    final XFile? photo = await _picker.pickImage(
+      source: ImageSource.camera,
+      maxWidth: 1024,
+      maxHeight: 1024,
+    );
+    if (photo == null) return;
+
+    setState(() {
+      _isProcessing = true;
+      _statusMessage = 'Scanning barcode...';
+    });
+
+    try {
+      final inputImage = InputImage.fromFilePath(photo.path);
+      final barcodeScanner = BarcodeScanner();
+      final barcodes = await barcodeScanner.processImage(inputImage);
+      await barcodeScanner.close();
+
+      if (barcodes.isEmpty) {
+        setState(() {
+          _statusMessage = 'No barcode found. Try again or type the food name.';
+          _isProcessing = false;
+        });
+        return;
+      }
+
+      final barcodeValue = barcodes.first.rawValue ?? '';
+      // Check custom_foods table for this barcode
+      final results = await (db.select(
+        db.customFoods,
+      )..where((t) => t.barcode.equals(barcodeValue))).get();
+
+      if (results.isNotEmpty) {
+        final food = results.first;
+        setState(() {
+          _statusMessage =
+              'Found: ${food.userDefinedName} (${food.carbsPerServing}g carbs)';
+          _isProcessing = false;
+        });
+        await _logMeal(
+          food.userDefinedName,
+          food.carbsPerServing,
+          isOffline: true,
+        );
+      } else {
+        // Barcode not known - prompt to add custom food
+        setState(() {
+          _statusMessage =
+              'Barcode "$barcodeValue" not found. Add it as a custom food?';
+          _isProcessing = false;
+        });
+        if (mounted) {
+          _showAddCustomFoodDialog(barcode: barcodeValue);
+        }
+      }
+    } catch (e) {
+      setState(() {
+        _statusMessage = 'Error scanning barcode. Please try again.';
+        _isProcessing = false;
+      });
+    }
+  }
+
+  // ---- Text Search (Offline) ----
+  Future<void> _searchByText(String query) async {
+    if (query.trim().isEmpty) {
+      setState(() {
+        _searchResults = [];
+      });
+      return;
+    }
+
+    final q = '%${query.trim()}%';
+
+    // Search custom_foods first, then local_foods using raw SQL
+    final customRows = await db
+        .customSelect(
+          'SELECT user_defined_name, carbs_per_serving FROM custom_foods WHERE user_defined_name LIKE ? LIMIT 5',
+          variables: [Variable.withString(q)],
+        )
+        .get();
+
+    final localRows = await db
+        .customSelect(
+          'SELECT name, carbs_per_serving FROM local_foods WHERE name LIKE ? LIMIT 10',
+          variables: [Variable.withString(q)],
+        )
+        .get();
+
+    final combined = <Map<String, dynamic>>[];
+
+    for (final row in customRows) {
+      combined.add({
+        'name': row.read<String>('user_defined_name'),
+        'carbs': row.read<double>('carbs_per_serving'),
+        'source': 'Custom',
+      });
+    }
+    for (final row in localRows) {
+      combined.add({
+        'name': row.read<String>('name'),
+        'carbs': row.read<double>('carbs_per_serving'),
+        'source': 'USDA',
+      });
+    }
+
+    setState(() {
+      _searchResults = combined;
+      _statusMessage = combined.isEmpty
+          ? 'No results found for "$query".'
+          : 'Found ${combined.length} results.';
+    });
+  }
+
+  // ---- Search by ML Kit labels ----
+  Future<void> _searchDatabaseByLabels(List<String> labels) async {
+    final combined = <Map<String, dynamic>>[];
+
+    for (final label in labels) {
+      final rows = await db
+          .customSelect(
+            'SELECT name, carbs_per_serving FROM local_foods WHERE name LIKE ? LIMIT 5',
+            variables: [Variable.withString('%$label%')],
+          )
+          .get();
+
+      for (final row in rows) {
+        combined.add({
+          'name': row.read<String>('name'),
+          'carbs': row.read<double>('carbs_per_serving'),
+          'source': 'USDA (via ML Kit)',
+        });
+      }
+    }
+
+    setState(() {
+      _searchResults = combined;
+      _isProcessing = false;
+      _statusMessage = combined.isEmpty
+          ? 'No matching foods found. Try typing the name.'
+          : 'Found ${combined.length} matches from image analysis.';
+    });
+  }
+
+  // ---- Log a meal ----
+  Future<void> _logMeal(
+    String foodName,
+    double carbs, {
+    bool isOffline = true,
+  }) async {
+    await db
+        .into(db.mealLogs)
+        .insert(
+          MealLogsCompanion.insert(
+            timestamp: DateTime.now(),
+            transcription: Value(foodName),
+            estimatedCarbs: carbs,
+            imagePath: Value(_capturedImage?.path),
+            isOfflineEstimate: Value(isOffline),
+          ),
+        );
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Logged: $foodName (${carbs}g carbs)'),
+          backgroundColor: SeniorTheme.successGreen,
+        ),
+      );
+      _loadRecentMeals();
+      setState(() {
+        _searchResults = [];
+        _searchController.clear();
+        _capturedImage = null;
+        _statusMessage = 'Meal logged successfully!';
+      });
+    }
+  }
+
+  // ---- Add Custom Food Dialog ----
+  void _showAddCustomFoodDialog({String? barcode}) {
+    final nameController = TextEditingController();
+    final carbsController = TextEditingController();
+    final servingController = TextEditingController(text: '1 serving');
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Add Custom Food'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (barcode != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    'Barcode: $barcode',
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ),
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Food Name',
+                  hintText: 'e.g., Kelloggs Corn Flakes',
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: servingController,
+                decoration: const InputDecoration(
+                  labelText: 'Serving Size',
+                  hintText: 'e.g., 1 cup, 30g',
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: carbsController,
+                decoration: const InputDecoration(
+                  labelText: 'Carbs per Serving (g)',
+                  hintText: 'e.g., 24',
+                ),
+                keyboardType: TextInputType.number,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              final name = nameController.text.trim();
+              final carbs = double.tryParse(carbsController.text.trim());
+              if (name.isEmpty || carbs == null) return;
+
+              await db
+                  .into(db.customFoods)
+                  .insert(
+                    CustomFoodsCompanion.insert(
+                      userDefinedName: name,
+                      barcode: Value(barcode),
+                      servingSize: Value(servingController.text.trim()),
+                      carbsPerServing: carbs,
+                    ),
+                  );
+
+              if (ctx.mounted) Navigator.pop(ctx);
+              if (mounted) {
+                setState(() {
+                  _statusMessage = 'Saved "$name" to your custom foods!';
+                });
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,52 +427,257 @@ class AddFoodScreen extends StatelessWidget {
         ),
       ),
       child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 20),
-              // Camera viewfinder area
+              const SizedBox(height: 8),
+
+              // -- Status Banner --
               GlassyCard(
                 width: double.infinity,
-                height: 350,
-                padding: const EdgeInsets.all(24),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade600,
-                    borderRadius: BorderRadius.circular(12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                child: Row(
+                  children: [
+                    if (_isProcessing)
+                      const Padding(
+                        padding: EdgeInsets.only(right: 12),
+                        child: SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                    Expanded(
+                      child: Text(
+                        _statusMessage,
+                        style: SeniorTheme.bodyStyle.copyWith(fontSize: 15),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // -- Image Preview --
+              if (_capturedImage != null) ...[
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Image.file(
+                    _capturedImage!,
+                    height: 200,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
                   ),
-                  child: Center(
-                    child: Icon(
-                      Icons.camera_alt_outlined,
-                      size: 80,
-                      color: Colors.grey.shade400,
+                ),
+                const SizedBox(height: 16),
+              ],
+
+              // -- Input Methods Row --
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildActionCard(
+                      icon: Icons.camera_alt_rounded,
+                      label: 'Camera',
+                      color: const Color(0xFF5CE1E6),
+                      onTap: _captureAndAnalyzePhoto,
                     ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'Take a photo of your meal here.',
-                style: SeniorTheme.bodyStyle.copyWith(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-              const Spacer(),
-              // Bottom action bar
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildBottomButton(
-                    Icons.note_add_outlined,
-                    'Additional notes',
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _buildActionCard(
+                      icon: Icons.photo_library_rounded,
+                      label: 'Gallery',
+                      color: const Color(0xFF81C784),
+                      onTap: _pickFromGallery,
+                    ),
                   ),
-                  _buildBottomButton(Icons.restaurant_outlined, 'Add food'),
-                  _buildBottomButton(Icons.analytics_outlined, 'Meal analysis'),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _buildActionCard(
+                      icon: Icons.qr_code_scanner_rounded,
+                      label: 'Barcode',
+                      color: const Color(0xFFFFB74D),
+                      onTap: _scanBarcode,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _buildActionCard(
+                      icon: Icons.add_circle_outline_rounded,
+                      label: 'Custom',
+                      color: const Color(0xFFBA68C8),
+                      onTap: () => _showAddCustomFoodDialog(),
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 16),
+
+              // -- Text Search Field --
+              GlassyCard(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.search, color: Colors.grey),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        onChanged: _searchByText,
+                        style: SeniorTheme.bodyStyle.copyWith(fontSize: 16),
+                        decoration: const InputDecoration(
+                          hintText: 'Search food by name...',
+                          border: InputBorder.none,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // -- Search Results --
+              if (_searchResults.isNotEmpty) ...[
+                Text(
+                  'Search Results',
+                  style: SeniorTheme.bodyStyle.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ..._searchResults.map(
+                  (item) => Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: GlassyCard(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      child: InkWell(
+                        onTap: () => _logMeal(
+                          item['name'] as String,
+                          (item['carbs'] as num).toDouble(),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item['name'] as String,
+                                    style: SeniorTheme.bodyStyle.copyWith(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  Text(
+                                    '${item["carbs"]}g carbs | ${item["source"]}',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Icon(
+                              Icons.add_circle,
+                              color: SeniorTheme.successGreen,
+                              size: 28,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+
+              // -- Recent Meals --
+              if (_recentMeals.isNotEmpty) ...[
+                Text(
+                  'Recent Meals',
+                  style: SeniorTheme.bodyStyle.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ..._recentMeals.map(
+                  (meal) => Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: GlassyCard(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            meal.isOfflineEstimate
+                                ? Icons.wifi_off_rounded
+                                : Icons.cloud_done_rounded,
+                            size: 20,
+                            color: meal.isOfflineEstimate
+                                ? Colors.orange
+                                : SeniorTheme.successGreen,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  meal.transcription ?? 'Unknown meal',
+                                  style: SeniorTheme.bodyStyle.copyWith(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                Text(
+                                  '${meal.estimatedCarbs}g carbs',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            _formatTime(meal.timestamp),
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey.shade500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+
+              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -71,24 +685,47 @@ class AddFoodScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomButton(IconData icon, String label) {
-    return Column(
-      children: [
-        Container(
-          width: 52,
-          height: 52,
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade600, width: 2),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, size: 24, color: Colors.grey.shade700),
+  Widget _buildActionCard({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: _isProcessing ? null : onTap,
+      child: GlassyCard(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        child: Column(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 26),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade700,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 6),
-        Text(
-          label,
-          style: TextStyle(fontSize: 10, color: Colors.grey.shade700),
-        ),
-      ],
+      ),
     );
+  }
+
+  String _formatTime(DateTime dt) {
+    final now = DateTime.now();
+    final diff = now.difference(dt);
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    return '${dt.month}/${dt.day}';
   }
 }

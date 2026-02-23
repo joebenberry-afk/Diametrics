@@ -7,6 +7,7 @@ import 'package:drift/native.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
+import 'package:flutter/services.dart' show rootBundle;
 
 part 'database.g.dart';
 
@@ -20,7 +21,36 @@ class Logs extends Table {
   BoolColumn get finishedMeal => boolean().withDefault(const Constant(false))();
 }
 
-@DriftDatabase(tables: [Logs])
+class LocalFoods extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text()();
+  TextColumn get servingSize => text().withDefault(const Constant('100g'))();
+  RealColumn get carbsPerServing => real()();
+}
+
+class CustomFoods extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get userDefinedName => text()();
+  TextColumn get barcode => text().nullable()();
+  TextColumn get servingSize =>
+      text().withDefault(const Constant('1 serving'))();
+  RealColumn get carbsPerServing => real()();
+}
+
+class MealLogs extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  DateTimeColumn get timestamp => dateTime()();
+  TextColumn get imagePath => text().nullable()();
+  TextColumn get transcription => text().nullable()();
+  RealColumn get estimatedCarbs => real()();
+  IntColumn get completionPercentage =>
+      integer().withDefault(const Constant(100))();
+  TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
+  BoolColumn get isOfflineEstimate =>
+      boolean().withDefault(const Constant(true))();
+}
+
+@DriftDatabase(tables: [Logs, LocalFoods, CustomFoods, MealLogs])
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
@@ -28,7 +58,62 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (Migrator m) async {
+      await m.createAll();
+    },
+    onUpgrade: (Migrator m, int from, int to) async {
+      if (from == 1) {
+        await m.createTable(localFoods);
+        await m.createTable(customFoods);
+        await m.createTable(mealLogs);
+      }
+    },
+  );
+
+  Future<void> populateLocalFoodsIfEmpty() async {
+    final count = await customSelect(
+      'SELECT COUNT(*) FROM local_foods',
+    ).getSingle();
+    final rowCount = count.data.values.first as int;
+    if (rowCount == 0) {
+      try {
+        final csvString = await rootBundle.loadString(
+          'assets/database/cleaned_food_database.csv',
+        );
+        final lines = csvString.split('\n');
+
+        await batch((batch) {
+          for (int i = 1; i < lines.length; i++) {
+            final line = lines[i].trim();
+            if (line.isEmpty) continue;
+
+            final lastCommaIndex = line.lastIndexOf(',');
+            if (lastCommaIndex != -1) {
+              String name = line.substring(0, lastCommaIndex);
+              // Clean wrapping quotes
+              if (name.startsWith('"') && name.endsWith('"')) {
+                name = name.substring(1, name.length - 1);
+              }
+              final carbsStr = line.substring(lastCommaIndex + 1);
+              final carbs = double.tryParse(carbsStr) ?? 0.0;
+
+              batch.insert(
+                localFoods,
+                LocalFoodsCompanion.insert(name: name, carbsPerServing: carbs),
+              );
+            }
+          }
+        });
+      } catch (e) {
+        // Safe fail if asset is missing or not reachable
+        print('Error populating local foods: \$e');
+      }
+    }
+  }
 
   Future<int> insertGlucoseLog({
     required DateTime timestamp,
