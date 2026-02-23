@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:drift/drift.dart' as drift;
-import '../../database/database.dart';
-import '../../theme.dart';
-import '../../widgets/big_button.dart';
+import '../database/database.dart';
+import '../database/db_instance.dart';
+import '../theme.dart';
+import '../widgets/big_button.dart';
 
 /// DebugScreen - For testing database functionality during development.
 ///
@@ -18,7 +19,6 @@ class DebugScreen extends StatefulWidget {
 }
 
 class _DebugScreenState extends State<DebugScreen> {
-  final AppDatabase _db = AppDatabase();
   List<Log> _logs = [];
   String _statusMessage = '';
 
@@ -30,7 +30,7 @@ class _DebugScreenState extends State<DebugScreen> {
 
   Future<void> _loadLogs() async {
     try {
-      final logs = await _db.getRecentLogs(const Duration(days: 30));
+      final logs = await db.getRecentLogs(const Duration(days: 30));
       setState(() {
         _logs = logs;
         _statusMessage = 'Loaded ${logs.length} logs';
@@ -44,8 +44,8 @@ class _DebugScreenState extends State<DebugScreen> {
 
   Future<void> _insertTestLog() async {
     try {
-      await _db
-          .into(_db.logs)
+      await db
+          .into(db.logs)
           .insert(
             LogsCompanion.insert(
               timestamp: DateTime.now(),
@@ -69,7 +69,7 @@ class _DebugScreenState extends State<DebugScreen> {
 
   Future<void> _clearAllLogs() async {
     try {
-      await _db.delete(_db.logs).go();
+      await db.delete(db.logs).go();
       setState(() {
         _statusMessage = 'All logs cleared';
         _logs = [];

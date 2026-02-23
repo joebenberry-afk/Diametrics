@@ -19,13 +19,22 @@ class MainLayout extends StatefulWidget {
 class _MainLayoutState extends State<MainLayout> {
   int _selectedIndex = -1; // -1 means home screen is active
 
-  final List<Widget> _screens = [
-    const EmergencyScreen(),
-    const StatisticsScreen(),
-    const AddFoodScreen(),
-    const RemindersScreen(),
-    const CircleManagementScreen(),
-  ];
+  Widget _buildScreen(int index) {
+    switch (index) {
+      case 0:
+        return const EmergencyScreen();
+      case 1:
+        return const StatisticsScreen();
+      case 2:
+        return const AddFoodScreen();
+      case 3:
+        return const RemindersScreen();
+      case 4:
+        return const CircleManagementScreen();
+      default:
+        return const HomeScreen();
+    }
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -87,7 +96,7 @@ class _MainLayoutState extends State<MainLayout> {
       ),
       body: _selectedIndex == -1
           ? const HomeScreen()
-          : _screens[_selectedIndex],
+          : _buildScreen(_selectedIndex),
       bottomNavigationBar: Container(
         color: SeniorTheme.primaryCyan,
         child: SafeArea(
