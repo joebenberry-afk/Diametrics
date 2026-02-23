@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:google_mlkit_image_labeling/google_mlkit_image_labeling.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+
+import '../../utils/nutrition_label_parser.dart';
 
 import '../../theme.dart';
 import '../../widgets/glassy_card.dart';
@@ -336,82 +339,144 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
     final nameController = TextEditingController();
     final carbsController = TextEditingController();
     final servingController = TextEditingController(text: '1 serving');
+    String? scanStatus;
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Add Custom Food'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (barcode != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Text(
-                    'Barcode: $barcode',
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: const Text('Add Custom Food'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Scan Label Button
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    final photo = await _picker.pickImage(
+                      source: ImageSource.camera,
+                      maxWidth: 1280,
+                      maxHeight: 1280,
+                      imageQuality: 90,
+                    );
+                    if (photo == null) return;
+
+                    setDialogState(() {
+                      scanStatus = 'Reading label...';
+                    });
+
+                    try {
+                      final inputImage = InputImage.fromFilePath(photo.path);
+                      final textRecognizer = TextRecognizer();
+                      final recognized = await textRecognizer.processImage(
+                        inputImage,
+                      );
+                      await textRecognizer.close();
+
+                      final parsed = NutritionLabelParser.parse(
+                        recognized.text,
+                      );
+
+                      setDialogState(() {
+                        if (parsed['servingSize'] != null &&
+                            parsed['servingSize']!.isNotEmpty) {
+                          servingController.text = parsed['servingSize']!;
+                        }
+                        if (parsed['totalCarbs'] != null) {
+                          carbsController.text = parsed['totalCarbs']!;
+                        }
+                        scanStatus = parsed.isEmpty
+                            ? 'Could not read label. Try again or type manually.'
+                            : 'Found: ${parsed.entries.map((e) => "${e.key}: ${e.value}").join(", ")}';
+                      });
+                    } catch (e) {
+                      setDialogState(() {
+                        scanStatus = 'Error reading label. Try again.';
+                      });
+                    }
+                  },
+                  icon: const Icon(Icons.document_scanner_rounded),
+                  label: const Text('Scan Nutrition Label'),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 44),
                   ),
                 ),
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Food Name',
-                  hintText: 'e.g., Kelloggs Corn Flakes',
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: servingController,
-                decoration: const InputDecoration(
-                  labelText: 'Serving Size',
-                  hintText: 'e.g., 1 cup, 30g',
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: carbsController,
-                decoration: const InputDecoration(
-                  labelText: 'Carbs per Serving (g)',
-                  hintText: 'e.g., 24',
-                ),
-                keyboardType: TextInputType.number,
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              final name = nameController.text.trim();
-              final carbs = double.tryParse(carbsController.text.trim());
-              if (name.isEmpty || carbs == null) return;
-
-              await db
-                  .into(db.customFoods)
-                  .insert(
-                    CustomFoodsCompanion.insert(
-                      userDefinedName: name,
-                      barcode: Value(barcode),
-                      servingSize: Value(servingController.text.trim()),
-                      carbsPerServing: carbs,
+                if (scanStatus != null) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    scanStatus!,
+                    style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                  ),
+                ],
+                const SizedBox(height: 12),
+                if (barcode != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text(
+                      'Barcode: $barcode',
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
-                  );
-
-              if (ctx.mounted) Navigator.pop(ctx);
-              if (mounted) {
-                setState(() {
-                  _statusMessage = 'Saved "$name" to your custom foods!';
-                });
-              }
-            },
-            child: const Text('Save'),
+                  ),
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Food Name',
+                    hintText: 'e.g., Kelloggs Corn Flakes',
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: servingController,
+                  decoration: const InputDecoration(
+                    labelText: 'Serving Size',
+                    hintText: 'e.g., 1 cup, 30g',
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: carbsController,
+                  decoration: const InputDecoration(
+                    labelText: 'Carbs per Serving (g)',
+                    hintText: 'e.g., 24',
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+              ],
+            ),
           ),
-        ],
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                final name = nameController.text.trim();
+                final carbs = double.tryParse(carbsController.text.trim());
+                if (name.isEmpty || carbs == null) return;
+
+                await db
+                    .into(db.customFoods)
+                    .insert(
+                      CustomFoodsCompanion.insert(
+                        userDefinedName: name,
+                        barcode: Value(barcode),
+                        servingSize: Value(servingController.text.trim()),
+                        carbsPerServing: carbs,
+                      ),
+                    );
+
+                if (ctx.mounted) Navigator.pop(ctx);
+                if (mounted) {
+                  setState(() {
+                    _statusMessage = 'Saved "$name" to your custom foods!';
+                  });
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
       ),
     );
   }
