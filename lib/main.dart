@@ -5,6 +5,7 @@ import 'theme.dart';
 import 'database/db_instance.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard/main_layout.dart';
+import 'services/sync_manager.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,6 +14,9 @@ Future<void> main() async {
   await initDatabase();
   // Populate the offline generic food database if it is empty
   await db.populateLocalFoodsIfEmpty();
+
+  // Initialize the SyncManager lifecycle observer
+  SyncManager().initialize();
 
   final prefs = await SharedPreferences.getInstance();
   final onboardingComplete = prefs.getBool('onboardingComplete') ?? false;

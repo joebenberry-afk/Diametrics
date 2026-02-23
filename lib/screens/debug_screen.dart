@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:drift/drift.dart' as drift;
 import '../database/database.dart';
 import '../database/db_instance.dart';
+import '../services/sync_manager.dart';
 import '../theme.dart';
 import '../widgets/big_button.dart';
 
@@ -118,6 +119,21 @@ class _DebugScreenState extends State<DebugScreen> {
               label: 'Refresh Logs',
               icon: Icons.refresh,
               onPressed: _loadLogs,
+              isSecondary: true,
+            ),
+            const SizedBox(height: 12),
+            BigButton(
+              label: 'Force Sync Now',
+              icon: Icons.cloud_sync,
+              onPressed: () async {
+                setState(() {
+                  _statusMessage = 'Syncing pending meal logs...';
+                });
+                await SyncManager().syncNow();
+                setState(() {
+                  _statusMessage = 'Sync complete. Check debug console.';
+                });
+              },
               isSecondary: true,
             ),
             const SizedBox(height: 12),
