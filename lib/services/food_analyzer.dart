@@ -128,31 +128,33 @@ class FoodAnalyzer {
     final requestBody = jsonEncode({
       'contents': [
         {
+          'role': 'user',
           'parts': [
             {
               'text':
-                  'You are a professional nutritionist AI. Analyze this food image and identify '
-                  'every food item visible. CRITICAL INSTRUCTION: Analyze the ENTIRE image. '
-                  'If there are multiple pieces of the same food (e.g., 4 chicken breasts, a full tray of potatoes), '
-                  'group them into a single item but MUST accurately state the TOTAL visible quantity in the portion '
-                  '(e.g., "4 breasts (approx. 600g)") and calculate the nutritional data for that ENTIRE combined portion.\n\n'
-                  'Return ONLY valid JSON (no markdown, no code fences) in this exact format:\n'
+                  'You are a professional clinical nutritionist AI assisting patients in Trinidad and Tobago. '
+                  'Analyze this food image and identify every visible food item, prioritizing local Caribbean dishes '
+                  '(e.g., Doubles, Sada Roti, Pelau) if applicable.\n\n'
+                  'CRITICAL INSTRUCTION: Analyze the ENTIRE image. '
+                  'If there are multiple pieces of the same food, group them into a single item '
+                  'and state the TOTAL visible quantity (e.g., "4 chicken breasts").\n\n'
+                  'EXAMPLE INPUT: A photo showing 6 doubles on a table.\n'
+                  'EXAMPLE OUTPUT:\n'
                   '{\n'
-                  '  "thought_process": "Briefly list and count all items you see here first (e.g. 1 breast left, 1 right, 2 back = 4 total).",\n'
+                  '  "thought_process": "I see 6 flatbreads filled with chickpeas. These are 6 portions of Trinidadian Doubles.",\n'
                   '  "items": [\n'
                   '    {\n'
-                  '      "name": "White Bread",\n'
-                  '      "portion": "4 slices",\n'
-                  '      "carbs_g": 26.0,\n'
-                  '      "calories": 140,\n'
-                  '      "protein_g": 4.0,\n'
-                  '      "fat_g": 1.5\n'
+                  '      "name": "Doubles",\n'
+                  '      "portion": "6 doubles",\n'
+                  '      "carbs_g": 210.0,\n'
+                  '      "calories": 1050,\n'
+                  '      "protein_g": 30.0,\n'
+                  '      "fat_g": 42.0\n'
                   '    }\n'
                   '  ],\n'
-                  '  "summary": "Brief one-line meal description"\n'
+                  '  "summary": "6 Trinidadian Doubles"\n'
                   '}\n\n'
-                  'If no food is visible, return: {"thought_process": "Empty plate", "items": [], "summary": "No food detected"}\n'
-                  'Be specific about food names (e.g., "whole wheat bread" not just "bread").',
+                  'Analyze the provided image now.',
             },
             {
               'inline_data': {'mime_type': mimeType, 'data': base64Image},
@@ -160,7 +162,49 @@ class FoodAnalyzer {
           ],
         },
       ],
-      'generationConfig': {'temperature': 0.1, 'maxOutputTokens': 2048},
+      'systemInstruction': {
+        'parts': [
+          {
+            'text':
+                'You must only return valid JSON matching the requested schema. No markdown, no explanations.',
+          },
+        ],
+      },
+      'generationConfig': {
+        'temperature': 0.1,
+        'maxOutputTokens': 2048,
+        'responseMimeType': 'application/json',
+        'responseSchema': {
+          'type': 'OBJECT',
+          'properties': {
+            'thought_process': {'type': 'STRING'},
+            'items': {
+              'type': 'ARRAY',
+              'items': {
+                'type': 'OBJECT',
+                'properties': {
+                  'name': {'type': 'STRING'},
+                  'portion': {'type': 'STRING'},
+                  'carbs_g': {'type': 'NUMBER'},
+                  'calories': {'type': 'NUMBER'},
+                  'protein_g': {'type': 'NUMBER'},
+                  'fat_g': {'type': 'NUMBER'},
+                },
+                'required': [
+                  'name',
+                  'portion',
+                  'carbs_g',
+                  'calories',
+                  'protein_g',
+                  'fat_g',
+                ],
+              },
+            },
+            'summary': {'type': 'STRING'},
+          },
+          'required': ['thought_process', 'items', 'summary'],
+        },
+      },
     });
 
     // Retry with exponential backoff (but not on rate limit errors)
