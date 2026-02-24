@@ -138,6 +138,7 @@ class FoodAnalyzer {
                   '(e.g., "4 breasts (approx. 600g)") and calculate the nutritional data for that ENTIRE combined portion.\n\n'
                   'Return ONLY valid JSON (no markdown, no code fences) in this exact format:\n'
                   '{\n'
+                  '  "thought_process": "Briefly list and count all items you see here first (e.g. 1 breast left, 1 right, 2 back = 4 total).",\n'
                   '  "items": [\n'
                   '    {\n'
                   '      "name": "White Bread",\n'
@@ -150,7 +151,7 @@ class FoodAnalyzer {
                   '  ],\n'
                   '  "summary": "Brief one-line meal description"\n'
                   '}\n\n'
-                  'If no food is visible, return: {"items": [], "summary": "No food detected"}\n'
+                  'If no food is visible, return: {"thought_process": "Empty plate", "items": [], "summary": "No food detected"}\n'
                   'Be specific about food names (e.g., "whole wheat bread" not just "bread").',
             },
             {
