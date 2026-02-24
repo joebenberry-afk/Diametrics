@@ -145,9 +145,47 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
         return;
       }
 
+      // Cross-reference each item against local USDA database
       setState(() {
-        _analysisResult = result;
-        _statusMessage = result.summary;
+        _statusMessage = 'Looking up USDA nutrition data...';
+      });
+
+      final enrichedItems = <FoodItem>[];
+      for (final item in result.items) {
+        final rows = await db
+            .customSelect(
+              'SELECT name, carbs_per_serving FROM local_foods '
+              'WHERE LOWER(name) LIKE ? ORDER BY LENGTH(name) LIMIT 1',
+              variables: [Variable.withString('%${item.name.toLowerCase()}%')],
+            )
+            .get();
+
+        if (rows.isNotEmpty) {
+          final usdaCarbs = rows.first.read<double>('carbs_per_serving');
+          enrichedItems.add(item.withUsdaData(carbsPer100g: usdaCarbs));
+        } else {
+          enrichedItems.add(item);
+        }
+      }
+
+      // Recalculate totals with enriched data
+      double totalCarbs = 0;
+      double totalCalories = 0;
+      for (final item in enrichedItems) {
+        totalCarbs += item.carbsGrams;
+        totalCalories += item.calories;
+      }
+
+      final enrichedResult = FoodAnalysisResult(
+        items: enrichedItems,
+        totalCarbs: totalCarbs,
+        totalCalories: totalCalories,
+        summary: result.summary,
+      );
+
+      setState(() {
+        _analysisResult = enrichedResult;
+        _statusMessage = enrichedResult.summary;
         _isProcessing = false;
       });
     } catch (e) {
@@ -835,6 +873,32 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 6),
+                  // Source badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: item.source == 'USDA'
+                          ? Colors.green.withValues(alpha: 0.12)
+                          : Colors.grey.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      item.source == 'USDA'
+                          ? 'Carbs from USDA Database'
+                          : 'AI Estimate',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: item.source == 'USDA'
+                            ? Colors.green.shade700
+                            : Colors.grey.shade600,
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Row(

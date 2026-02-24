@@ -25,6 +25,9 @@ class FoodItem {
   final double proteinGrams;
   final double fatGrams;
 
+  /// Where the nutritional data came from: 'USDA' or 'AI Estimate'.
+  final String source;
+
   const FoodItem({
     required this.name,
     required this.portion,
@@ -32,6 +35,7 @@ class FoodItem {
     required this.calories,
     required this.proteinGrams,
     required this.fatGrams,
+    this.source = 'AI Estimate',
   });
 
   factory FoodItem.fromJson(Map<String, dynamic> json) {
@@ -42,6 +46,19 @@ class FoodItem {
       calories: (json['calories'] as num?)?.toDouble() ?? 0.0,
       proteinGrams: (json['protein_g'] as num?)?.toDouble() ?? 0.0,
       fatGrams: (json['fat_g'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+
+  /// Returns a copy with USDA nutritional data replacing the AI estimates.
+  FoodItem withUsdaData({required double carbsPer100g}) {
+    return FoodItem(
+      name: name,
+      portion: portion,
+      carbsGrams: carbsPer100g,
+      calories: calories,
+      proteinGrams: proteinGrams,
+      fatGrams: fatGrams,
+      source: 'USDA',
     );
   }
 }
