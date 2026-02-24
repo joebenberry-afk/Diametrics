@@ -1,11 +1,12 @@
 import 'dart:io';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:google_mlkit_image_labeling/google_mlkit_image_labeling.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 
+import '../../services/food_analyzer.dart';
 import '../../utils/nutrition_label_parser.dart';
 
 import '../../theme.dart';
@@ -32,6 +33,7 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
   bool _isProcessing = false;
   List<Map<String, dynamic>> _searchResults = [];
   List<MealLog> _recentMeals = [];
+  FoodAnalysisResult? _analysisResult;
 
   @override
   void initState() {
@@ -58,7 +60,7 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
     }
   }
 
-  // ---- Camera + ML Kit Image Labeling (Offline) ----
+  // ---- Camera + Gemini Flash AI Food Analysis ----
   Future<void> _captureAndAnalyzePhoto() async {
     final XFile? photo = await _picker.pickImage(
       source: ImageSource.camera,
@@ -70,40 +72,11 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
 
     setState(() {
       _capturedImage = File(photo.path);
-      _isProcessing = true;
-      _statusMessage = 'Analyzing image with on-device AI...';
+      _analysisResult = null;
+      _searchResults = [];
     });
 
-    try {
-      final inputImage = InputImage.fromFilePath(photo.path);
-      final imageLabeler = ImageLabeler(
-        options: ImageLabelerOptions(confidenceThreshold: 0.5),
-      );
-      final labels = await imageLabeler.processImage(inputImage);
-      await imageLabeler.close();
-
-      if (labels.isEmpty) {
-        setState(() {
-          _statusMessage = 'Could not identify food. Try typing the name.';
-          _isProcessing = false;
-        });
-        return;
-      }
-
-      // Search local database using ML Kit labels
-      final labelTexts = labels.map((l) => l.label).toList();
-      setState(() {
-        _statusMessage =
-            'Detected: ${labelTexts.take(3).join(", ")}. Searching database...';
-      });
-
-      await _searchDatabaseByLabels(labelTexts);
-    } catch (e) {
-      setState(() {
-        _statusMessage = 'Error analyzing image. Please try again.';
-        _isProcessing = false;
-      });
-    }
+    await _analyzeWithGemini(photo.path);
   }
 
   // ---- Pick from gallery ----
@@ -118,36 +91,59 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
 
     setState(() {
       _capturedImage = File(photo.path);
+      _analysisResult = null;
+      _searchResults = [];
+    });
+
+    await _analyzeWithGemini(photo.path);
+  }
+
+  // ---- Shared Gemini analysis logic ----
+  Future<void> _analyzeWithGemini(String imagePath) async {
+    setState(() {
       _isProcessing = true;
-      _statusMessage = 'Analyzing image with on-device AI...';
+      _statusMessage = 'Checking internet connection...';
+    });
+
+    // Check connectivity first
+    final connectivity = await Connectivity().checkConnectivity();
+    final isConnected = connectivity.any((r) => r != ConnectivityResult.none);
+
+    if (!isConnected) {
+      setState(() {
+        _isProcessing = false;
+        _statusMessage =
+            'No internet connection. Use text search or try again later.';
+      });
+      return;
+    }
+
+    setState(() {
+      _statusMessage = 'Analyzing food with AI...';
     });
 
     try {
-      final inputImage = InputImage.fromFilePath(photo.path);
-      final imageLabeler = ImageLabeler(
-        options: ImageLabelerOptions(confidenceThreshold: 0.5),
-      );
-      final labels = await imageLabeler.processImage(inputImage);
-      await imageLabeler.close();
+      final result = await FoodAnalyzer.analyzeImage(imagePath);
 
-      if (labels.isEmpty) {
+      if (!mounted) return;
+
+      if (result.items.isEmpty) {
         setState(() {
-          _statusMessage = 'Could not identify food. Try typing the name.';
+          _statusMessage = 'No food detected. Try typing the name instead.';
           _isProcessing = false;
         });
         return;
       }
 
-      final labelTexts = labels.map((l) => l.label).toList();
       setState(() {
-        _statusMessage =
-            'Detected: ${labelTexts.take(3).join(", ")}. Searching database...';
+        _analysisResult = result;
+        _statusMessage = result.summary;
+        _isProcessing = false;
       });
-
-      await _searchDatabaseByLabels(labelTexts);
     } catch (e) {
+      if (!mounted) return;
       setState(() {
-        _statusMessage = 'Error analyzing image. Please try again.';
+        _statusMessage = 'AI analysis failed. Try typing the food name.';
         _isProcessing = false;
       });
     }
@@ -269,33 +265,16 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
     });
   }
 
-  // ---- Search by ML Kit labels ----
-  Future<void> _searchDatabaseByLabels(List<String> labels) async {
-    final combined = <Map<String, dynamic>>[];
+  // ---- Log entire AI-analyzed meal ----
+  Future<void> _logAnalyzedMeal() async {
+    final result = _analysisResult;
+    if (result == null || result.items.isEmpty) return;
 
-    for (final label in labels) {
-      final rows = await db
-          .customSelect(
-            'SELECT name, carbs_per_serving FROM local_foods WHERE name LIKE ? LIMIT 5',
-            variables: [Variable.withString('%$label%')],
-          )
-          .get();
-
-      for (final row in rows) {
-        combined.add({
-          'name': row.read<String>('name'),
-          'carbs': row.read<double>('carbs_per_serving'),
-          'source': 'USDA (via ML Kit)',
-        });
-      }
-    }
+    final foodNames = result.items.map((i) => i.name).join(', ');
+    await _logMeal(foodNames, result.totalCarbs);
 
     setState(() {
-      _searchResults = combined;
-      _isProcessing = false;
-      _statusMessage = combined.isEmpty
-          ? 'No matching foods found. Try typing the name.'
-          : 'Found ${combined.length} matches from image analysis.';
+      _analysisResult = null;
     });
   }
 
@@ -542,6 +521,12 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
                 const SizedBox(height: 16),
               ],
 
+              // -- AI Food Analysis Results --
+              if (_analysisResult != null) ...[
+                _buildFoodAnalysisResults(_analysisResult!),
+                const SizedBox(height: 16),
+              ],
+
               // -- Input Methods Row --
               Row(
                 children: [
@@ -783,6 +768,183 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  // ---- AI Analysis Results Card ----
+  Widget _buildFoodAnalysisResults(FoodAnalysisResult result) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'AI Food Analysis',
+          style: SeniorTheme.bodyStyle.copyWith(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+        const SizedBox(height: 8),
+        ...result.items.map(
+          (item) => Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: GlassyCard(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          item.name,
+                          style: SeniorTheme.bodyStyle.copyWith(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: SeniorTheme.primaryCyan.withValues(
+                            alpha: 0.15,
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          item.portion,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade700,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      _buildNutrientChip(
+                        'Carbs',
+                        '${item.carbsGrams.toStringAsFixed(1)}g',
+                        Colors.orange,
+                      ),
+                      const SizedBox(width: 8),
+                      _buildNutrientChip(
+                        'Cal',
+                        item.calories.toStringAsFixed(0),
+                        Colors.red.shade400,
+                      ),
+                      const SizedBox(width: 8),
+                      _buildNutrientChip(
+                        'Protein',
+                        '${item.proteinGrams.toStringAsFixed(1)}g',
+                        Colors.blue.shade400,
+                      ),
+                      const SizedBox(width: 8),
+                      _buildNutrientChip(
+                        'Fat',
+                        '${item.fatGrams.toStringAsFixed(1)}g',
+                        Colors.purple.shade300,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        // Meal totals + Log button
+        GlassyCard(
+          width: double.infinity,
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildTotalStat(
+                    'Total Carbs',
+                    '${result.totalCarbs.toStringAsFixed(1)}g',
+                    Colors.orange,
+                  ),
+                  _buildTotalStat(
+                    'Total Calories',
+                    result.totalCalories.toStringAsFixed(0),
+                    Colors.red.shade400,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton.icon(
+                  onPressed: _logAnalyzedMeal,
+                  icon: const Icon(Icons.check_circle_outline),
+                  label: Text(
+                    'Log This Meal',
+                    style: SeniorTheme.buttonTextStyle,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNutrientChip(String label, String value, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Column(
+          children: [
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
+            ),
+            Text(
+              label,
+              style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTotalStat(String label, String value, Color color) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+        ),
+      ],
     );
   }
 
