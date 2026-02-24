@@ -1,33 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'theme.dart';
-import 'database/db_instance.dart';
-import 'screens/login_screen.dart';
-import 'screens/dashboard/main_layout.dart';
-import 'services/sync_manager.dart';
+import 'screens/splash_screen.dart';
 
-Future<void> main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Initialize the AES-256 encrypted database
-  await initDatabase();
-  // Populate the offline generic food database if it is empty
-  await db.populateLocalFoodsIfEmpty();
-
-  // Initialize the SyncManager lifecycle observer
-  SyncManager().initialize();
-
-  final prefs = await SharedPreferences.getInstance();
-  final onboardingComplete = prefs.getBool('onboardingComplete') ?? false;
-
-  runApp(DiametricsApp(onboardingComplete: onboardingComplete));
+  runApp(const DiametricsApp());
 }
 
 class DiametricsApp extends StatelessWidget {
-  final bool onboardingComplete;
-
-  const DiametricsApp({super.key, required this.onboardingComplete});
+  const DiametricsApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +19,7 @@ class DiametricsApp extends StatelessWidget {
       theme: SeniorTheme.lightTheme,
       darkTheme: SeniorTheme.darkTheme,
       themeMode: ThemeMode.light,
-      home: onboardingComplete ? const MainLayout() : const LoginScreen(),
+      home: const SplashScreen(),
     );
   }
 }
