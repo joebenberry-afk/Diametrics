@@ -9,8 +9,8 @@
 class ApiConfig {
   static const String geminiApiKey = String.fromEnvironment('GEMINI_API_KEY');
 
-  /// Gemini Flash model — has a generous free tier (15 RPM, 1500 RPD).
-  static const String geminiModel = 'gemini-2.0-flash';
+  /// Gemini 2.5 Flash — fast multimodal model with free tier.
+  static const String geminiModel = 'gemini-2.5-flash';
 
   static String get geminiEndpoint =>
       'https://generativelanguage.googleapis.com/v1beta/models/$geminiModel:generateContent?key=$geminiApiKey';

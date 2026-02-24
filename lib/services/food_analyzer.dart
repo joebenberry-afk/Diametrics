@@ -7,6 +7,15 @@ import 'package:http/http.dart' as http;
 
 import '../config/api_config.dart';
 
+/// Exception for API rate limit errors (429). Should not be retried.
+class RateLimitException implements Exception {
+  final String message;
+  const RateLimitException(this.message);
+
+  @override
+  String toString() => message;
+}
+
 /// A single food item identified by the AI with its nutritional data.
 class FoodItem {
   final String name;
@@ -133,7 +142,7 @@ class FoodAnalyzer {
       'generationConfig': {'temperature': 0.1, 'maxOutputTokens': 1024},
     });
 
-    // Retry with exponential backoff
+    // Retry with exponential backoff (but not on rate limit errors)
     final result = await _retryWithBackoff(() async {
       final response = await http
           .post(
@@ -143,9 +152,16 @@ class FoodAnalyzer {
           )
           .timeout(const Duration(seconds: 30));
 
+      if (response.statusCode == 429) {
+        // Rate limit - don't retry, throw a user-friendly message
+        throw RateLimitException(
+          'API rate limit reached. Please wait a minute and try again.',
+        );
+      }
+
       if (response.statusCode != 200) {
         throw Exception(
-          'Gemini API error (${response.statusCode}): ${response.body}',
+          'Server error (${response.statusCode}). Please try again.',
         );
       }
 
@@ -217,6 +233,8 @@ class FoodAnalyzer {
       try {
         return await action();
       } catch (e) {
+        // Don't retry rate limit errors - it just wastes more quota
+        if (e is RateLimitException) rethrow;
         if (attempt == _maxRetries - 1) rethrow;
         final delay = Duration(seconds: 1 << attempt); // 1s, 2s, 4s
         debugPrint(
