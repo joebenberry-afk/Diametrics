@@ -21,6 +21,34 @@ class HomeScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Home Dashboard Header with Mascot
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Semantics(
+                    label: 'DiaMetrics Robot Mascot',
+                    child: Image.asset(
+                      'assets/images/robot_mascot.png',
+                      width: 72,
+                      height: 72,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
+                      'Hello!\nReady to log today?',
+                      style: SeniorTheme.headingStyle.copyWith(
+                        fontSize: 24,
+                        color: SeniorTheme.primaryCyan,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
               // Top two cards row
               Row(
                 children: [

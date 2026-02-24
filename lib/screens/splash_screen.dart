@@ -70,6 +70,17 @@ class _SplashScreenState extends State<SplashScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Mascot / App Icon
+              Semantics(
+                label: 'DiaMetrics Robot Mascot',
+                child: Image.asset(
+                  'assets/images/robot_mascot.png',
+                  width: 140,
+                  height: 140,
+                ),
+              ),
+              const SizedBox(height: 24),
+
               // App title
               Text(
                 'DiaMetrics',
