@@ -67,11 +67,12 @@ class SeniorTextField extends StatelessWidget {
             onChanged: onChanged,
             readOnly: readOnly,
             onTap: onTap,
-            style: SeniorTheme.bodyStyle,
+            style: SeniorTheme.bodyStyle.copyWith(fontSize: 16),
             decoration: InputDecoration(
               hintText: hint,
               hintStyle: SeniorTheme.bodyStyle.copyWith(
                 color: Colors.grey.shade500,
+                fontSize: 16,
               ),
               filled: true,
               fillColor: SeniorTheme.surfaceWhite,
@@ -81,7 +82,7 @@ class SeniorTextField extends StatelessWidget {
               ),
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 20,
-                vertical: 18,
+                vertical: 14,
               ),
             ),
           ),

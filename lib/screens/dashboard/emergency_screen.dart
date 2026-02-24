@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme.dart';
+import '../../widgets/glassy_card.dart';
 
 /// Emergency Alert screen - displays a large SOS button and description.
 /// Matches the "Emergency alert" mockup from design image 1 (right panel).
@@ -22,54 +23,63 @@ class EmergencyScreen extends StatelessWidget {
           child: Column(
             children: [
               const Spacer(),
-              // SOS Button
-              GestureDetector(
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Emergency alert sent to all linked users!',
-                        style: SeniorTheme.bodyStyle.copyWith(
-                          color: Colors.white,
+              // Massive SOS Button within GlassyCard
+              GlassyCard(
+                padding: const EdgeInsets.all(24),
+                child: GestureDetector(
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Emergency alert sent to all linked users!',
+                          style: SeniorTheme.bodyStyle.copyWith(
+                            color: Colors.white,
+                          ),
                         ),
+                        backgroundColor: Colors.red,
                       ),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                },
-                child: Container(
-                  width: 220,
-                  height: 180,
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.red.withValues(alpha: 0.4),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'SOS',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 64,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 4,
+                    );
+                  },
+                  child: Semantics(
+                    button: true,
+                    label: 'Send SOS Emergency Alert',
+                    child: AspectRatio(
+                      aspectRatio: 1.0, // perfect square
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFED1C24), // Bright mockup red
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.red.withValues(alpha: 0.4),
+                              blurRadius: 20,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: const Center(
+                          child: Text(
+                            'SOS',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 80,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 4,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 48),
               Text(
                 'Send an emergency alert to all linked users.',
                 textAlign: TextAlign.center,
                 style: SeniorTheme.bodyStyle.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 20,
                 ),
               ),
               const Spacer(),

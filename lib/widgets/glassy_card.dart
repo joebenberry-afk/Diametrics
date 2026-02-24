@@ -9,6 +9,7 @@ class GlassyCard extends StatelessWidget {
   final double? width;
   final double? height;
   final EdgeInsetsGeometry padding;
+  final Color? color;
 
   const GlassyCard({
     super.key,
@@ -16,6 +17,7 @@ class GlassyCard extends StatelessWidget {
     this.width,
     this.height,
     this.padding = const EdgeInsets.all(24.0),
+    this.color,
   });
 
   @override
@@ -25,7 +27,7 @@ class GlassyCard extends StatelessWidget {
       height: height,
       padding: padding,
       decoration: BoxDecoration(
-        color: SeniorTheme.cardGrey,
+        color: color ?? SeniorTheme.cardGrey,
         borderRadius: BorderRadius.circular(24.0),
         boxShadow: [
           BoxShadow(

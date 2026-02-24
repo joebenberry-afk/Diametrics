@@ -55,6 +55,7 @@ class SeniorDropdown<T> extends StatelessWidget {
               hint,
               style: SeniorTheme.bodyStyle.copyWith(
                 color: isCyan ? SeniorTheme.surfaceBlack : Colors.grey.shade600,
+                fontSize: 16,
               ),
             ),
             items: items,
@@ -62,12 +63,13 @@ class SeniorDropdown<T> extends StatelessWidget {
             isExpanded: true,
             style: SeniorTheme.bodyStyle.copyWith(
               color: SeniorTheme.surfaceBlack,
+              fontSize: 16,
             ),
             dropdownColor: SeniorTheme.surfaceWhite,
             icon: Icon(
-              Icons.arrow_drop_down,
+              Icons.arrow_downward,
               color: isCyan ? SeniorTheme.surfaceBlack : Colors.grey.shade600,
-              size: 28,
+              size: 20,
             ),
           ),
         ),
