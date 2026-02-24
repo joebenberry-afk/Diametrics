@@ -57,7 +57,8 @@ class FoodAnalyzer {
   /// Sends the image to Gemini Flash with a structured prompt requesting
   /// JSON output containing food items and their nutritional breakdown.
   static Future<FoodAnalysisResult> analyzeImage(String imagePath) async {
-    final imageBytes = await File(imagePath).readAsBytes();
+    final imageFile = File(imagePath);
+    final imageBytes = await imageFile.readAsBytes();
     final base64Image = base64Encode(imageBytes);
 
     // Determine MIME type from extension
@@ -103,11 +104,13 @@ class FoodAnalyzer {
       'generationConfig': {'temperature': 0.1, 'maxOutputTokens': 1024},
     });
 
-    final response = await http.post(
-      Uri.parse(ApiConfig.geminiEndpoint),
-      headers: {'Content-Type': 'application/json'},
-      body: requestBody,
-    );
+    final response = await http
+        .post(
+          Uri.parse(ApiConfig.geminiEndpoint),
+          headers: {'Content-Type': 'application/json'},
+          body: requestBody,
+        )
+        .timeout(const Duration(seconds: 30));
 
     if (response.statusCode != 200) {
       throw Exception(

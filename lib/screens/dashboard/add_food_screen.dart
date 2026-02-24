@@ -64,9 +64,9 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
   Future<void> _captureAndAnalyzePhoto() async {
     final XFile? photo = await _picker.pickImage(
       source: ImageSource.camera,
-      maxWidth: 1024,
-      maxHeight: 1024,
-      imageQuality: 85,
+      maxWidth: 512,
+      maxHeight: 512,
+      imageQuality: 70,
     );
     if (photo == null) return;
 
@@ -83,9 +83,9 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
   Future<void> _pickFromGallery() async {
     final XFile? photo = await _picker.pickImage(
       source: ImageSource.gallery,
-      maxWidth: 1024,
-      maxHeight: 1024,
-      imageQuality: 85,
+      maxWidth: 512,
+      maxHeight: 512,
+      imageQuality: 70,
     );
     if (photo == null) return;
 
@@ -143,7 +143,7 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _statusMessage = 'AI analysis failed. Try typing the food name.';
+        _statusMessage = 'AI analysis failed: $e';
         _isProcessing = false;
       });
     }
