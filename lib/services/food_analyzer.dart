@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../config/api_config.dart';
+import 'food_rag_service.dart';
 
 /// Exception for API rate limit errors (429). Should not be retried.
 class RateLimitException implements Exception {
@@ -131,14 +132,16 @@ class FoodAnalyzer {
             {
               'text':
                   'You are a professional nutritionist AI. Analyze this food image and identify '
-                  'every food item visible. For each item, estimate the portion size and provide '
-                  'nutritional data per portion.\n\n'
+                  'every food item visible. CRITICAL INSTRUCTION: Analyze the ENTIRE image. '
+                  'If there are multiple pieces of the same food (e.g., 4 chicken breasts, a full tray of potatoes), '
+                  'group them into a single item but MUST accurately state the TOTAL visible quantity in the portion '
+                  '(e.g., "4 breasts (approx. 600g)") and calculate the nutritional data for that ENTIRE combined portion.\n\n'
                   'Return ONLY valid JSON (no markdown, no code fences) in this exact format:\n'
                   '{\n'
                   '  "items": [\n'
                   '    {\n'
                   '      "name": "White Bread",\n'
-                  '      "portion": "2 slices",\n'
+                  '      "portion": "4 slices",\n'
                   '      "carbs_g": 26.0,\n'
                   '      "calories": 140,\n'
                   '      "protein_g": 4.0,\n'
@@ -185,8 +188,30 @@ class FoodAnalyzer {
       return _parseResponse(response.body);
     });
 
-    // Cache the result
-    _cache[imageHash] = result;
+    // 2. Post-Retrieval RAG Enrichment
+    // Search the local DB for the foods Gemini found and override AI estimates
+    // with verified carb data.
+    final enrichedItems = await FoodRagService.enrichWithLocalData(
+      result.items,
+    );
+
+    // Recalculate totals after RAG enrichment
+    double newTotalCarbs = 0;
+    double newTotalCalories = 0;
+    for (final item in enrichedItems) {
+      newTotalCarbs += item.carbsGrams;
+      newTotalCalories += item.calories;
+    }
+
+    final enrichedResult = FoodAnalysisResult(
+      items: enrichedItems,
+      totalCarbs: newTotalCarbs,
+      totalCalories: newTotalCalories,
+      summary: result.summary,
+    );
+
+    // Cache the enriched result instead of the raw AI result
+    _cache[imageHash] = enrichedResult;
 
     // Limit cache size to prevent memory bloat (keep last 20)
     if (_cache.length > 20) {

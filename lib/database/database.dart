@@ -148,6 +148,23 @@ class AppDatabase extends _$AppDatabase {
       logs,
     )..where((l) => l.timestamp.isBiggerThanValue(cutoff))).get();
   }
+
+  /// Searches local and custom foods for a name match to enrich AI data
+  Future<LocalFood?> searchLocalFood(String query) async {
+    final searchTerm = '%${query.toLowerCase()}%';
+    return (select(localFoods)
+          ..where((f) => f.name.lower().like(searchTerm))
+          ..limit(1))
+        .getSingleOrNull();
+  }
+
+  Future<CustomFood?> searchCustomFood(String query) async {
+    final searchTerm = '%${query.toLowerCase()}%';
+    return (select(customFoods)
+          ..where((f) => f.userDefinedName.lower().like(searchTerm))
+          ..limit(1))
+        .getSingleOrNull();
+  }
 }
 
 /// Opens the application SQLite database.
