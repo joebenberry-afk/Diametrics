@@ -9,8 +9,8 @@
 class ApiConfig {
   static const String geminiApiKey = String.fromEnvironment('GEMINI_API_KEY');
 
-  /// Use Flash Lite for faster responses and lower bandwidth.
-  static const String geminiModel = 'gemini-2.0-flash-lite';
+  /// Gemini Flash model — has a generous free tier (15 RPM, 1500 RPD).
+  static const String geminiModel = 'gemini-2.0-flash';
 
   static String get geminiEndpoint =>
       'https://generativelanguage.googleapis.com/v1beta/models/$geminiModel:generateContent?key=$geminiApiKey';
