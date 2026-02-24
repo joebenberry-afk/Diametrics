@@ -156,7 +156,7 @@ class FoodAnalyzer {
           ],
         },
       ],
-      'generationConfig': {'temperature': 0.1, 'maxOutputTokens': 1024},
+      'generationConfig': {'temperature': 0.1, 'maxOutputTokens': 2048},
     });
 
     // Retry with exponential backoff (but not on rate limit errors)
