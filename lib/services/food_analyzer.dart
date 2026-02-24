@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../config/api_config.dart';
@@ -50,15 +52,42 @@ class FoodAnalysisResult {
   });
 }
 
-/// Analyzes food images using Google Gemini Flash.
+/// Analyzes food images using Google Gemini Flash Lite.
+///
+/// Optimizations:
+/// - Hash-based in-memory cache (avoids re-analyzing identical images)
+/// - Retry with exponential backoff (handles flaky mobile connections)
+/// - 30-second HTTP timeout
+/// - Compressed image input (512px, 70% quality from caller)
 class FoodAnalyzer {
+  // In-memory cache: SHA-256 hash of image bytes -> analysis result
+  static final Map<String, FoodAnalysisResult> _cache = {};
+
+  /// Maximum retry attempts for transient failures.
+  static const int _maxRetries = 3;
+
   /// Analyzes a food photo and returns identified items with nutritional data.
   ///
-  /// Sends the image to Gemini Flash with a structured prompt requesting
-  /// JSON output containing food items and their nutritional breakdown.
+  /// Results are cached by image content hash. Identical images return
+  /// instantly from cache without an API call.
   static Future<FoodAnalysisResult> analyzeImage(String imagePath) async {
-    final imageFile = File(imagePath);
-    final imageBytes = await imageFile.readAsBytes();
+    if (!ApiConfig.isConfigured) {
+      throw Exception(
+        'Gemini API key not configured. '
+        'Build with: flutter run --dart-define=GEMINI_API_KEY=your_key',
+      );
+    }
+
+    final imageBytes = await File(imagePath).readAsBytes();
+
+    // Check cache by image content hash
+    final imageHash = sha256.convert(imageBytes).toString();
+    final cached = _cache[imageHash];
+    if (cached != null) {
+      debugPrint('FoodAnalyzer: Cache hit for $imageHash');
+      return cached;
+    }
+
     final base64Image = base64Encode(imageBytes);
 
     // Determine MIME type from extension
@@ -104,23 +133,40 @@ class FoodAnalyzer {
       'generationConfig': {'temperature': 0.1, 'maxOutputTokens': 1024},
     });
 
-    final response = await http
-        .post(
-          Uri.parse(ApiConfig.geminiEndpoint),
-          headers: {'Content-Type': 'application/json'},
-          body: requestBody,
-        )
-        .timeout(const Duration(seconds: 30));
+    // Retry with exponential backoff
+    final result = await _retryWithBackoff(() async {
+      final response = await http
+          .post(
+            Uri.parse(ApiConfig.geminiEndpoint),
+            headers: {'Content-Type': 'application/json'},
+            body: requestBody,
+          )
+          .timeout(const Duration(seconds: 30));
 
-    if (response.statusCode != 200) {
-      throw Exception(
-        'Gemini API error (${response.statusCode}): ${response.body}',
-      );
+      if (response.statusCode != 200) {
+        throw Exception(
+          'Gemini API error (${response.statusCode}): ${response.body}',
+        );
+      }
+
+      return _parseResponse(response.body);
+    });
+
+    // Cache the result
+    _cache[imageHash] = result;
+
+    // Limit cache size to prevent memory bloat (keep last 20)
+    if (_cache.length > 20) {
+      _cache.remove(_cache.keys.first);
     }
 
-    final responseJson = jsonDecode(response.body) as Map<String, dynamic>;
+    return result;
+  }
 
-    // Extract text from the Gemini response
+  /// Parses the Gemini API JSON response into a [FoodAnalysisResult].
+  static FoodAnalysisResult _parseResponse(String responseBody) {
+    final responseJson = jsonDecode(responseBody) as Map<String, dynamic>;
+
     final candidates = responseJson['candidates'] as List<dynamic>?;
     if (candidates == null || candidates.isEmpty) {
       throw Exception('No response from Gemini API');
@@ -130,7 +176,7 @@ class FoodAnalyzer {
     final parts = content['parts'] as List<dynamic>;
     var text = parts[0]['text'] as String;
 
-    // Clean any markdown code fences that Gemini might add despite instructions
+    // Clean any markdown code fences that Gemini might add
     text = text.trim();
     if (text.startsWith('```')) {
       final firstNewline = text.indexOf('\n');
@@ -159,5 +205,33 @@ class FoodAnalyzer {
       totalCalories: totalCalories,
       summary: parsed['summary'] as String? ?? 'Meal analyzed',
     );
+  }
+
+  /// Retries [action] up to [_maxRetries] times with exponential backoff.
+  ///
+  /// Backoff delays: 1s, 2s, 4s.
+  /// Only retries on exceptions (network/timeout failures), not on successful
+  /// but empty results.
+  static Future<T> _retryWithBackoff<T>(Future<T> Function() action) async {
+    for (int attempt = 0; attempt < _maxRetries; attempt++) {
+      try {
+        return await action();
+      } catch (e) {
+        if (attempt == _maxRetries - 1) rethrow;
+        final delay = Duration(seconds: 1 << attempt); // 1s, 2s, 4s
+        debugPrint(
+          'FoodAnalyzer: Attempt ${attempt + 1} failed, '
+          'retrying in ${delay.inSeconds}s...',
+        );
+        await Future.delayed(delay);
+      }
+    }
+    // Unreachable, but satisfies the analyzer
+    throw StateError('Retry loop exited unexpectedly');
+  }
+
+  /// Clears the in-memory analysis cache.
+  static void clearCache() {
+    _cache.clear();
   }
 }

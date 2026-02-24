@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 
+import '../../config/api_config.dart';
 import '../../services/food_analyzer.dart';
 import '../../utils/nutrition_label_parser.dart';
 
@@ -100,6 +101,15 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
 
   // ---- Shared Gemini analysis logic ----
   Future<void> _analyzeWithGemini(String imagePath) async {
+    if (!ApiConfig.isConfigured) {
+      setState(() {
+        _statusMessage =
+            'API key missing. Build with: --dart-define=GEMINI_API_KEY=...';
+        _isProcessing = false;
+      });
+      return;
+    }
+
     setState(() {
       _isProcessing = true;
       _statusMessage = 'Checking internet connection...';
