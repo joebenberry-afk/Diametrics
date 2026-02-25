@@ -51,6 +51,8 @@ dependencies:
   flutter_secure_storage: ^10.0.0
   local_auth: ^3.0.0
   sqlcipher_flutter_libs: ^0.7.0+eol
+  sqlite3_flutter_libs: ^0.6.0+eol
+  sqlite3: ^2.9.4
 
 dev_dependencies:
   flutter_test:
