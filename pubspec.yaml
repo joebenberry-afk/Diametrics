@@ -50,7 +50,7 @@ dependencies:
   crypto: ^3.0.6
   flutter_secure_storage: ^10.0.0
   local_auth: ^3.0.0
-  sqlcipher_flutter_libs: ^0.6.8
+  sqlite3_flutter_libs: ^0.5.24
   sqlite3: ^2.9.4
 
 dev_dependencies:
