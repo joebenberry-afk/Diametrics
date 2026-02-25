@@ -277,7 +277,19 @@ class FoodAnalyzer {
 
     final content = candidates[0]['content'] as Map<String, dynamic>;
     final parts = content['parts'] as List<dynamic>;
-    var text = parts[0]['text'] as String;
+
+    // gemini-2.5-flash is a thinking model: parts may contain a 'thought'
+    // entry before the actual 'text' entry. Find the first part with 'text'.
+    String? text;
+    for (final part in parts) {
+      if (part is Map<String, dynamic> && part.containsKey('text')) {
+        text = part['text'] as String;
+        break;
+      }
+    }
+    if (text == null || text.isEmpty) {
+      throw Exception('No text content in API response');
+    }
 
     // Clean any markdown code fences that Gemini might add
     text = text.trim();
