@@ -172,7 +172,7 @@ class FoodAnalyzer {
       },
       'generationConfig': {
         'temperature': 0.1,
-        'maxOutputTokens': 2048,
+        'maxOutputTokens': 8192,
         'responseMimeType': 'application/json',
         'responseSchema': {
           'type': 'OBJECT',
@@ -289,7 +289,12 @@ class FoodAnalyzer {
       text = text.substring(0, text.length - 3).trim();
     }
 
-    final parsed = jsonDecode(text) as Map<String, dynamic>;
+    Map<String, dynamic> parsed;
+    try {
+      parsed = jsonDecode(text) as Map<String, dynamic>;
+    } catch (e) {
+      throw Exception('Failed to parse AI response: $e\n\nRaw text:\n$text');
+    }
 
     final items = (parsed['items'] as List<dynamic>)
         .map((e) => FoodItem.fromJson(e as Map<String, dynamic>))
