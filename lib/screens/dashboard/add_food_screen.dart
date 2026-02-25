@@ -846,15 +846,16 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
+                  Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 8,
+                    runSpacing: 4,
                     children: [
-                      Expanded(
-                        child: Text(
-                          item.name,
-                          style: SeniorTheme.bodyStyle.copyWith(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
+                      Text(
+                        item.name,
+                        style: SeniorTheme.bodyStyle.copyWith(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                       Container(
@@ -906,26 +907,25 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Row(
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
                       _buildNutrientChip(
                         'Carbs',
                         '${item.carbsGrams.toStringAsFixed(1)}g',
                         Colors.orange,
                       ),
-                      const SizedBox(width: 8),
                       _buildNutrientChip(
                         'Cal',
                         item.calories.toStringAsFixed(0),
                         Colors.red.shade400,
                       ),
-                      const SizedBox(width: 8),
                       _buildNutrientChip(
                         'Protein',
                         '${item.proteinGrams.toStringAsFixed(1)}g',
                         Colors.blue.shade400,
                       ),
-                      const SizedBox(width: 8),
                       _buildNutrientChip(
                         'Fat',
                         '${item.fatGrams.toStringAsFixed(1)}g',
