@@ -278,11 +278,14 @@ class FoodAnalyzer {
     final content = candidates[0]['content'] as Map<String, dynamic>;
     final parts = content['parts'] as List<dynamic>;
 
-    // gemini-2.5-flash is a thinking model: parts may contain a 'thought'
-    // entry before the actual 'text' entry. Find the first part with 'text'.
+    // gemini-2.5-flash is a thinking model: parts may contain 'thought'
+    // entries (with thought: true) before the actual response. These thought
+    // parts ALSO have a 'text' key, so we must explicitly skip them.
     String? text;
     for (final part in parts) {
-      if (part is Map<String, dynamic> && part.containsKey('text')) {
+      if (part is Map<String, dynamic> &&
+          part.containsKey('text') &&
+          part['thought'] != true) {
         text = part['text'] as String;
         break;
       }
