@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:ffi';
 import 'dart:io';
 import 'dart:math';
 
@@ -10,7 +9,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sqlite3/open.dart';
 
 import 'database.dart';
 
@@ -41,10 +39,6 @@ Future<void> initDatabase() async {
 
 /// Migrates or generates a secure AES-256 key and returns the encrypted database connection.
 Future<QueryExecutor> openEncryptedDatabase() async {
-  if (Platform.isAndroid) {
-    open.overrideFor(OperatingSystem.android, _openOnAndroid);
-  }
-
   const secureStorage = FlutterSecureStorage();
   String? dbKey = await secureStorage.read(key: 'sqlcipher_db_key');
 
@@ -85,8 +79,4 @@ Future<QueryExecutor> openEncryptedDatabase() async {
       db.execute("PRAGMA key = '$dbKey'");
     },
   );
-}
-
-DynamicLibrary _openOnAndroid() {
-  return DynamicLibrary.open('libsqlcipher.so');
 }
