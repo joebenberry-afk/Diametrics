@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 
+import '../config/app_lock_config.dart';
 import '../screens/dashboard/main_layout.dart';
 import '../theme.dart';
 
@@ -34,17 +35,33 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // If the app is resumed from the background, require re-authentication
-    if (state == AppLifecycleState.resumed) {
-      if (!_isAuthenticated && !_isAuthenticating) {
-        _authenticate();
-      }
-    } else if (state == AppLifecycleState.paused ||
+    if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive) {
-      // Lock the app as soon as it goes to the background
+      // Record when we went to the background instead of immediately locking
+      AppLockConfig.lastBackgroundedTime = DateTime.now();
+    } else if (state == AppLifecycleState.resumed) {
+      // 1. If the image picker (or similar) set the bypass flag, skip auth
+      if (AppLockConfig.ignoreNextResume) {
+        AppLockConfig.ignoreNextResume = false;
+        return;
+      }
+
+      // 2. If we were backgrounded for less than the timeout, skip auth
+      final lastTime = AppLockConfig.lastBackgroundedTime;
+      if (lastTime != null) {
+        final elapsed = DateTime.now().difference(lastTime);
+        if (elapsed < AppLockConfig.lockTimeout) {
+          return;
+        }
+      }
+
+      // 3. App was backgrounded for a significant time, require re-auth
       setState(() {
         _isAuthenticated = false;
       });
+      if (!_isAuthenticating) {
+        _authenticate();
+      }
     }
   }
 

@@ -7,6 +7,7 @@ import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 
 import '../../config/api_config.dart';
+import '../../config/app_lock_config.dart';
 import '../../services/food_analyzer.dart';
 import '../../utils/nutrition_label_parser.dart';
 
@@ -63,6 +64,7 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
 
   // ---- Camera + Gemini Flash AI Food Analysis ----
   Future<void> _captureAndAnalyzePhoto() async {
+    AppLockConfig.ignoreNextResume = true;
     final XFile? photo = await _picker.pickImage(
       source: ImageSource.camera,
       maxWidth: 512,
@@ -82,6 +84,7 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
 
   // ---- Pick from gallery ----
   Future<void> _pickFromGallery() async {
+    AppLockConfig.ignoreNextResume = true;
     final XFile? photo = await _picker.pickImage(
       source: ImageSource.gallery,
       maxWidth: 512,
@@ -199,6 +202,7 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
 
   // ---- Barcode Scanning (Offline) ----
   Future<void> _scanBarcode() async {
+    AppLockConfig.ignoreNextResume = true;
     final XFile? photo = await _picker.pickImage(
       source: ImageSource.camera,
       maxWidth: 1024,
@@ -380,6 +384,7 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
                 // Scan Label Button
                 OutlinedButton.icon(
                   onPressed: () async {
+                    AppLockConfig.ignoreNextResume = true;
                     final photo = await _picker.pickImage(
                       source: ImageSource.camera,
                       maxWidth: 1280,
