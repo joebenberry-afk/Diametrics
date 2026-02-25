@@ -51,6 +51,7 @@ dependencies:
   flutter_secure_storage: ^10.0.0
   local_auth: ^3.0.0
   sqlcipher_flutter_libs: ^0.7.0+eol
+  sqlite3: ^2.9.4
 
 dev_dependencies:
   flutter_test:
@@ -111,7 +112,6 @@ flutter:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/images/robot_mascot.png"
-  min_sdk_android: 21
-  adaptive_icon_background: "#E0F7FA"
-  adaptive_icon_foreground: "assets/images/robot_mascot.png"
+  image_path: "assets/icons/app_icon.png"
+  min_sdk_android: 21 # As per the technical summary
+  remove_alpha_ios: true
