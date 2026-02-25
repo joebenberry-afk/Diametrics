@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../database/db_instance.dart';
 import '../services/sync_manager.dart';
 import '../theme.dart';
-import 'login_screen.dart';
-import 'dashboard/main_layout.dart';
+import '../widgets/auth_wrapper.dart';
 
 /// SplashScreen - Displays the app branding while async initialization runs.
 ///
@@ -19,39 +17,49 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
-  String? _errorMessage;
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  String? _errorMessage; // Keep this for error display
 
   @override
   void initState() {
     super.initState();
-    _initialize();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+
+    _controller.forward();
+    _initializeApp();
   }
 
-  Future<void> _initialize() async {
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _initializeApp() async {
     try {
-      // 1. Initialize the AES-256 encrypted database
+      // 1. Initialize encrypted database with secure key management
       await initDatabase();
 
-      // 2. Populate the offline generic food database if it is empty
+      // 2. Populate offline clinical food database if empty
       await db.populateLocalFoodsIfEmpty();
 
-      // 3. Initialize the SyncManager lifecycle observer
+      // 3. Initialize background sync manager
       SyncManager().initialize();
 
-      // 4. Read onboarding status
-      final prefs = await SharedPreferences.getInstance();
-      final onboardingComplete = prefs.getBool('onboardingComplete') ?? false;
+      // Add a minimum delay to show off the splash screen animations
+      await Future.delayed(const Duration(seconds: 2));
 
-      if (!mounted) return;
-
-      // 5. Navigate to the correct screen
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) =>
-              onboardingComplete ? const MainLayout() : const LoginScreen(),
-        ),
-      );
+      if (mounted) {
+        // Since this is a clinical app, we bypass login directly to the biometric AuthWrapper
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const AuthWrapper()),
+        );
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -116,7 +124,7 @@ class _SplashScreenState extends State<SplashScreen> {
                       setState(() {
                         _errorMessage = null;
                       });
-                      _initialize();
+                      _initializeApp();
                     },
                     child: Text('Retry', style: SeniorTheme.buttonTextStyle),
                   ),

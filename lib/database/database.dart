@@ -1,8 +1,4 @@
-import 'dart:io';
 import 'package:drift/drift.dart';
-import 'package:drift/native.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as p;
 import 'package:flutter/services.dart' show rootBundle;
 
 part 'database.g.dart';
@@ -165,12 +161,4 @@ class AppDatabase extends _$AppDatabase {
           ..limit(1))
         .getSingleOrNull();
   }
-}
-
-/// Opens the application SQLite database.
-Future<NativeDatabase> openEncryptedDatabase() async {
-  final dir = await getApplicationDocumentsDirectory();
-  final file = File(p.join(dir.path, 'app.db'));
-
-  return NativeDatabase(file);
 }
