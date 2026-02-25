@@ -853,6 +853,8 @@ class _AddFoodScreenState extends State<AddFoodScreen> {
                     children: [
                       Text(
                         item.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: SeniorTheme.bodyStyle.copyWith(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
