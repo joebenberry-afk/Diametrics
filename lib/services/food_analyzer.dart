@@ -138,11 +138,19 @@ class FoodAnalyzer {
                   'CRITICAL INSTRUCTION: Analyze the ENTIRE image. '
                   'If there are multiple pieces of the same food, group them into a single item '
                   'and state the TOTAL visible quantity (e.g., "4 chicken breasts").\n\n'
-                  'Return ONLY a JSON object with "items" and "summary". Keep names SHORT (max 3 words).\n\n'
-                  'EXAMPLE:\n'
+                  'EXAMPLE INPUT: A photo showing 6 doubles on a table.\n'
+                  'EXAMPLE OUTPUT:\n'
                   '{\n'
+                  '  "thought_process": "I see 6 flatbreads filled with chickpeas. These are 6 portions of Trinidadian Doubles.",\n'
                   '  "items": [\n'
-                  '    {"name": "Doubles", "portion": "6 doubles", "carbs_g": 210.0, "calories": 1050, "protein_g": 30.0, "fat_g": 42.0}\n'
+                  '    {\n'
+                  '      "name": "Doubles",\n'
+                  '      "portion": "6 doubles",\n'
+                  '      "carbs_g": 210.0,\n'
+                  '      "calories": 1050,\n'
+                  '      "protein_g": 30.0,\n'
+                  '      "fat_g": 42.0\n'
+                  '    }\n'
                   '  ],\n'
                   '  "summary": "6 Trinidadian Doubles"\n'
                   '}\n\n'
@@ -158,17 +166,18 @@ class FoodAnalyzer {
         'parts': [
           {
             'text':
-                'You must only return valid JSON matching the requested schema. No markdown, no explanations. Keep food names under 4 words.',
+                'You must only return valid JSON matching the requested schema. No markdown, no explanations.',
           },
         ],
       },
       'generationConfig': {
         'temperature': 0.1,
-        'maxOutputTokens': 1024,
+        'maxOutputTokens': 2048,
         'responseMimeType': 'application/json',
         'responseSchema': {
           'type': 'OBJECT',
           'properties': {
+            'thought_process': {'type': 'STRING'},
             'items': {
               'type': 'ARRAY',
               'items': {
@@ -193,7 +202,7 @@ class FoodAnalyzer {
             },
             'summary': {'type': 'STRING'},
           },
-          'required': ['items', 'summary'],
+          'required': ['thought_process', 'items', 'summary'],
         },
       },
     });
@@ -268,21 +277,7 @@ class FoodAnalyzer {
 
     final content = candidates[0]['content'] as Map<String, dynamic>;
     final parts = content['parts'] as List<dynamic>;
-
-    // gemini-2.5-flash is a thinking model: the actual JSON response is
-    // always the LAST text part. Thinking parts come first and may also
-    // contain a 'text' key. Iterate in reverse to grab the correct one.
-    String? text;
-    for (int i = parts.length - 1; i >= 0; i--) {
-      final part = parts[i];
-      if (part is Map<String, dynamic> && part.containsKey('text')) {
-        text = part['text'] as String;
-        break;
-      }
-    }
-    if (text == null || text.isEmpty) {
-      throw Exception('No text content in API response');
-    }
+    var text = parts[0]['text'] as String;
 
     // Clean any markdown code fences that Gemini might add
     text = text.trim();
@@ -294,12 +289,7 @@ class FoodAnalyzer {
       text = text.substring(0, text.length - 3).trim();
     }
 
-    Map<String, dynamic> parsed;
-    try {
-      parsed = jsonDecode(text) as Map<String, dynamic>;
-    } catch (e) {
-      throw Exception('Failed to parse AI response: $e\n\nRaw text:\n$text');
-    }
+    final parsed = jsonDecode(text) as Map<String, dynamic>;
 
     final items = (parsed['items'] as List<dynamic>)
         .map((e) => FoodItem.fromJson(e as Map<String, dynamic>))
