@@ -291,9 +291,31 @@ class FoodAnalyzer {
 
     final parsed = jsonDecode(text) as Map<String, dynamic>;
 
-    final items = (parsed['items'] as List<dynamic>)
+    var items = (parsed['items'] as List<dynamic>)
         .map((e) => FoodItem.fromJson(e as Map<String, dynamic>))
         .toList();
+
+    // UI Defense: Cap at 10 items to prevent UI thread lockup on massive hallucinations
+    if (items.length > 10) {
+      items = items.sublist(0, 10);
+    }
+
+    // UI Defense: Truncate absurdly long text fields
+    items = items.map((item) {
+      return FoodItem(
+        name: item.name.length > 100
+            ? '${item.name.substring(0, 97)}...'
+            : item.name,
+        portion: item.portion.length > 100
+            ? '${item.portion.substring(0, 97)}...'
+            : item.portion,
+        carbsGrams: item.carbsGrams,
+        calories: item.calories,
+        proteinGrams: item.proteinGrams,
+        fatGrams: item.fatGrams,
+        source: item.source,
+      );
+    }).toList();
 
     double totalCarbs = 0;
     double totalCalories = 0;
