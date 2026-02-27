@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'package:drift/drift.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
@@ -102,7 +103,7 @@ class AppDatabase extends _$AppDatabase {
         });
       } catch (e) {
         // Safe fail if asset is missing or not reachable
-        print('Error populating local foods: \$e');
+        developer.log('Error populating local foods: $e');
       }
     }
   }

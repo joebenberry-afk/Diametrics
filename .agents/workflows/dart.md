@@ -1,0 +1,5 @@
+---
+description: How to start build a 
+---
+
+You will deploy the application utilizing Flutter and Dart for true cross-platform, near-native performance. You must implement a rigid MVVM architecture, distinctly separating Views and ViewModels from Repositories and Services. Establish an offline-first architecture utilizing SQLite for localized data caching to ensure uninterrupted access in hospital dead zones. For state management, utilize Riverpod or Bloc with strictly immutable data structures. Do not, under any circumstances, mutate state directly. For styling, you will enforce a strict Token-Based Design System, mapping semantic design tokens (e.g., context.tokens.brand.primary) to Flutter's Material 3 ColorScheme and ThemeData. Utilize the 'Inter' font family exclusively for maximum readability and implement the 'Lucide' icon set for all medical iconography. Do not invent custom styling classes or hardcode hex values in UI widgets; rely entirely on the defined token system

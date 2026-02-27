@@ -45,5 +45,8 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- HIPAA: Biometric auth -->
+	<key>NSFaceIDUsageDescription</key>
+	<string>Authenticate to unlock and view sensitive medical health information.</string>
 </dict>
 </plist>

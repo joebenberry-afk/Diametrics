@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'theme.dart';
-import 'screens/splash_screen.dart';
+import 'core/theme/app_theme.dart';
+import 'package:diametrics/src/core/di/injection.dart';
+import 'services/reminder_service.dart';
+import 'views/dashboard/dashboard_view.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const DiametricsApp());
+  configureDependencies();
+  await ReminderService.initialize();
+  runApp(const ProviderScope(child: DiametricsApp()));
 }
 
 class DiametricsApp extends StatelessWidget {
@@ -16,10 +21,11 @@ class DiametricsApp extends StatelessWidget {
     return MaterialApp(
       title: 'DiaMetrics',
       debugShowCheckedModeBanner: false,
-      theme: SeniorTheme.lightTheme,
-      darkTheme: SeniorTheme.darkTheme,
-      themeMode: ThemeMode.light,
-      home: const SplashScreen(),
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode:
+          ThemeMode.system, // Prefer system for dark/light mode switching
+      home: const DashboardView(),
     );
   }
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../database/db_instance.dart';
-import 'food_analyzer.dart';
+import '../src/domain/entities/food_item.dart';
 
 /// Augments the AI food analysis results with verified local database data.
 /// This acts as a post-retrieval RAG (Retrieval-Augmented Generation) layer
