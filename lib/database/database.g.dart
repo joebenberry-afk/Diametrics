@@ -1672,6 +1672,409 @@ class MealLogsCompanion extends UpdateCompanion<MealLog> {
   }
 }
 
+class $N5kIngredientsTable extends N5kIngredients
+    with TableInfo<$N5kIngredientsTable, N5kIngredient> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $N5kIngredientsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _calPerGMeta = const VerificationMeta(
+    'calPerG',
+  );
+  @override
+  late final GeneratedColumn<double> calPerG = GeneratedColumn<double>(
+    'cal_per_g',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _fatPerGMeta = const VerificationMeta(
+    'fatPerG',
+  );
+  @override
+  late final GeneratedColumn<double> fatPerG = GeneratedColumn<double>(
+    'fat_per_g',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _carbPerGMeta = const VerificationMeta(
+    'carbPerG',
+  );
+  @override
+  late final GeneratedColumn<double> carbPerG = GeneratedColumn<double>(
+    'carb_per_g',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _proteinPerGMeta = const VerificationMeta(
+    'proteinPerG',
+  );
+  @override
+  late final GeneratedColumn<double> proteinPerG = GeneratedColumn<double>(
+    'protein_per_g',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    calPerG,
+    fatPerG,
+    carbPerG,
+    proteinPerG,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'n5k_ingredients';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<N5kIngredient> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('cal_per_g')) {
+      context.handle(
+        _calPerGMeta,
+        calPerG.isAcceptableOrUnknown(data['cal_per_g']!, _calPerGMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_calPerGMeta);
+    }
+    if (data.containsKey('fat_per_g')) {
+      context.handle(
+        _fatPerGMeta,
+        fatPerG.isAcceptableOrUnknown(data['fat_per_g']!, _fatPerGMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_fatPerGMeta);
+    }
+    if (data.containsKey('carb_per_g')) {
+      context.handle(
+        _carbPerGMeta,
+        carbPerG.isAcceptableOrUnknown(data['carb_per_g']!, _carbPerGMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_carbPerGMeta);
+    }
+    if (data.containsKey('protein_per_g')) {
+      context.handle(
+        _proteinPerGMeta,
+        proteinPerG.isAcceptableOrUnknown(
+          data['protein_per_g']!,
+          _proteinPerGMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_proteinPerGMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  N5kIngredient map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return N5kIngredient(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      calPerG: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}cal_per_g'],
+      )!,
+      fatPerG: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}fat_per_g'],
+      )!,
+      carbPerG: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}carb_per_g'],
+      )!,
+      proteinPerG: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}protein_per_g'],
+      )!,
+    );
+  }
+
+  @override
+  $N5kIngredientsTable createAlias(String alias) {
+    return $N5kIngredientsTable(attachedDatabase, alias);
+  }
+}
+
+class N5kIngredient extends DataClass implements Insertable<N5kIngredient> {
+  final int id;
+  final String name;
+  final double calPerG;
+  final double fatPerG;
+  final double carbPerG;
+  final double proteinPerG;
+  const N5kIngredient({
+    required this.id,
+    required this.name,
+    required this.calPerG,
+    required this.fatPerG,
+    required this.carbPerG,
+    required this.proteinPerG,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['name'] = Variable<String>(name);
+    map['cal_per_g'] = Variable<double>(calPerG);
+    map['fat_per_g'] = Variable<double>(fatPerG);
+    map['carb_per_g'] = Variable<double>(carbPerG);
+    map['protein_per_g'] = Variable<double>(proteinPerG);
+    return map;
+  }
+
+  N5kIngredientsCompanion toCompanion(bool nullToAbsent) {
+    return N5kIngredientsCompanion(
+      id: Value(id),
+      name: Value(name),
+      calPerG: Value(calPerG),
+      fatPerG: Value(fatPerG),
+      carbPerG: Value(carbPerG),
+      proteinPerG: Value(proteinPerG),
+    );
+  }
+
+  factory N5kIngredient.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return N5kIngredient(
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      calPerG: serializer.fromJson<double>(json['calPerG']),
+      fatPerG: serializer.fromJson<double>(json['fatPerG']),
+      carbPerG: serializer.fromJson<double>(json['carbPerG']),
+      proteinPerG: serializer.fromJson<double>(json['proteinPerG']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String>(name),
+      'calPerG': serializer.toJson<double>(calPerG),
+      'fatPerG': serializer.toJson<double>(fatPerG),
+      'carbPerG': serializer.toJson<double>(carbPerG),
+      'proteinPerG': serializer.toJson<double>(proteinPerG),
+    };
+  }
+
+  N5kIngredient copyWith({
+    int? id,
+    String? name,
+    double? calPerG,
+    double? fatPerG,
+    double? carbPerG,
+    double? proteinPerG,
+  }) => N5kIngredient(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    calPerG: calPerG ?? this.calPerG,
+    fatPerG: fatPerG ?? this.fatPerG,
+    carbPerG: carbPerG ?? this.carbPerG,
+    proteinPerG: proteinPerG ?? this.proteinPerG,
+  );
+  N5kIngredient copyWithCompanion(N5kIngredientsCompanion data) {
+    return N5kIngredient(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      calPerG: data.calPerG.present ? data.calPerG.value : this.calPerG,
+      fatPerG: data.fatPerG.present ? data.fatPerG.value : this.fatPerG,
+      carbPerG: data.carbPerG.present ? data.carbPerG.value : this.carbPerG,
+      proteinPerG: data.proteinPerG.present
+          ? data.proteinPerG.value
+          : this.proteinPerG,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('N5kIngredient(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('calPerG: $calPerG, ')
+          ..write('fatPerG: $fatPerG, ')
+          ..write('carbPerG: $carbPerG, ')
+          ..write('proteinPerG: $proteinPerG')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, name, calPerG, fatPerG, carbPerG, proteinPerG);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is N5kIngredient &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.calPerG == this.calPerG &&
+          other.fatPerG == this.fatPerG &&
+          other.carbPerG == this.carbPerG &&
+          other.proteinPerG == this.proteinPerG);
+}
+
+class N5kIngredientsCompanion extends UpdateCompanion<N5kIngredient> {
+  final Value<int> id;
+  final Value<String> name;
+  final Value<double> calPerG;
+  final Value<double> fatPerG;
+  final Value<double> carbPerG;
+  final Value<double> proteinPerG;
+  const N5kIngredientsCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.calPerG = const Value.absent(),
+    this.fatPerG = const Value.absent(),
+    this.carbPerG = const Value.absent(),
+    this.proteinPerG = const Value.absent(),
+  });
+  N5kIngredientsCompanion.insert({
+    this.id = const Value.absent(),
+    required String name,
+    required double calPerG,
+    required double fatPerG,
+    required double carbPerG,
+    required double proteinPerG,
+  }) : name = Value(name),
+       calPerG = Value(calPerG),
+       fatPerG = Value(fatPerG),
+       carbPerG = Value(carbPerG),
+       proteinPerG = Value(proteinPerG);
+  static Insertable<N5kIngredient> custom({
+    Expression<int>? id,
+    Expression<String>? name,
+    Expression<double>? calPerG,
+    Expression<double>? fatPerG,
+    Expression<double>? carbPerG,
+    Expression<double>? proteinPerG,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (calPerG != null) 'cal_per_g': calPerG,
+      if (fatPerG != null) 'fat_per_g': fatPerG,
+      if (carbPerG != null) 'carb_per_g': carbPerG,
+      if (proteinPerG != null) 'protein_per_g': proteinPerG,
+    });
+  }
+
+  N5kIngredientsCompanion copyWith({
+    Value<int>? id,
+    Value<String>? name,
+    Value<double>? calPerG,
+    Value<double>? fatPerG,
+    Value<double>? carbPerG,
+    Value<double>? proteinPerG,
+  }) {
+    return N5kIngredientsCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      calPerG: calPerG ?? this.calPerG,
+      fatPerG: fatPerG ?? this.fatPerG,
+      carbPerG: carbPerG ?? this.carbPerG,
+      proteinPerG: proteinPerG ?? this.proteinPerG,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (calPerG.present) {
+      map['cal_per_g'] = Variable<double>(calPerG.value);
+    }
+    if (fatPerG.present) {
+      map['fat_per_g'] = Variable<double>(fatPerG.value);
+    }
+    if (carbPerG.present) {
+      map['carb_per_g'] = Variable<double>(carbPerG.value);
+    }
+    if (proteinPerG.present) {
+      map['protein_per_g'] = Variable<double>(proteinPerG.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('N5kIngredientsCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('calPerG: $calPerG, ')
+          ..write('fatPerG: $fatPerG, ')
+          ..write('carbPerG: $carbPerG, ')
+          ..write('proteinPerG: $proteinPerG')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -1679,6 +2082,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $LocalFoodsTable localFoods = $LocalFoodsTable(this);
   late final $CustomFoodsTable customFoods = $CustomFoodsTable(this);
   late final $MealLogsTable mealLogs = $MealLogsTable(this);
+  late final $N5kIngredientsTable n5kIngredients = $N5kIngredientsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1688,6 +2092,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     localFoods,
     customFoods,
     mealLogs,
+    n5kIngredients,
   ];
 }
 
@@ -2552,6 +2957,223 @@ typedef $$MealLogsTableProcessedTableManager =
       MealLog,
       PrefetchHooks Function()
     >;
+typedef $$N5kIngredientsTableCreateCompanionBuilder =
+    N5kIngredientsCompanion Function({
+      Value<int> id,
+      required String name,
+      required double calPerG,
+      required double fatPerG,
+      required double carbPerG,
+      required double proteinPerG,
+    });
+typedef $$N5kIngredientsTableUpdateCompanionBuilder =
+    N5kIngredientsCompanion Function({
+      Value<int> id,
+      Value<String> name,
+      Value<double> calPerG,
+      Value<double> fatPerG,
+      Value<double> carbPerG,
+      Value<double> proteinPerG,
+    });
+
+class $$N5kIngredientsTableFilterComposer
+    extends Composer<_$AppDatabase, $N5kIngredientsTable> {
+  $$N5kIngredientsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get calPerG => $composableBuilder(
+    column: $table.calPerG,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get fatPerG => $composableBuilder(
+    column: $table.fatPerG,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get carbPerG => $composableBuilder(
+    column: $table.carbPerG,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get proteinPerG => $composableBuilder(
+    column: $table.proteinPerG,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$N5kIngredientsTableOrderingComposer
+    extends Composer<_$AppDatabase, $N5kIngredientsTable> {
+  $$N5kIngredientsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get calPerG => $composableBuilder(
+    column: $table.calPerG,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get fatPerG => $composableBuilder(
+    column: $table.fatPerG,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get carbPerG => $composableBuilder(
+    column: $table.carbPerG,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get proteinPerG => $composableBuilder(
+    column: $table.proteinPerG,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$N5kIngredientsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $N5kIngredientsTable> {
+  $$N5kIngredientsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<double> get calPerG =>
+      $composableBuilder(column: $table.calPerG, builder: (column) => column);
+
+  GeneratedColumn<double> get fatPerG =>
+      $composableBuilder(column: $table.fatPerG, builder: (column) => column);
+
+  GeneratedColumn<double> get carbPerG =>
+      $composableBuilder(column: $table.carbPerG, builder: (column) => column);
+
+  GeneratedColumn<double> get proteinPerG => $composableBuilder(
+    column: $table.proteinPerG,
+    builder: (column) => column,
+  );
+}
+
+class $$N5kIngredientsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $N5kIngredientsTable,
+          N5kIngredient,
+          $$N5kIngredientsTableFilterComposer,
+          $$N5kIngredientsTableOrderingComposer,
+          $$N5kIngredientsTableAnnotationComposer,
+          $$N5kIngredientsTableCreateCompanionBuilder,
+          $$N5kIngredientsTableUpdateCompanionBuilder,
+          (
+            N5kIngredient,
+            BaseReferences<_$AppDatabase, $N5kIngredientsTable, N5kIngredient>,
+          ),
+          N5kIngredient,
+          PrefetchHooks Function()
+        > {
+  $$N5kIngredientsTableTableManager(
+    _$AppDatabase db,
+    $N5kIngredientsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$N5kIngredientsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$N5kIngredientsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$N5kIngredientsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<double> calPerG = const Value.absent(),
+                Value<double> fatPerG = const Value.absent(),
+                Value<double> carbPerG = const Value.absent(),
+                Value<double> proteinPerG = const Value.absent(),
+              }) => N5kIngredientsCompanion(
+                id: id,
+                name: name,
+                calPerG: calPerG,
+                fatPerG: fatPerG,
+                carbPerG: carbPerG,
+                proteinPerG: proteinPerG,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String name,
+                required double calPerG,
+                required double fatPerG,
+                required double carbPerG,
+                required double proteinPerG,
+              }) => N5kIngredientsCompanion.insert(
+                id: id,
+                name: name,
+                calPerG: calPerG,
+                fatPerG: fatPerG,
+                carbPerG: carbPerG,
+                proteinPerG: proteinPerG,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$N5kIngredientsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $N5kIngredientsTable,
+      N5kIngredient,
+      $$N5kIngredientsTableFilterComposer,
+      $$N5kIngredientsTableOrderingComposer,
+      $$N5kIngredientsTableAnnotationComposer,
+      $$N5kIngredientsTableCreateCompanionBuilder,
+      $$N5kIngredientsTableUpdateCompanionBuilder,
+      (
+        N5kIngredient,
+        BaseReferences<_$AppDatabase, $N5kIngredientsTable, N5kIngredient>,
+      ),
+      N5kIngredient,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -2563,4 +3185,6 @@ class $AppDatabaseManager {
       $$CustomFoodsTableTableManager(_db, _db.customFoods);
   $$MealLogsTableTableManager get mealLogs =>
       $$MealLogsTableTableManager(_db, _db.mealLogs);
+  $$N5kIngredientsTableTableManager get n5kIngredients =>
+      $$N5kIngredientsTableTableManager(_db, _db.n5kIngredients);
 }

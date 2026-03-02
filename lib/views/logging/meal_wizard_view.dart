@@ -9,9 +9,11 @@ import '../../core/theme/app_tokens.dart';
 import '../../repositories/user_repository.dart';
 import '../../src/core/di/injection.dart';
 import '../../src/domain/entities/food_analysis_result.dart';
+import '../../src/domain/entities/food_item.dart';
 import '../../src/domain/repositories/food_analyzer_repository.dart';
 import '../../viewmodels/logging_wizard_viewmodel.dart';
 import '../projection/projection_result_view.dart';
+import 'barcode_scanner_view.dart';
 
 class MealWizardView extends ConsumerStatefulWidget {
   const MealWizardView({super.key});
@@ -118,6 +120,43 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
     }
   }
 
+  // ── Barcode Scanner ──────────────────────────────────────────────────
+
+  Future<void> _openBarcodeScanner() async {
+    AppLockConfig.ignoreNextResume = true;
+    final FoodItem? result = await Navigator.push<FoodItem>(
+      context,
+      MaterialPageRoute(builder: (_) => const BarcodeScannerView()),
+    );
+    if (result != null && mounted) {
+      // Populate viewmodel state
+      ref.read(loggingWizardProvider.notifier).setFromBarcodeResult(
+        carbs: result.carbsGrams,
+        proteins: result.proteinGrams,
+        fats: result.fatGrams,
+      );
+      // Populate text controllers so the UI fields update visually
+      _carbsCtrl.text = result.carbsGrams.toStringAsFixed(1);
+      _proteinCtrl.text = result.proteinGrams.toStringAsFixed(1);
+      _fatsCtrl.text = result.fatGrams.toStringAsFixed(1);
+      _fiberCtrl.clear();
+
+      // Show a confirmation snackbar with the source badge
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${result.name} added (${result.source})',
+              overflow: TextOverflow.ellipsis,
+            ),
+            backgroundColor: AppThemeTokens.brandSuccess,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
   void _showSourceSheet() {
     showModalBottomSheet<void>(
       context: context,
@@ -201,6 +240,34 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                   onTap: () {
                     Navigator.pop(ctx);
                     _pickImage(ImageSource.gallery);
+                  },
+                ),
+                ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: AppThemeTokens.brandPrimary.withValues(alpha: 0.12),
+                    child: Icon(
+                      Icons.qr_code_scanner,
+                      color: AppThemeTokens.brandPrimary,
+                      size: 20,
+                    ),
+                  ),
+                  title: Text(
+                    'Scan Barcode',
+                    style: TextStyle(
+                      color: isDark ? Colors.white : AppThemeTokens.textPrimary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Scan a packaged food label for exact nutrition',
+                    style: TextStyle(
+                      color: isDark ? Colors.white54 : AppThemeTokens.textSecondary,
+                      fontSize: 13,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _openBarcodeScanner();
                   },
                 ),
                 const SizedBox(height: AppThemeTokens.spaceMd),

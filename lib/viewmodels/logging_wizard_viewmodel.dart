@@ -152,6 +152,21 @@ class LoggingWizardViewModel extends StateNotifier<LoggingWizardState> {
       state = state.copyWith(containsCaffeine: val);
   void updateMealType(String type) => state = state.copyWith(mealType: type);
 
+  /// Populates meal macro fields from a barcode scan result (FoodItem).
+  /// Called after the user successfully scans a packaged food barcode.
+  void setFromBarcodeResult({
+    required double carbs,
+    required double proteins,
+    required double fats,
+  }) {
+    state = state.copyWith(
+      pendingCarbs: carbs,
+      pendingProteins: proteins,
+      pendingFats: fats,
+      pendingFiber: 0.0,
+    );
+  }
+
   // --- Medication Adjustments ---
   void updateMedicationUnits(double units) =>
       state = state.copyWith(pendingMedicationUnits: units);

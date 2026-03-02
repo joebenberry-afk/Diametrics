@@ -24,4 +24,22 @@ abstract class FoodItem with _$FoodItem {
   FoodItem withUsdaData({required double carbsPer100g}) {
     return copyWith(carbsGrams: carbsPer100g, source: 'USDA');
   }
+
+  /// Returns a copy with full macro data from any verified source
+  /// (USDA API, N5K, Open Food Facts, etc.).
+  FoodItem withFullNutrition({
+    required double carbsGrams,
+    required double proteinGrams,
+    required double fatGrams,
+    required double calories,
+    required String sourceName,
+  }) {
+    return copyWith(
+      carbsGrams: carbsGrams,
+      proteinGrams: proteinGrams,
+      fatGrams: fatGrams,
+      calories: calories,
+      source: sourceName,
+    );
+  }
 }
