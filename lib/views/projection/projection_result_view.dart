@@ -38,10 +38,20 @@ class ProjectionResultView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Glucose Projection'),
+        title: Text(
+          'Glucose Projection',
+          style: TextStyle(
+            color: isDark ? Colors.white : AppThemeTokens.textPrimary,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        iconTheme: IconThemeData(
+          color: isDark ? Colors.white : AppThemeTokens.textPrimary,
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         automaticallyImplyLeading: false,
@@ -57,7 +67,7 @@ class ProjectionResultView extends StatelessWidget {
                 height: 260,
                 padding: const EdgeInsets.fromLTRB(8, 16, 16, 8),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: isDark ? AppThemeTokens.bgSurfaceDark : Colors.white,
                   borderRadius:
                       BorderRadius.circular(AppThemeTokens.radiusLg),
                   border: Border.all(
@@ -113,7 +123,7 @@ class ProjectionResultView extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(AppThemeTokens.spaceMd),
                 decoration: BoxDecoration(
-                  color: AppThemeTokens.bgSurface,
+                  color: isDark ? AppThemeTokens.bgSurfaceDark : AppThemeTokens.bgSurface,
                   borderRadius:
                       BorderRadius.circular(AppThemeTokens.radiusMd),
                 ),
@@ -167,7 +177,7 @@ class ProjectionResultView extends StatelessWidget {
                     Text(
                       result.summary,
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: AppThemeTokens.textPrimary,
+                        color: isDark ? Colors.white.withValues(alpha: 0.85) : AppThemeTokens.textPrimary,
                       ),
                     ),
                   ],

@@ -54,7 +54,14 @@ class MetricCard extends StatelessWidget {
                       child: Icon(icon, color: accentColor, size: 24),
                     ),
                     if (trendData.isNotEmpty)
-                      MicroChart(dataPoints: trendData, color: accentColor),
+                      Flexible(
+                        child: ClipRect(
+                          child: MicroChart(
+                            dataPoints: trendData,
+                            color: accentColor,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
                 const Spacer(),
@@ -83,7 +90,7 @@ class MetricCard extends StatelessWidget {
                       unit,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontSize: 14,
-                        color: AppThemeTokens.textSecondary,
+                        color: isDark ? Colors.white60 : AppThemeTokens.textSecondary,
                       ),
                     ),
                   ],

@@ -30,6 +30,10 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
   final _glucoseMinCtrl = TextEditingController();
   final _glucoseMaxCtrl = TextEditingController();
 
+  // "Other" free-text controllers for gender and diabetes type
+  final _otherGenderCtrl = TextEditingController();
+  final _otherDiabetesTypeCtrl = TextEditingController();
+
   // State fields mirrored from profile
   String _gender = '';
   String _diabetesType = '';
@@ -40,6 +44,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
 
   bool _isDirty = false;
   bool _isSaving = false;
+  bool _hasPopulated = false;
 
   bool _reminderEnabled = false;
   TimeOfDay? _reminderTime;
@@ -47,23 +52,38 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
   @override
   void initState() {
     super.initState();
-    // Populate once the async profile is available
-    WidgetsBinding.instance.addPostFrameCallback((_) => _populateFromProfile());
   }
 
-  void _populateFromProfile() {
-    final profile = ref.read(userProfileProvider).valueOrNull;
-    if (profile == null) return;
+  static const _genderPresets = ['Male', 'Female', 'Other'];
+  static const _diabetesPresets = [
+    'Type 1', 'Type 2', 'Gestational', 'LADA', 'Pre-diabetes', 'Other'
+  ];
+
+  void _populateFromProfile(dynamic profile) {
     _nameCtrl.text = profile.name;
     _ageCtrl.text = profile.age.toString();
     _heightCtrl.text = profile.heightCm.toStringAsFixed(1);
     _weightCtrl.text = profile.weightKg.toStringAsFixed(1);
-    _diagnosisYearCtrl.text = profile.diagnosisYear.toString();
+    // Only populate year if it's a plausible value
+    if (profile.diagnosisYear > 1900) {
+      _diagnosisYearCtrl.text = profile.diagnosisYear.toString();
+    }
     _glucoseMinCtrl.text = profile.targetGlucoseMin.toStringAsFixed(0);
     _glucoseMaxCtrl.text = profile.targetGlucoseMax.toStringAsFixed(0);
+
+    // Detect "custom Other" values saved from a previous session
+    final storedGender = profile.gender as String;
+    final storedDiabetes = profile.diabetesType as String;
+    final genderIsPreset = _genderPresets.contains(storedGender);
+    final diabetesIsPreset = _diabetesPresets.contains(storedDiabetes);
+
     setState(() {
-      _gender = profile.gender;
-      _diabetesType = profile.diabetesType;
+      _gender = genderIsPreset ? storedGender : 'Other';
+      if (!genderIsPreset) _otherGenderCtrl.text = storedGender;
+
+      _diabetesType = diabetesIsPreset ? storedDiabetes : 'Other';
+      if (!diabetesIsPreset) _otherDiabetesTypeCtrl.text = storedDiabetes;
+
       _glucoseUnit = profile.preferredGlucoseUnit;
       _usesInsulin = profile.usesInsulin;
       _usesPills = profile.usesPills;
@@ -95,6 +115,8 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
     _diagnosisYearCtrl.dispose();
     _glucoseMinCtrl.dispose();
     _glucoseMaxCtrl.dispose();
+    _otherGenderCtrl.dispose();
+    _otherDiabetesTypeCtrl.dispose();
     super.dispose();
   }
 
@@ -117,11 +139,27 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
       _showError('Please select a gender identity.');
       return;
     }
+    if (_gender == 'Other' && _otherGenderCtrl.text.trim().isEmpty) {
+      _showError('Please describe your gender identity.');
+      return;
+    }
 
     if (_diabetesType.isEmpty) {
       _showError('Please select a diabetes type.');
       return;
     }
+    if (_diabetesType == 'Other' && _otherDiabetesTypeCtrl.text.trim().isEmpty) {
+      _showError('Please describe your diabetes type.');
+      return;
+    }
+
+    // Resolve final values — use custom text when "Other" was chosen
+    final finalGender = _gender == 'Other'
+        ? _otherGenderCtrl.text.trim()
+        : _gender;
+    final finalDiabetesType = _diabetesType == 'Other'
+        ? _otherDiabetesTypeCtrl.text.trim()
+        : _diabetesType;
 
     final current = ref.read(userProfileProvider).valueOrNull;
     if (current == null) return;
@@ -131,10 +169,10 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
       final updated = current.copyWith(
         name: _nameCtrl.text.trim(),
         age: int.parse(_ageCtrl.text),
-        gender: _gender,
+        gender: finalGender,
         heightCm: double.parse(_heightCtrl.text),
         weightKg: double.parse(_weightCtrl.text),
-        diabetesType: _diabetesType,
+        diabetesType: finalDiabetesType,
         diagnosisYear: int.parse(_diagnosisYearCtrl.text),
         preferredGlucoseUnit: _glucoseUnit,
         usesInsulin: _usesInsulin,
@@ -215,14 +253,14 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
         title: Text(
           'Settings',
           style: theme.textTheme.headlineSmall?.copyWith(
-            color: AppThemeTokens.textPrimary,
+            color: isDark ? Colors.white : AppThemeTokens.textPrimary,
             fontWeight: FontWeight.w700,
           ),
         ),
         leading: IconButton(
-          icon: const Icon(
+          icon: Icon(
             Icons.arrow_back_ios_new_rounded,
-            color: AppThemeTokens.textPrimary,
+            color: isDark ? Colors.white : AppThemeTokens.textPrimary,
           ),
           onPressed: () => Navigator.pop(context),
         ),
@@ -233,7 +271,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
               child: Text(
                 'Save',
                 style: TextStyle(
-                  color: AppThemeTokens.brandPrimary,
+                  color: isDark ? AppThemeTokens.brandAccent : AppThemeTokens.brandSecondary,
                   fontWeight: FontWeight.w700,
                   fontSize: 16,
                 ),
@@ -249,7 +287,15 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
             style: const TextStyle(color: AppThemeTokens.error),
           ),
         ),
-        data: (_) => _buildForm(isDark, theme),
+        data: (profile) {
+          if (profile != null && !_hasPopulated) {
+            _hasPopulated = true;
+            WidgetsBinding.instance.addPostFrameCallback(
+              (_) { if (mounted) _populateFromProfile(profile); },
+            );
+          }
+          return _buildForm(isDark, theme);
+        },
       ),
       bottomNavigationBar: _isDirty
           ? _SaveBar(isSaving: _isSaving, onSave: _save)
@@ -301,10 +347,12 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
               const SizedBox(height: AppThemeTokens.spaceMd),
               _GenderSelector(
                 selected: _gender,
+                otherCtrl: _otherGenderCtrl,
                 onChanged: (g) {
                   setState(() => _gender = g);
                   _markDirty();
                 },
+                onOtherChanged: (_) => _markDirty(),
               ),
               const SizedBox(height: AppThemeTokens.spaceMd),
               _SettingsTextField(
@@ -355,10 +403,12 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
             children: [
               _DiabetesTypeSelector(
                 selected: _diabetesType,
+                otherCtrl: _otherDiabetesTypeCtrl,
                 onChanged: (t) {
                   setState(() => _diabetesType = t);
                   _markDirty();
                 },
+                onOtherChanged: (_) => _markDirty(),
               ),
               const SizedBox(height: AppThemeTokens.spaceMd),
               _SettingsTextField(
@@ -366,7 +416,10 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                 label: 'Year of Diagnosis',
                 hint: 'e.g., 2010',
                 inputType: TextInputType.number,
-                formatters: [FilteringTextInputFormatter.digitsOnly],
+                formatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(4),
+                ],
                 validator: (v) {
                   final n = int.tryParse(v ?? '');
                   final now = DateTime.now().year;
@@ -545,18 +598,20 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                 const Divider(height: 1),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text(
+                  title: Text(
                     'Reminder Time',
                     style: TextStyle(
-                      color: AppThemeTokens.textPrimary,
+                      color: isDark ? Colors.white : AppThemeTokens.textPrimary,
                       fontWeight: FontWeight.w600,
                       fontSize: 15,
                     ),
                   ),
                   subtitle: Text(
                     _reminderTime!.format(context),
-                    style: const TextStyle(
-                      color: AppThemeTokens.textSecondary,
+                    style: TextStyle(
+                      color: isDark
+                          ? Colors.white60
+                          : AppThemeTokens.textSecondary,
                       fontSize: 13,
                     ),
                   ),
@@ -695,10 +750,10 @@ class _SectionCard extends StatelessWidget {
                 const SizedBox(width: AppThemeTokens.spaceSm),
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
-                    color: AppThemeTokens.textPrimary,
+                    color: isDark ? Colors.white : AppThemeTokens.textPrimary,
                     letterSpacing: 0.2,
                   ),
                 ),
@@ -737,25 +792,36 @@ class _SettingsTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : AppThemeTokens.textPrimary;
+    final hintColor = isDark ? Colors.white54 : AppThemeTokens.textSecondary;
     return TextFormField(
       controller: controller,
       keyboardType: inputType,
       inputFormatters: formatters,
       validator: validator,
       onChanged: onChanged,
-      style: const TextStyle(color: AppThemeTokens.textPrimary, fontSize: 16),
+      style: TextStyle(color: textColor, fontSize: 16),
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
-        hintStyle: const TextStyle(color: AppThemeTokens.textSecondary),
-        labelStyle: const TextStyle(color: AppThemeTokens.textSecondary),
+        hintStyle: TextStyle(color: hintColor),
+        labelStyle: TextStyle(color: hintColor),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
+          borderSide: BorderSide(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.3)
+                : const Color(0xFFD1D5DB),
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
           borderSide: const BorderSide(
-            color: AppThemeTokens.brandPrimary,
+            color: AppThemeTokens.brandAccent,
             width: 2,
           ),
         ),
@@ -770,21 +836,30 @@ class _SettingsTextField extends StatelessWidget {
 
 class _GenderSelector extends StatelessWidget {
   final String selected;
+  final TextEditingController otherCtrl;
   final ValueChanged<String> onChanged;
+  final ValueChanged<String>? onOtherChanged;
 
-  const _GenderSelector({required this.selected, required this.onChanged});
+  const _GenderSelector({
+    required this.selected,
+    required this.otherCtrl,
+    required this.onChanged,
+    this.onOtherChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final inactiveText = isDark ? Colors.white : AppThemeTokens.textPrimary;
     const options = ['Male', 'Female', 'Other'];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Gender Identity',
           style: TextStyle(
             fontSize: 13,
-            color: AppThemeTokens.textSecondary,
+            color: isDark ? Colors.white60 : AppThemeTokens.textSecondary,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -802,15 +877,15 @@ class _GenderSelector extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? AppThemeTokens.brandPrimary
-                          : AppThemeTokens.brandPrimary.withValues(alpha: 0.06),
-                      borderRadius: BorderRadius.circular(
-                        AppThemeTokens.radiusMd,
-                      ),
+                          ? AppThemeTokens.brandSecondary
+                          : (isDark
+                              ? Colors.white.withValues(alpha: 0.10)
+                              : AppThemeTokens.brandPrimary.withValues(alpha: 0.06)),
+                      borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
                       border: Border.all(
                         color: isSelected
-                            ? AppThemeTokens.brandPrimary
-                            : AppThemeTokens.brandAccent.withValues(alpha: 0.4),
+                            ? AppThemeTokens.brandSecondary
+                            : AppThemeTokens.brandAccent.withValues(alpha: 0.5),
                         width: isSelected ? 2 : 1,
                       ),
                     ),
@@ -818,9 +893,7 @@ class _GenderSelector extends StatelessWidget {
                       child: Text(
                         g,
                         style: TextStyle(
-                          color: isSelected
-                              ? Colors.white
-                              : AppThemeTokens.textPrimary,
+                          color: isSelected ? Colors.white : inactiveText,
                           fontWeight: FontWeight.w600,
                           fontSize: 14,
                         ),
@@ -832,6 +905,52 @@ class _GenderSelector extends StatelessWidget {
             );
           }).toList(),
         ),
+        // ── "Other" free-text field ───────────────────────────────────
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          child: selected == 'Other'
+              ? Padding(
+                  key: const ValueKey('gender_other_field'),
+                  padding: const EdgeInsets.only(top: AppThemeTokens.spaceSm),
+                  child: TextFormField(
+                    controller: otherCtrl,
+                    onChanged: onOtherChanged,
+                    style: TextStyle(
+                      color: isDark ? Colors.white : AppThemeTokens.textPrimary,
+                      fontSize: 15,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Describe your gender identity…',
+                      hintStyle: TextStyle(
+                        color: isDark ? Colors.white38 : AppThemeTokens.textSecondary,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
+                        borderSide: BorderSide(
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.3)
+                              : const Color(0xFFD1D5DB),
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
+                        borderSide: const BorderSide(
+                          color: AppThemeTokens.brandAccent,
+                          width: 2,
+                        ),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
+                    ),
+                    validator: (v) => selected == 'Other' && (v == null || v.trim().isEmpty)
+                        ? 'Please describe your gender identity'
+                        : null,
+                  ),
+                )
+              : const SizedBox.shrink(key: ValueKey('gender_other_hidden')),
+        ),
       ],
     );
   }
@@ -839,11 +958,15 @@ class _GenderSelector extends StatelessWidget {
 
 class _DiabetesTypeSelector extends StatelessWidget {
   final String selected;
+  final TextEditingController otherCtrl;
   final ValueChanged<String> onChanged;
+  final ValueChanged<String>? onOtherChanged;
 
   const _DiabetesTypeSelector({
     required this.selected,
+    required this.otherCtrl,
     required this.onChanged,
+    this.onOtherChanged,
   });
 
   static const _types = [
@@ -857,58 +980,109 @@ class _DiabetesTypeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final inactiveText = isDark ? Colors.white : AppThemeTokens.textPrimary;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Diabetes Type',
           style: TextStyle(
             fontSize: 13,
-            color: AppThemeTokens.textSecondary,
+            color: isDark ? Colors.white60 : AppThemeTokens.textSecondary,
             fontWeight: FontWeight.w500,
           ),
         ),
         const SizedBox(height: AppThemeTokens.spaceSm),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
+        // ── Fixed 3-column grid — no layout shifts when selection changes ──
+        GridView.count(
+          crossAxisCount: 3,
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 8,
+          childAspectRatio: 2.6,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
           children: _types.map((t) {
             final isSelected = selected == t;
             return GestureDetector(
               onTap: () => onChanged(t),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 150),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 10,
-                ),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? AppThemeTokens.brandPrimary
-                      : AppThemeTokens.brandPrimary.withValues(alpha: 0.06),
-                  borderRadius: BorderRadius.circular(
-                    AppThemeTokens.radiusFull,
-                  ),
+                      ? AppThemeTokens.brandSecondary
+                      : (isDark
+                          ? Colors.white.withValues(alpha: 0.10)
+                          : AppThemeTokens.brandPrimary.withValues(alpha: 0.06)),
+                  borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
                   border: Border.all(
                     color: isSelected
-                        ? AppThemeTokens.brandPrimary
-                        : AppThemeTokens.brandAccent.withValues(alpha: 0.4),
+                        ? AppThemeTokens.brandSecondary
+                        : AppThemeTokens.brandAccent.withValues(alpha: 0.5),
                     width: isSelected ? 2 : 1,
                   ),
                 ),
-                child: Text(
-                  t,
-                  style: TextStyle(
-                    color: isSelected
-                        ? Colors.white
-                        : AppThemeTokens.textPrimary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
+                child: Center(
+                  child: Text(
+                    t,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: isSelected ? Colors.white : inactiveText,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
                   ),
                 ),
               ),
             );
           }).toList(),
+        ),
+        // ── "Other" free-text field ───────────────────────────────────────
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          child: selected == 'Other'
+              ? Padding(
+                  key: const ValueKey('diabetes_other_field'),
+                  padding: const EdgeInsets.only(top: AppThemeTokens.spaceSm),
+                  child: TextFormField(
+                    controller: otherCtrl,
+                    onChanged: onOtherChanged,
+                    style: TextStyle(
+                      color: isDark ? Colors.white : AppThemeTokens.textPrimary,
+                      fontSize: 15,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Specify your diabetes type…',
+                      hintStyle: TextStyle(
+                        color: isDark ? Colors.white38 : AppThemeTokens.textSecondary,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
+                        borderSide: BorderSide(
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.3)
+                              : const Color(0xFFD1D5DB),
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
+                        borderSide: const BorderSide(
+                          color: AppThemeTokens.brandAccent,
+                          width: 2,
+                        ),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
+                    ),
+                    validator: (v) => selected == 'Other' && (v == null || v.trim().isEmpty)
+                        ? 'Please specify your diabetes type'
+                        : null,
+                  ),
+                )
+              : const SizedBox.shrink(key: ValueKey('diabetes_other_hidden')),
         ),
       ],
     );
@@ -923,14 +1097,16 @@ class _GlucoseUnitToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final inactiveText = isDark ? Colors.white70 : AppThemeTokens.textPrimary;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Preferred Glucose Unit',
           style: TextStyle(
             fontSize: 13,
-            color: AppThemeTokens.textSecondary,
+            color: isDark ? Colors.white60 : AppThemeTokens.textSecondary,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -948,14 +1124,16 @@ class _GlucoseUnitToggle extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? AppThemeTokens.brandPrimary
-                          : AppThemeTokens.brandPrimary.withValues(alpha: 0.06),
+                          ? AppThemeTokens.brandSecondary
+                          : (isDark
+                              ? Colors.white.withValues(alpha: 0.08)
+                              : AppThemeTokens.brandPrimary.withValues(alpha: 0.06)),
                       borderRadius: BorderRadius.circular(
                         AppThemeTokens.radiusMd,
                       ),
                       border: Border.all(
                         color: isSelected
-                            ? AppThemeTokens.brandPrimary
+                            ? AppThemeTokens.brandSecondary
                             : AppThemeTokens.brandAccent.withValues(alpha: 0.4),
                         width: isSelected ? 2 : 1,
                       ),
@@ -964,9 +1142,7 @@ class _GlucoseUnitToggle extends StatelessWidget {
                       child: Text(
                         unit,
                         style: TextStyle(
-                          color: isSelected
-                              ? Colors.white
-                              : AppThemeTokens.textPrimary,
+                          color: isSelected ? Colors.white : inactiveText,
                           fontWeight: FontWeight.w700,
                           fontSize: 15,
                         ),
@@ -998,27 +1174,28 @@ class _SettingsSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return SwitchListTile.adaptive(
       contentPadding: EdgeInsets.zero,
       title: Text(
         label,
-        style: const TextStyle(
-          color: AppThemeTokens.textPrimary,
+        style: TextStyle(
+          color: isDark ? Colors.white : AppThemeTokens.textPrimary,
           fontWeight: FontWeight.w600,
           fontSize: 15,
         ),
       ),
       subtitle: Text(
         subtitle,
-        style: const TextStyle(
-          color: AppThemeTokens.textSecondary,
+        style: TextStyle(
+          color: isDark ? Colors.white60 : AppThemeTokens.textSecondary,
           fontSize: 13,
         ),
       ),
       value: value,
       onChanged: onChanged,
-      activeThumbColor: AppThemeTokens.brandPrimary,
-      activeTrackColor: AppThemeTokens.brandPrimary.withValues(alpha: 0.4),
+      activeThumbColor: AppThemeTokens.brandAccent,
+      activeTrackColor: AppThemeTokens.brandAccent.withValues(alpha: 0.4),
     );
   }
 }

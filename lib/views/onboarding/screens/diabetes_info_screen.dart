@@ -20,6 +20,7 @@ class DiabetesInfoScreen extends ConsumerStatefulWidget {
 class _DiabetesInfoScreenState extends ConsumerState<DiabetesInfoScreen> {
   final _formKey = GlobalKey<FormState>();
   final _yearController = TextEditingController();
+  final _otherTypeController = TextEditingController();
 
   String _selectedType = '';
   String _selectedUnit = 'mg/dL'; // Default to mg/dL
@@ -27,31 +28,37 @@ class _DiabetesInfoScreenState extends ConsumerState<DiabetesInfoScreen> {
   @override
   void dispose() {
     _yearController.dispose();
+    _otherTypeController.dispose();
     super.dispose();
   }
 
   void _submit() {
-    if (_formKey.currentState!.validate() && _selectedType.isNotEmpty) {
-      ref
-          .read(onboardingViewModelProvider.notifier)
-          .updateDiabetesContext(
-            diabetesType: _selectedType,
+    if (_selectedType.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Please select your diabetes type.',
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.white)),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ));
+      return;
+    }
+    if (_selectedType == 'Other/Not Sure' && _otherTypeController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Please describe your diabetes type.',
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.white)),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ));
+      return;
+    }
+    if (_formKey.currentState!.validate()) {
+      final finalType = _selectedType == 'Other/Not Sure'
+          ? _otherTypeController.text.trim()
+          : _selectedType;
+      ref.read(onboardingViewModelProvider.notifier).updateDiabetesContext(
+            diabetesType: finalType,
             diagnosisYear: int.parse(_yearController.text),
             unit: _selectedUnit,
           );
       widget.onNext();
-    } else if (_selectedType.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Please select your diabetes type.',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyLarge?.copyWith(color: Colors.white),
-          ),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
     }
   }
 
@@ -103,6 +110,20 @@ class _DiabetesInfoScreenState extends ConsumerState<DiabetesInfoScreen> {
                 _buildTypeButton('Other/Not Sure', colorScheme, textTheme),
               ],
             ),
+            if (_selectedType == 'Other/Not Sure') ...[
+              const SizedBox(height: 12.0),
+              TextFormField(
+                controller: _otherTypeController,
+                decoration: const InputDecoration(
+                  labelText: 'Describe your diabetes type',
+                  hintText: 'e.g., Type 3c, MODY, Pre-diabetes…',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (v) => _selectedType == 'Other/Not Sure' && (v == null || v.trim().isEmpty)
+                    ? 'Please describe your diabetes type'
+                    : null,
+              ),
+            ],
             SizedBox(height: 32.0),
 
             // Diagnosis Year
@@ -114,7 +135,10 @@ class _DiabetesInfoScreenState extends ConsumerState<DiabetesInfoScreen> {
                 border: OutlineInputBorder(),
               ),
               keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(4),
+              ],
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter diagnosis year';
@@ -191,11 +215,7 @@ class _DiabetesInfoScreenState extends ConsumerState<DiabetesInfoScreen> {
     final isSelected = _selectedType == type;
 
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedType = type;
-        });
-      },
+      onTap: () => setState(() => _selectedType = type),
       child: Semantics(
         button: true,
         selected: isSelected,

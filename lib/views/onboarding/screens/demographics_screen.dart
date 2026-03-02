@@ -18,6 +18,7 @@ class _DemographicsScreenState extends ConsumerState<DemographicsScreen> {
   final _ageController = TextEditingController();
   final _heightController = TextEditingController();
   final _weightController = TextEditingController();
+  final _otherGenderController = TextEditingController();
 
   String _selectedGender = '';
 
@@ -27,33 +28,39 @@ class _DemographicsScreenState extends ConsumerState<DemographicsScreen> {
     _ageController.dispose();
     _heightController.dispose();
     _weightController.dispose();
+    _otherGenderController.dispose();
     super.dispose();
   }
 
   void _submit() {
-    if (_formKey.currentState!.validate() && _selectedGender.isNotEmpty) {
-      ref
-          .read(onboardingViewModelProvider.notifier)
-          .updateDemographics(
+    if (_selectedGender.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Please select a gender identity.',
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.white)),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ));
+      return;
+    }
+    if (_selectedGender == 'Other' && _otherGenderController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Please describe your gender identity.',
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.white)),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ));
+      return;
+    }
+    if (_formKey.currentState!.validate()) {
+      final finalGender = _selectedGender == 'Other'
+          ? _otherGenderController.text.trim()
+          : _selectedGender;
+      ref.read(onboardingViewModelProvider.notifier).updateDemographics(
             name: _nameController.text.trim(),
             age: int.parse(_ageController.text),
-            gender: _selectedGender,
+            gender: finalGender,
             heightCm: double.parse(_heightController.text),
             weightKg: double.parse(_weightController.text),
           );
       widget.onNext();
-    } else if (_selectedGender.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Please select a gender identity.',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyLarge?.copyWith(color: Colors.white),
-          ),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
     }
   }
 
@@ -145,6 +152,20 @@ class _DemographicsScreenState extends ConsumerState<DemographicsScreen> {
                 _buildGenderButton('Other', colorScheme, textTheme),
               ],
             ),
+            if (_selectedGender == 'Other') ...[
+              const SizedBox(height: 12.0),
+              TextFormField(
+                controller: _otherGenderController,
+                decoration: const InputDecoration(
+                  labelText: 'Describe your gender identity',
+                  hintText: 'e.g., Non-binary, Gender fluid…',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (v) => _selectedGender == 'Other' && (v == null || v.trim().isEmpty)
+                    ? 'Please describe your gender identity'
+                    : null,
+              ),
+            ],
             SizedBox(height: 32.0),
 
             // Height
@@ -229,11 +250,7 @@ class _DemographicsScreenState extends ConsumerState<DemographicsScreen> {
     final isSelected = _selectedGender == gender;
 
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedGender = gender;
-        });
-      },
+      onTap: () => setState(() => _selectedGender = gender),
       child: Semantics(
         button: true,
         selected: isSelected,

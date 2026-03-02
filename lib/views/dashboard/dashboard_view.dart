@@ -337,12 +337,12 @@ class _QuickLogSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppThemeTokens.spaceMd),
-          const Text(
+          Text(
             'Quick Log',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: AppThemeTokens.textPrimary,
+              color: isDark ? Colors.white : AppThemeTokens.textPrimary,
             ),
           ),
           const SizedBox(height: AppThemeTokens.spaceLg),
@@ -414,6 +414,7 @@ class _QuickLogButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Semantics(
       label: 'Log $label',
       button: true,
@@ -424,9 +425,9 @@ class _QuickLogButton extends StatelessWidget {
           width: 100,
           padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
+            color: color.withValues(alpha: isDark ? 0.15 : 0.1),
             borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
-            border: Border.all(color: color.withValues(alpha: 0.2)),
+            border: Border.all(color: color.withValues(alpha: 0.3)),
           ),
           child: Column(
             children: [
@@ -434,10 +435,10 @@ class _QuickLogButton extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 13,
-                  color: AppThemeTokens.textPrimary,
+                  color: isDark ? Colors.white : AppThemeTokens.textPrimary,
                 ),
               ),
             ],
@@ -478,20 +479,20 @@ class _DailySummaryCard extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.today_outlined,
                 size: 18,
                 color: AppThemeTokens.brandPrimary,
               ),
-              SizedBox(width: AppThemeTokens.spaceSm),
+              const SizedBox(width: AppThemeTokens.spaceSm),
               Text(
                 "Today's Summary",
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: AppThemeTokens.textPrimary,
+                  color: isDark ? Colors.white : AppThemeTokens.textPrimary,
                 ),
               ),
             ],
@@ -607,30 +608,31 @@ class _SummaryStatTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Expanded(
       child: Column(
         children: [
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w800,
-              color: AppThemeTokens.textPrimary,
+              color: isDark ? Colors.white : AppThemeTokens.textPrimary,
             ),
           ),
           Text(
             unit,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 10,
-              color: AppThemeTokens.textSecondary,
+              color: isDark ? Colors.white54 : AppThemeTokens.textSecondary,
             ),
           ),
           const SizedBox(height: 2),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
-              color: AppThemeTokens.textSecondary,
+              color: isDark ? Colors.white54 : AppThemeTokens.textSecondary,
             ),
           ),
         ],

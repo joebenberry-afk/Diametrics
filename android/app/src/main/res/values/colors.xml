@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#E0F7FA</color>
+    <!-- DiaMetrics brand colors (used by launch_background and Android 12+ splash) -->
+    <color name="brand_dark">#0D1B2A</color>
+    <color name="brand_primary">#1B263B</color>
 </resources>

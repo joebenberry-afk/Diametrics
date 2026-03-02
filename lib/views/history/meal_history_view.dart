@@ -87,6 +87,7 @@ class _MealHistoryTile extends StatelessWidget {
     final defaultTitle =
         '${log.mealType[0].toUpperCase()}${log.mealType.substring(1)} meal';
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(
         horizontal: AppThemeTokens.spaceLg,
@@ -106,8 +107,8 @@ class _MealHistoryTile extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             '${log.carbohydrates.toStringAsFixed(0)}g carbs • ${log.proteins.toStringAsFixed(0)}g protein • ${log.fats.toStringAsFixed(0)}g fat',
-            style: const TextStyle(
-              color: AppThemeTokens.textPrimary,
+            style: TextStyle(
+              color: isDark ? Colors.white70 : AppThemeTokens.textPrimary,
               fontSize: 13,
             ),
           ),

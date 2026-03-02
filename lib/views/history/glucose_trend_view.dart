@@ -168,7 +168,11 @@ class _PeriodTab extends StatelessWidget {
             label,
             style: TextStyle(
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-              color: isSelected ? Colors.white : AppThemeTokens.textPrimary,
+              color: isSelected
+                  ? Colors.white
+                  : (Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white70
+                      : AppThemeTokens.textPrimary),
             ),
           ),
         ),
@@ -291,10 +295,12 @@ class _StatBox extends StatelessWidget {
           children: [
             Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
-                color: AppThemeTokens.textPrimary,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white
+                    : AppThemeTokens.textPrimary,
               ),
             ),
             const SizedBox(height: 2),

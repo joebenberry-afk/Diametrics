@@ -12,6 +12,7 @@ class GlucoseWizardView extends ConsumerWidget {
     final state = ref.watch(loggingWizardProvider);
     final viewModel = ref.read(loggingWizardProvider.notifier);
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     // Context options mapped to the prediction phases in the implementation plan
     final contextOptions = [
@@ -67,7 +68,7 @@ class GlucoseWizardView extends ConsumerWidget {
                       ),
                       textAlign: TextAlign.center,
                       style: theme.textTheme.displayLarge?.copyWith(
-                        color: AppThemeTokens.brandPrimary,
+                        color: isDark ? Colors.white : AppThemeTokens.brandPrimary,
                         fontWeight: FontWeight.bold,
                       ),
                       decoration: const InputDecoration(

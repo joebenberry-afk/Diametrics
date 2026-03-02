@@ -70,7 +70,7 @@ class _MedicationInfoScreenState extends ConsumerState<MedicationInfoScreen> {
             colorScheme: colorScheme,
             textTheme: textTheme,
           ),
-          const Spacer(),
+          const SizedBox(height: 48),
           SizedBox(
             width: double.infinity,
             height: 56,

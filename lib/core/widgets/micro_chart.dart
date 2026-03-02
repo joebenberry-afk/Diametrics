@@ -18,7 +18,7 @@ class MicroChart extends StatelessWidget {
     return Semantics(
       label: 'Micro trend chart displaying data variations',
       child: CustomPaint(
-        size: const Size(100, 40),
+        size: const Size(70, 36),
         painter: _MicroTrendPainter(dataPoints, color),
       ),
     );
