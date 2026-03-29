@@ -4,6 +4,8 @@ import '../models/glucose_log.dart';
 import '../models/meal_log.dart';
 import '../models/medication_log.dart';
 import '../models/projection_result.dart';
+import '../repositories/user_repository.dart';
+import '../services/adaptive_tuning_service.dart';
 import '../services/glucose_projection_service.dart';
 import 'health_data_viewmodel.dart';
 
@@ -215,8 +217,18 @@ class LoggingWizardViewModel extends StateNotifier<LoggingWizardState> {
         context: state.glucoseContext,
       );
 
-      await ref.read(healthDataRepositoryProvider).addGlucoseLog(log);
+      final dataRepo = ref.read(healthDataRepositoryProvider);
+      await dataRepo.addGlucoseLog(log);
       ref.invalidate(glucoseLogsProvider);
+
+      // Fire adaptive tuning in the background for post-meal readings.
+      // Never awaited so it never blocks or disrupts the user flow.
+      AdaptiveTuningService.tuneFromGlucoseLog(
+        glucoseLog: log,
+        dataRepo: dataRepo,
+        userRepo: UserRepository(),
+      );
+
       state = LoggingWizardState(); // Reset wizard
       return true;
     } catch (e) {
@@ -281,8 +293,9 @@ class LoggingWizardViewModel extends StateNotifier<LoggingWizardState> {
       await repo.addMealLog(mealLog);
       ref.invalidate(mealLogsProvider);
 
-      // 3. Calculate IOB and run the projection
+      // 3. Calculate IOB and run the projection using personalized ML params.
       final iob = await _calculateIOB();
+      final profile = await UserRepository().getProfile();
       final result = GlucoseProjectionService.project(
         baselineGlucose: state.preMealGlucose!,
         carbsGrams: state.pendingCarbs!,
@@ -293,6 +306,9 @@ class LoggingWizardViewModel extends StateNotifier<LoggingWizardState> {
         containsCaffeine: state.containsCaffeine,
         weightKg: weightKg,
         insulinOnBoard: iob,
+        p1: profile?.metabolicClearanceRate ?? 0.010,
+        isf: profile?.insulinSensitivityFactor ?? 50.0,
+        tMaxBase: profile?.absorptionDelayBase ?? 40.0,
       );
 
       // Reset wizard state

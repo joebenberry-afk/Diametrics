@@ -15,9 +15,6 @@ class GlucoseProjectionService {
   /// Duration of the projection in minutes (4 hours).
   static const int _projectionMinutes = 240;
 
-  /// Default insulin sensitivity factor (mg/dL drop per unit of insulin).
-  static const double _defaultISF = 50.0;
-
   /// Computes a minute-by-minute post-meal glucose projection.
   ///
   /// Returns a [ProjectionResult] containing the plotted curve, peak,
@@ -32,6 +29,9 @@ class GlucoseProjectionService {
     required bool containsCaffeine,
     double weightKg = 70.0,
     double insulinOnBoard = 0.0,
+    double p1 = 0.010, // ML parameter: metabolicClearanceRate
+    double isf = 50.0, // ML parameter: insulinSensitivityFactor
+    double tMaxBase = 40.0, // ML parameter: absorptionDelayBase
   }) {
     // ── STEP 1: Total Available Glucose (TAG) ─────────────────────────
     final netCarbs = max(0.0, carbsGrams - fiberGrams);
@@ -42,7 +42,7 @@ class GlucoseProjectionService {
     final double dG = tag / 180.0 * 1000.0; // mmol glucose dose
 
     // Time-to-maximum gut absorption (minutes)
-    double tMax = 40.0;
+    double tMax = tMaxBase;
     if (fatGrams > 40 || proteinGrams > 25) {
       tMax += 30.0; // High fat/protein delay (Sieradzki)
     }
@@ -53,11 +53,10 @@ class GlucoseProjectionService {
     // Glucose distribution volume (liters)
     final double vG = 0.16 * weightKg;
 
-    // Fractional clearance rate (Glucose Effectiveness S_G ~ 0.010 - 0.015 min^-1)
-    const double p1 = 0.010;
+    // Fractional clearance rate is now injected dynamically (p1)
 
     // IOB insulin action rate (mg/dL per minute over 4-hour DIA)
-    final double iobRate = insulinOnBoard * _defaultISF / _projectionMinutes;
+    final double iobRate = insulinOnBoard * isf / _projectionMinutes;
 
     // ── STEP 3: Minute-by-minute simulation ───────────────────────────
     double gCurrent = baselineGlucose;

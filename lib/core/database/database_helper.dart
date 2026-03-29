@@ -5,7 +5,7 @@ import 'package:path_provider/path_provider.dart';
 
 class DatabaseHelper {
   static const _databaseName = "diametrics_v1.db";
-  static const _databaseVersion = 5; // v5: recreate user_profiles schema
+  static const _databaseVersion = 6; // v6: adaptive ML tuning schema
 
   DatabaseHelper._privateConstructor();
   static final DatabaseHelper instance = DatabaseHelper._privateConstructor();
@@ -72,10 +72,20 @@ class DatabaseHelper {
       );
     }
     if (oldVersion < 5) {
-      // We added createdAt, updatedAt, and targetWeightKg. 
+      // We added createdAt, updatedAt, and targetWeightKg.
       // Safest migration is to recreate the profile table so they fill it correctly.
       await db.execute('DROP TABLE IF EXISTS user_profiles');
       _createUserProfileTable(db);
+    }
+    if (oldVersion < 6) {
+      // Add personalized ML parameters to UserProfile schema
+      try {
+        await db.execute("ALTER TABLE user_profiles ADD COLUMN metabolicClearanceRate REAL NOT NULL DEFAULT 0.010");
+        await db.execute("ALTER TABLE user_profiles ADD COLUMN insulinSensitivityFactor REAL NOT NULL DEFAULT 50.0");
+        await db.execute("ALTER TABLE user_profiles ADD COLUMN absorptionDelayBase REAL NOT NULL DEFAULT 40.0");
+      } catch (_) {
+        // In case the recreation in v5 happened simultaneously and already captured these
+      }
     }
   }
 
@@ -152,6 +162,9 @@ class DatabaseHelper {
         usesCgm INTEGER NOT NULL DEFAULT 0,
         targetGlucoseMin REAL NOT NULL,
         targetGlucoseMax REAL NOT NULL,
+        metabolicClearanceRate REAL NOT NULL DEFAULT 0.010,
+        insulinSensitivityFactor REAL NOT NULL DEFAULT 50.0,
+        absorptionDelayBase REAL NOT NULL DEFAULT 40.0,
         hasAgreedToDisclaimer INTEGER NOT NULL DEFAULT 0,
         createdAt TEXT NOT NULL,
         updatedAt TEXT NOT NULL

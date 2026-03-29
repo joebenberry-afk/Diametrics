@@ -22,6 +22,12 @@ _UserProfile _$UserProfileFromJson(Map<String, dynamic> json) => _UserProfile(
   usesCgm: json['usesCgm'] as bool? ?? false,
   targetGlucoseMin: (json['targetGlucoseMin'] as num?)?.toDouble() ?? 70.0,
   targetGlucoseMax: (json['targetGlucoseMax'] as num?)?.toDouble() ?? 180.0,
+  metabolicClearanceRate:
+      (json['metabolicClearanceRate'] as num?)?.toDouble() ?? 0.010,
+  insulinSensitivityFactor:
+      (json['insulinSensitivityFactor'] as num?)?.toDouble() ?? 50.0,
+  absorptionDelayBase:
+      (json['absorptionDelayBase'] as num?)?.toDouble() ?? 40.0,
   hasAgreedToDisclaimer: json['hasAgreedToDisclaimer'] as bool? ?? false,
   createdAt: DateTime.parse(json['createdAt'] as String),
   updatedAt: DateTime.parse(json['updatedAt'] as String),
@@ -44,6 +50,9 @@ Map<String, dynamic> _$UserProfileToJson(_UserProfile instance) =>
       'usesCgm': instance.usesCgm,
       'targetGlucoseMin': instance.targetGlucoseMin,
       'targetGlucoseMax': instance.targetGlucoseMax,
+      'metabolicClearanceRate': instance.metabolicClearanceRate,
+      'insulinSensitivityFactor': instance.insulinSensitivityFactor,
+      'absorptionDelayBase': instance.absorptionDelayBase,
       'hasAgreedToDisclaimer': instance.hasAgreedToDisclaimer,
       'createdAt': instance.createdAt.toIso8601String(),
       'updatedAt': instance.updatedAt.toIso8601String(),

@@ -30,6 +30,11 @@ abstract class UserProfile with _$UserProfile {
     @Default(70.0) double targetGlucoseMin,
     @Default(180.0) double targetGlucoseMax,
 
+    // ML Metabolic Parameters (Local Adaptive Tuning Constants)
+    @Default(0.010) double metabolicClearanceRate,
+    @Default(50.0) double insulinSensitivityFactor,
+    @Default(40.0) double absorptionDelayBase,
+
     // Meta
     @Default(false) bool hasAgreedToDisclaimer,
     required DateTime createdAt,
