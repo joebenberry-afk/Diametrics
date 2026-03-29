@@ -18,16 +18,22 @@ class UserRepository {
     map['createdAt'] = profile.createdAt.toIso8601String();
     map['updatedAt'] = profile.updatedAt.toIso8601String();
 
-    await db.insert(
-      'user_profiles',
-      map,
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.transaction((txn) async {
+      // Ensure we only ever have ONE profile on the device. 
+      // This wipes any phantom profiles created if Onboarding was aborted.
+      await txn.delete('user_profiles');
+      await txn.insert('user_profiles', map);
+    });
   }
 
   Future<UserProfile?> getProfile() async {
     final db = await _dbHelper.database;
-    final maps = await db.query('user_profiles', limit: 1);
+    // Force fetch the MOST RECENT profile if multiple somehow exist
+    final maps = await db.query(
+      'user_profiles', 
+      orderBy: 'updatedAt DESC', 
+      limit: 1,
+    );
 
     if (maps.isEmpty) return null;
 
