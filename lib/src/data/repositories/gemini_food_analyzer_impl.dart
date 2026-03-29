@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';
 
 import 'package:injectable/injectable.dart';
 
@@ -36,13 +38,15 @@ class GeminiFoodAnalyzerImpl implements FoodAnalyzerRepository {
   /// instantly from cache without a backend round-trip.
   @override
   Future<FoodAnalysisResult> analyzeImage(String imagePath) async {
-    if (!BackendConfig.isConfigured) {
+    if (!BackendConfig.isConfigured && !BackendConfig.isDirectGeminiEnabled) {
       throw Exception(
-        'DiaMetrics backend not configured.\n'
+        'DiaMetrics backend not configured AND no test key provided.\n'
         'Build with:\n'
         '  flutter run \\\n'
         '    --dart-define=BACKEND_URL=http://10.0.2.2:8000 \\\n'
-        '    --dart-define=BACKEND_API_KEY=your_secret',
+        '    --dart-define=BACKEND_API_KEY=your_secret\n'
+        'OR for local testing without a backend:\n'
+        '  flutter run --dart-define=GEMINI_API_KEY=your_gemini_key',
       );
     }
 
@@ -55,10 +59,16 @@ class GeminiFoodAnalyzerImpl implements FoodAnalyzerRepository {
       return cached;
     }
 
-    // Call backend (retries on transient failures, not on rate-limit errors)
-    final result = await _retryWithBackoff(
-      () => BackendFoodService.analyzeImage(imagePath),
-    );
+    // Use direct on-device Gemini evaluation if key is provided
+    FoodAnalysisResult result;
+    if (BackendConfig.isDirectGeminiEnabled) {
+      result = await _analyzeImageLocally(imageBytes);
+    } else {
+      // Call backend (retries on transient failures, not on rate-limit errors)
+      result = await _retryWithBackoff(
+        () => BackendFoodService.analyzeImage(imagePath),
+      );
+    }
 
     // Post-Retrieval RAG Enrichment — runs entirely on-device, no network.
     // Overrides backend AI estimates with verified local database values.
@@ -121,4 +131,40 @@ class GeminiFoodAnalyzerImpl implements FoodAnalyzerRepository {
 
   /// Clears the in-memory analysis cache.
   void clearCache() => _cache.clear();
+
+  Future<FoodAnalysisResult> _analyzeImageLocally(List<int> imageBytes) async {
+    final model = GenerativeModel(
+      model: 'gemini-1.5-flash',
+      apiKey: BackendConfig.geminiApiKey,
+    );
+    
+    final prompt = TextPart(
+      'You are a clinical dietitian AI. Analyze this food image. '
+      'Identify all food items on the plate, their approximate portions, and estimate macronutrients. '
+      'Reply ONLY with a JSON object. NO markdown delimiters at the start or end, just raw JSON. Schema:\n'
+      '{"items": [{"name": "string", "portion": "string", "carbs_g": number, "calories": number, "protein_g": number, "fat_g": number, "source": "AI Estimate"}], '
+      '"totalCarbs": number, "totalCalories": number, "summary": "string"}'
+    );
+    final imagePart = DataPart('image/jpeg', Uint8List.fromList(imageBytes));
+
+    final response = await model.generateContent([
+      Content.multi([prompt, imagePart])
+    ]);
+
+    final text = response.text;
+    if (text == null) {
+      throw Exception('Gemini returned an empty response.');
+    }
+
+    // Clean JSON (in case Gemini included markdown blocks)
+    final cleanJson = text.replaceAll(RegExp(r'^```json\n?', multiLine: true), '').replaceAll(RegExp(r'\n?```$', multiLine: true), '').trim();
+    
+    try {
+      final decoded = jsonDecode(cleanJson) as Map<String, dynamic>;
+      return FoodAnalysisResult.fromJson(decoded);
+    } catch (e) {
+      debugPrint('Error parsing Gemini JSON: $e\nResponse: $text');
+      throw Exception('Failed to parse AI JSON response.');
+    }
+  }
 }

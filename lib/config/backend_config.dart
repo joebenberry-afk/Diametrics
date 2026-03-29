@@ -43,6 +43,12 @@ class BackendConfig {
   /// Whether the backend has been configured (API key is set).
   static bool get isConfigured => backendApiKey.isNotEmpty;
 
+  /// Optional: Direct Gemini API key for local dev/testing without the backend server.
+  static const String geminiApiKey = String.fromEnvironment('GEMINI_API_KEY');
+  
+  /// Whether direct on-device Gemini inference is enabled (fallback for testing).
+  static bool get isDirectGeminiEnabled => geminiApiKey.isNotEmpty;
+
   // ---------------------------------------------------------------------------
   // Endpoint URLs
   // ---------------------------------------------------------------------------
