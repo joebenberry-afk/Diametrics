@@ -15,6 +15,7 @@ import '../history/meal_history_view.dart';
 import '../history/medication_history_view.dart';
 import '../../services/emergency_service.dart';
 import '../../viewmodels/health_data_viewmodel.dart';
+import '../../viewmodels/activity_viewmodel.dart';
 import '../../models/glucose_log.dart';
 
 class DashboardView extends ConsumerWidget {
@@ -74,6 +75,9 @@ class DashboardView extends ConsumerWidget {
     final dosesDisplay = doseCount.toString();
 
     final activityAsync = ref.watch(recentActivityProvider);
+
+    final stepsAsync = ref.watch(stepCountProvider);
+    final stepsDisplay = stepsAsync.valueOrNull?.toString() ?? '--';
 
     return Scaffold(
       body: SafeArea(
@@ -192,11 +196,11 @@ class DashboardView extends ConsumerWidget {
                   ),
                   MetricCard(
                     title: 'Activity',
-                    value: '6,420',
+                    value: stepsDisplay,
                     unit: 'Steps',
                     icon: Icons.directions_walk,
                     accentColor: AppThemeTokens.brandSecondary,
-                    trendData: const [2000, 4000, 3500, 6420],
+                    trendData: const [],
                     onTap: () {},
                   ),
                 ],
