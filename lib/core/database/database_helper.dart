@@ -5,7 +5,7 @@ import 'package:path_provider/path_provider.dart';
 
 class DatabaseHelper {
   static const _databaseName = "diametrics_v1.db";
-  static const _databaseVersion = 4; // v4: added full macros to meal_logs
+  static const _databaseVersion = 5; // v5: recreate user_profiles schema
 
   DatabaseHelper._privateConstructor();
   static final DatabaseHelper instance = DatabaseHelper._privateConstructor();
@@ -70,6 +70,12 @@ class DatabaseHelper {
       await db.execute(
         "ALTER TABLE meal_logs ADD COLUMN containsCaffeine INTEGER NOT NULL DEFAULT 0",
       );
+    }
+    if (oldVersion < 5) {
+      // We added createdAt, updatedAt, and targetWeightKg. 
+      // Safest migration is to recreate the profile table so they fill it correctly.
+      await db.execute('DROP TABLE IF EXISTS user_profiles');
+      _createUserProfileTable(db);
     }
   }
 

@@ -53,8 +53,8 @@ class GlucoseProjectionService {
     // Glucose distribution volume (liters)
     final double vG = 0.16 * weightKg;
 
-    // Fractional clearance rate (per minute)
-    const double p1 = 0.02;
+    // Fractional clearance rate (Glucose Effectiveness S_G ~ 0.010 - 0.015 min^-1)
+    const double p1 = 0.010;
 
     // IOB insulin action rate (mg/dL per minute over 4-hour DIA)
     final double iobRate = insulinOnBoard * _defaultISF / _projectionMinutes;
@@ -81,7 +81,11 @@ class GlucoseProjectionService {
 
       // Glucose-dependent clearance relies on subtracting a basal/fasting EGP balance
       // Assume healthy baseline EGP cancels out clearance at ~90 mg/dL.
-      final double clearanceRate = max(0.0, gCurrent - 90.0) * p1;
+      double clearanceRate = max(0.0, gCurrent - 90.0) * p1;
+      
+      // Professional cap: Maximal endogenous clearance shouldn't exceed typical human limits 
+      // (~1.5 mg/dL/min without heavy exogenous insulin)
+      clearanceRate = min(clearanceRate, 1.5);
 
       // Alcohol: inhibits gluconeogenesis → ~3 mg/dL drop per hour after 60 min
       final double alcoholDrop =
