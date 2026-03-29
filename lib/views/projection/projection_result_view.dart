@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:fl_chart/fl_chart.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../models/projection_result.dart';
 
@@ -74,13 +75,11 @@ class ProjectionResultView extends StatelessWidget {
                     color: AppThemeTokens.brandPrimary.withValues(alpha: 0.1),
                   ),
                 ),
-                child: CustomPaint(
-                  painter: _GlucoseCurvePainter(
-                    points: result.points,
-                    riskColor: _riskColor(),
-                  ),
-                  size: Size.infinite,
-                ),
+                child: result.points.isEmpty 
+                    ? const Center(child: Text('No projection data available'))
+                    : LineChart(
+                        _buildChartData(result.points, _riskColor()),
+                      ),
               ),
 
               const SizedBox(height: AppThemeTokens.spaceLg),
@@ -287,173 +286,135 @@ class _MetricTile extends StatelessWidget {
   }
 }
 
-// ── Custom Painter: Glucose Curve ───────────────────────────────────────
+  LineChartData _buildChartData(List<ProjectionPoint> points, Color riskColor) {
+    if (points.isEmpty) return LineChartData();
 
-class _GlucoseCurvePainter extends CustomPainter {
-  final List<ProjectionPoint> points;
-  final Color riskColor;
-
-  _GlucoseCurvePainter({required this.points, required this.riskColor});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (points.isEmpty) return;
-
-    const double leftPad = 40;
-    const double bottomPad = 28;
-    const double topPad = 12;
-    const double rightPad = 8;
-
-    final chartW = size.width - leftPad - rightPad;
-    final chartH = size.height - topPad - bottomPad;
-
-    // Determine Y range with padding
     final allValues = points.map((p) => p.glucoseValue);
     final rawMin = allValues.reduce(min);
     final rawMax = allValues.reduce(max);
-    final yMin = (rawMin - 20).clamp(0.0, 500.0);
-    final yMax = rawMax + 20;
+    
+    // Add 20 padding, clamp minimum to 0
+    final yMin = max(0.0, rawMin - 20.0);
+    final yMax = rawMax + 20.0;
 
-    double xOf(int t) => leftPad + (t / 240.0) * chartW;
-    double yOf(double g) =>
-        topPad + chartH - ((g - yMin) / (yMax - yMin)) * chartH;
+    final spots = points
+        .map((p) => FlSpot(p.timeMinutes.toDouble(), p.glucoseValue))
+        .toList();
 
-    // ── Background glucose zones ──
-    void drawZone(double lo, double hi, Color c) {
-      final top = yOf(hi.clamp(yMin, yMax));
-      final bot = yOf(lo.clamp(yMin, yMax));
-      if (bot <= top) return;
-      canvas.drawRect(
-        Rect.fromLTRB(leftPad, top, leftPad + chartW, bot),
-        Paint()..color = c.withValues(alpha: 0.08),
-      );
-    }
-
-    drawZone(70, 140, AppThemeTokens.brandSuccess); // target zone
-    drawZone(140, 180, AppThemeTokens.warning); // elevated
-    drawZone(180, yMax, AppThemeTokens.error); // high
-
-    // ── Grid lines ──
-    final gridPaint = Paint()
-      ..color = Colors.grey.withValues(alpha: 0.2)
-      ..strokeWidth = 0.5;
-
-    // Horizontal grid lines (every 50 mg/dL)
-    for (double g = (yMin / 50).ceilToDouble() * 50; g <= yMax; g += 50) {
-      final y = yOf(g);
-      canvas.drawLine(Offset(leftPad, y), Offset(leftPad + chartW, y), gridPaint);
-
-      // Label
-      final tp = TextPainter(
-        text: TextSpan(
-          text: g.toStringAsFixed(0),
-          style: const TextStyle(
-            color: Colors.grey,
-            fontSize: 10,
-          ),
+    return LineChartData(
+      minX: 0,
+      maxX: 240,
+      minY: yMin,
+      maxY: yMax,
+      gridData: FlGridData(
+        show: true,
+        drawVerticalLine: true,
+        horizontalInterval: 50,
+        verticalInterval: 60,
+        getDrawingHorizontalLine: (value) => FlLine(
+          color: Colors.grey.withValues(alpha: 0.2),
+          strokeWidth: 1,
         ),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      tp.paint(canvas, Offset(leftPad - tp.width - 4, y - tp.height / 2));
-    }
-
-    // Vertical grid lines (every 60 min = 1 hour)
-    for (int t = 0; t <= 240; t += 60) {
-      final x = xOf(t);
-      canvas.drawLine(Offset(x, topPad), Offset(x, topPad + chartH), gridPaint);
-
-      final label = t == 0 ? '0' : '${t ~/ 60}hr';
-      final tp = TextPainter(
-        text: TextSpan(
-          text: label,
-          style: const TextStyle(color: Colors.grey, fontSize: 10),
-        ),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      tp.paint(
-        canvas,
-        Offset(x - tp.width / 2, topPad + chartH + 6),
-      );
-    }
-
-    // ── Glucose curve ──
-    if (points.length < 2) return;
-
-    final curvePath = Path()
-      ..moveTo(xOf(points.first.timeMinutes), yOf(points.first.glucoseValue));
-
-    for (int i = 1; i < points.length; i++) {
-      curvePath.lineTo(
-        xOf(points[i].timeMinutes),
-        yOf(points[i].glucoseValue),
-      );
-    }
-
-    canvas.drawPath(
-      curvePath,
-      Paint()
-        ..color = AppThemeTokens.brandPrimary
-        ..strokeWidth = 2.5
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round,
-    );
-
-    // ── Fill under curve ──
-    final fillPath = Path.from(curvePath)
-      ..lineTo(xOf(points.last.timeMinutes), topPad + chartH)
-      ..lineTo(xOf(points.first.timeMinutes), topPad + chartH)
-      ..close();
-
-    canvas.drawPath(
-      fillPath,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            AppThemeTokens.brandPrimary.withValues(alpha: 0.15),
-            AppThemeTokens.brandPrimary.withValues(alpha: 0.0),
-          ],
-        ).createShader(
-          Rect.fromLTRB(leftPad, topPad, leftPad + chartW, topPad + chartH),
-        ),
-    );
-
-    // ── Peak dot ──
-    final peakPoint = points.reduce(
-      (a, b) => a.glucoseValue >= b.glucoseValue ? a : b,
-    );
-    final peakX = xOf(peakPoint.timeMinutes);
-    final peakY = yOf(peakPoint.glucoseValue);
-
-    canvas.drawCircle(
-      Offset(peakX, peakY),
-      5,
-      Paint()..color = riskColor,
-    );
-    canvas.drawCircle(
-      Offset(peakX, peakY),
-      3,
-      Paint()..color = Colors.white,
-    );
-
-    // Peak label
-    final peakTp = TextPainter(
-      text: TextSpan(
-        text: peakPoint.glucoseValue.toStringAsFixed(0),
-        style: TextStyle(
-          color: riskColor,
-          fontSize: 11,
-          fontWeight: FontWeight.bold,
+        getDrawingVerticalLine: (value) => FlLine(
+          color: Colors.grey.withValues(alpha: 0.2),
+          strokeWidth: 1,
         ),
       ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    peakTp.paint(canvas, Offset(peakX - peakTp.width / 2, peakY - 18));
+      titlesData: FlTitlesData(
+        show: true,
+        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        leftTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            interval: 50,
+            reservedSize: 40,
+            getTitlesWidget: (value, meta) {
+              return Text(
+                value.toInt().toString(),
+                style: const TextStyle(color: Colors.grey, fontSize: 10),
+                textAlign: TextAlign.right,
+              );
+            },
+          ),
+        ),
+        bottomTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            interval: 60,
+            reservedSize: 30,
+            getTitlesWidget: (value, meta) {
+              if (value == 0) return const Text('0', style: TextStyle(color: Colors.grey, fontSize: 10));
+              return Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Text(
+                  '${(value / 60).toInt()}hr',
+                  style: const TextStyle(color: Colors.grey, fontSize: 10),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+      borderData: FlBorderData(show: false),
+      lineBarsData: [
+        LineChartBarData(
+          spots: spots,
+          isCurved: true,
+          color: AppThemeTokens.brandPrimary,
+          barWidth: 3,
+          isStrokeCapRound: true,
+          dotData: FlDotData(
+            show: true,
+            checkToShowDot: (spot, barData) {
+              // Only show dot at the peak
+              final isPeak = spot.y == rawMax;
+              return isPeak;
+            },
+            getDotPainter: (spot, percent, barData, index) {
+              return FlDotCirclePainter(
+                radius: 4,
+                color: riskColor,
+                strokeWidth: 2,
+                strokeColor: Colors.white,
+              );
+            },
+          ),
+          belowBarData: BarAreaData(
+            show: true,
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                AppThemeTokens.brandPrimary.withValues(alpha: 0.3),
+                AppThemeTokens.brandPrimary.withValues(alpha: 0.0),
+              ],
+            ),
+          ),
+        ),
+      ],
+      extraLinesData: ExtraLinesData(
+        horizontalLines: [
+          // Target zone limits
+          HorizontalLine(
+            y: 70,
+            color: AppThemeTokens.brandSuccess.withValues(alpha: 0.3),
+            strokeWidth: 1,
+            dashArray: [5, 5],
+          ),
+          HorizontalLine(
+            y: 140,
+            color: AppThemeTokens.brandSuccess.withValues(alpha: 0.3),
+            strokeWidth: 1,
+            dashArray: [5, 5],
+          ),
+          HorizontalLine(
+            y: 180,
+            color: AppThemeTokens.warning.withValues(alpha: 0.3),
+            strokeWidth: 1,
+            dashArray: [5, 5],
+          ),
+        ],
+      ),
+    );
   }
-
-  @override
-  bool shouldRepaint(covariant _GlucoseCurvePainter oldDelegate) =>
-      oldDelegate.points != points;
-}

@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node budget.js)",
+      "Bash(npm install -g docx)",
+      "Bash(node -e \"require\\(''docx''\\)\")",
+      "Bash(node -e \"const p=require\\(''path''\\);process.chdir\\(p.join\\(require\\(''os''\\).homedir\\(\\),''AppData'',''Roaming'',''npm'',''node_modules'',''docx''\\)\\);console.log\\(''at'',__dirname\\)\")",
+      "Bash(npm root -g)",
+      "Bash(python \"C:\\\\Users\\\\assas\\\\AppData\\\\Roaming\\\\Claude\\\\local-agent-mode-sessions\\\\skills-plugin\\\\d7b1e9ae-bb27-4139-8e51-d9d3f01e3231\\\\bee208ce-0f45-45fa-aeec-d4a5fa640d09\\\\skills\\\\docx\\\\scripts\\\\office\\\\validate.py\" \"C:\\\\Users\\\\assas\\\\Desktop\\\\DiaMetrics_Budget_Proposal.docx\")",
+      "Bash(pip install defusedxml -q)",
+      "Bash(python -c \":*)",
+      "Bash(npm install:*)"
+    ]
+  }
+}

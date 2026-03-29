@@ -19,6 +19,7 @@ class LoggingWizardState {
   final double? pendingFiber;
   final double? pendingProteins;
   final double? pendingFats;
+  final double? pendingCalories;
   final bool containsAlcohol;
   final bool containsCaffeine;
   final String mealType;
@@ -42,6 +43,7 @@ class LoggingWizardState {
     this.pendingFiber,
     this.pendingProteins,
     this.pendingFats,
+    this.pendingCalories,
     this.containsAlcohol = false,
     this.containsCaffeine = false,
     this.mealType = 'lunch',
@@ -61,6 +63,7 @@ class LoggingWizardState {
     double? pendingFiber,
     double? pendingProteins,
     double? pendingFats,
+    double? pendingCalories,
     bool? containsAlcohol,
     bool? containsCaffeine,
     String? mealType,
@@ -79,6 +82,7 @@ class LoggingWizardState {
       pendingFiber: pendingFiber ?? this.pendingFiber,
       pendingProteins: pendingProteins ?? this.pendingProteins,
       pendingFats: pendingFats ?? this.pendingFats,
+      pendingCalories: pendingCalories ?? this.pendingCalories,
       containsAlcohol: containsAlcohol ?? this.containsAlcohol,
       containsCaffeine: containsCaffeine ?? this.containsCaffeine,
       mealType: mealType ?? this.mealType,
@@ -138,12 +142,14 @@ class LoggingWizardViewModel extends StateNotifier<LoggingWizardState> {
     double? fiber,
     double? proteins,
     double? fats,
+    double? calories,
   }) {
     state = state.copyWith(
       pendingCarbs: carbs,
       pendingFiber: fiber,
       pendingProteins: proteins,
       pendingFats: fats,
+      pendingCalories: calories,
     );
   }
 
@@ -158,11 +164,13 @@ class LoggingWizardViewModel extends StateNotifier<LoggingWizardState> {
     required double carbs,
     required double proteins,
     required double fats,
+    required double calories,
   }) {
     state = state.copyWith(
       pendingCarbs: carbs,
       pendingProteins: proteins,
       pendingFats: fats,
+      pendingCalories: calories,
       pendingFiber: 0.0,
     );
   }
@@ -249,6 +257,14 @@ class LoggingWizardViewModel extends StateNotifier<LoggingWizardState> {
         ref.invalidate(glucoseLogsProvider);
       }
 
+      // Calculate fallback calories if not explicitly provided by AI
+      final computedCalories = (state.pendingCarbs! * 4.0) +
+          (state.pendingProteins! * 4.0) +
+          (state.pendingFats! * 9.0);
+      final finalCalories = (state.pendingCalories != null && state.pendingCalories! > 0)
+          ? state.pendingCalories!
+          : computedCalories;
+
       // 2. Save the meal log
       final mealLog = MealLog(
         id: _uuid.v4(),
@@ -257,6 +273,7 @@ class LoggingWizardViewModel extends StateNotifier<LoggingWizardState> {
         dietaryFiber: state.pendingFiber ?? 0.0,
         proteins: state.pendingProteins!,
         fats: state.pendingFats!,
+        calories: finalCalories,
         containsAlcohol: state.containsAlcohol,
         containsCaffeine: state.containsCaffeine,
         mealType: state.mealType,
@@ -297,6 +314,13 @@ class LoggingWizardViewModel extends StateNotifier<LoggingWizardState> {
 
     state = state.copyWith(isSubmitting: true, error: null);
     try {
+      final computedCalories = (state.pendingCarbs! * 4.0) +
+          (state.pendingProteins! * 4.0) +
+          (state.pendingFats! * 9.0);
+      final finalCalories = (state.pendingCalories != null && state.pendingCalories! > 0)
+          ? state.pendingCalories!
+          : computedCalories;
+
       final log = MealLog(
         id: _uuid.v4(),
         timestamp: DateTime.now(),
@@ -304,6 +328,7 @@ class LoggingWizardViewModel extends StateNotifier<LoggingWizardState> {
         dietaryFiber: state.pendingFiber ?? 0.0,
         proteins: state.pendingProteins!,
         fats: state.pendingFats!,
+        calories: finalCalories,
         containsAlcohol: state.containsAlcohol,
         containsCaffeine: state.containsCaffeine,
         mealType: state.mealType,

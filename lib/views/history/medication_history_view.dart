@@ -54,7 +54,7 @@ class MedicationHistoryView extends ConsumerWidget {
               vertical: AppThemeTokens.spaceMd,
             ),
             itemCount: sortedLogs.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
+            separatorBuilder: (_, _) => const Divider(height: 1),
             itemBuilder: (context, index) {
               final log = sortedLogs[index];
               return _MedicationHistoryTile(log: log);

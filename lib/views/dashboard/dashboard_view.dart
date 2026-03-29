@@ -9,9 +9,11 @@ import '../logging/glucose_wizard_view.dart';
 import '../logging/meal_wizard_view.dart';
 import '../logging/medication_wizard_view.dart';
 import '../settings/settings_view.dart';
+import '../settings/emergency_contacts_view.dart';
 import '../history/glucose_trend_view.dart';
 import '../history/meal_history_view.dart';
 import '../history/medication_history_view.dart';
+import '../../services/emergency_service.dart';
 import '../../viewmodels/health_data_viewmodel.dart';
 import '../../models/glucose_log.dart';
 
@@ -81,15 +83,24 @@ class DashboardView extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // ── Header / Account Area ──────────────────────────────────
-              AccountCard(
-                userName: displayName,
-                userStatus: statusText,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const SettingsView()),
-                  );
-                },
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: AccountCard(
+                      userName: displayName,
+                      userStatus: statusText,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const SettingsView()),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: AppThemeTokens.spaceSm),
+                  const _SOSButton(),
+                ],
               ),
               const SizedBox(height: AppThemeTokens.spaceSm),
 
@@ -500,7 +511,7 @@ class _DailySummaryCard extends ConsumerWidget {
           const SizedBox(height: AppThemeTokens.spaceMd),
           summaryAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (_, __) => const Text('Could not load summary'),
+            error: (_, _) => const Text('Could not load summary'),
             data: (s) =>
                 s.glucoseReadings == 0 &&
                     s.mealsLogged == 0 &&
@@ -709,6 +720,94 @@ class _AlertBanner extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SOSButton extends StatefulWidget {
+  const _SOSButton();
+
+  @override
+  State<_SOSButton> createState() => _SOSButtonState();
+}
+
+class _SOSButtonState extends State<_SOSButton> {
+  bool _isCalling = false;
+
+  void _handleEmergency() async {
+    setState(() => _isCalling = true);
+    
+    // First vibrate heavily to give feedback
+    // In a real app we might use HapticFeedback.heavyImpact();
+    // Then call emergency service
+    
+    final bool success = await EmergencyService.callEmergencyContact();
+    
+    if (!mounted) return;
+    setState(() => _isCalling = false);
+
+    if (!success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('No emergency contact configured, or unable to dial.'),
+          backgroundColor: AppThemeTokens.error,
+          action: SnackBarAction(
+            label: 'Configure',
+            textColor: Colors.white,
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const EmergencyContactsView()),
+              );
+            },
+          ),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: 'Emergency SOS Call',
+      button: true,
+      child: Material(
+        color: AppThemeTokens.error,
+        borderRadius: BorderRadius.circular(AppThemeTokens.radiusLg),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: _isCalling ? null : _handleEmergency,
+          splashColor: Colors.white24,
+          highlightColor: Colors.white10,
+          child: Container(
+            height: 72, // Matches typical AccountCard height roughly
+            width: 72,
+            alignment: Alignment.center,
+            child: _isCalling
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3),
+                  )
+                : const Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.warning_rounded, color: Colors.white, size: 28),
+                      SizedBox(height: 2),
+                      Text(
+                        'SOS',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
         ),
       ),
     );

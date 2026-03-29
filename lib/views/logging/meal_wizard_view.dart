@@ -98,6 +98,7 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
         fiber: null,
         proteins: totalProtein,
         fats: totalFat,
+        calories: result.totalCalories,
       );
 
       // Update text controllers so the input fields visually reflect the AI values
@@ -134,6 +135,7 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
         carbs: result.carbsGrams,
         proteins: result.proteinGrams,
         fats: result.fatGrams,
+        calories: result.calories,
       );
       // Populate text controllers so the UI fields update visually
       _carbsCtrl.text = result.carbsGrams.toStringAsFixed(1);

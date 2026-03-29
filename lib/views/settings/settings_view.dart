@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../core/theme/app_tokens.dart';
 import '../../services/reminder_service.dart';
 import '../../viewmodels/profile_viewmodel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'emergency_contacts_view.dart';
 
 class SettingsView extends ConsumerStatefulWidget {
   const SettingsView({super.key});
@@ -632,6 +634,44 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                   },
                 ),
               ],
+            ],
+          ),
+
+          const SizedBox(height: AppThemeTokens.spaceMd),
+
+          _SectionCard(
+            title: 'Safety',
+            icon: Icons.health_and_safety_outlined,
+            isDark: isDark,
+            children: [
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(LucideIcons.phoneCall, color: AppThemeTokens.error),
+                title: Text(
+                  'Emergency Contacts',
+                  style: TextStyle(
+                    color: isDark ? Colors.white : AppThemeTokens.textPrimary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                  ),
+                ),
+                subtitle: Text(
+                  'Manage who to call in an emergency',
+                  style: TextStyle(
+                    color: isDark ? Colors.white60 : AppThemeTokens.textSecondary,
+                    fontSize: 13,
+                  ),
+                ),
+                trailing: const Icon(Icons.chevron_right_rounded, color: AppThemeTokens.textSecondary),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const EmergencyContactsView(),
+                    ),
+                  );
+                },
+              ),
             ],
           ),
 

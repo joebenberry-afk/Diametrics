@@ -36,6 +36,9 @@ class MealLogs extends Table {
   TextColumn get imagePath => text().nullable()();
   TextColumn get transcription => text().nullable()();
   RealColumn get estimatedCarbs => real()();
+  RealColumn get totalCalories => real().withDefault(const Constant(0.0))();
+  RealColumn get totalProtein => real().withDefault(const Constant(0.0))();
+  RealColumn get totalFat => real().withDefault(const Constant(0.0))();
   IntColumn get completionPercentage =>
       integer().withDefault(const Constant(100))();
   TextColumn get syncStatus => text().withDefault(const Constant('pending'))();
@@ -62,7 +65,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -77,6 +80,11 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from <= 2) {
         await m.createTable(n5kIngredients);
+      }
+      if (from <= 3) {
+        await m.addColumn(mealLogs, mealLogs.totalCalories);
+        await m.addColumn(mealLogs, mealLogs.totalProtein);
+        await m.addColumn(mealLogs, mealLogs.totalFat);
       }
     },
   );

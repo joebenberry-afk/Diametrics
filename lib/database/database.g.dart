@@ -1208,6 +1208,42 @@ class $MealLogsTable extends MealLogs with TableInfo<$MealLogsTable, MealLog> {
     type: DriftSqlType.double,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _totalCaloriesMeta = const VerificationMeta(
+    'totalCalories',
+  );
+  @override
+  late final GeneratedColumn<double> totalCalories = GeneratedColumn<double>(
+    'total_calories',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
+  static const VerificationMeta _totalProteinMeta = const VerificationMeta(
+    'totalProtein',
+  );
+  @override
+  late final GeneratedColumn<double> totalProtein = GeneratedColumn<double>(
+    'total_protein',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
+  static const VerificationMeta _totalFatMeta = const VerificationMeta(
+    'totalFat',
+  );
+  @override
+  late final GeneratedColumn<double> totalFat = GeneratedColumn<double>(
+    'total_fat',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
   static const VerificationMeta _completionPercentageMeta =
       const VerificationMeta('completionPercentage');
   @override
@@ -1253,6 +1289,9 @@ class $MealLogsTable extends MealLogs with TableInfo<$MealLogsTable, MealLog> {
     imagePath,
     transcription,
     estimatedCarbs,
+    totalCalories,
+    totalProtein,
+    totalFat,
     completionPercentage,
     syncStatus,
     isOfflineEstimate,
@@ -1305,6 +1344,30 @@ class $MealLogsTable extends MealLogs with TableInfo<$MealLogsTable, MealLog> {
       );
     } else if (isInserting) {
       context.missing(_estimatedCarbsMeta);
+    }
+    if (data.containsKey('total_calories')) {
+      context.handle(
+        _totalCaloriesMeta,
+        totalCalories.isAcceptableOrUnknown(
+          data['total_calories']!,
+          _totalCaloriesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('total_protein')) {
+      context.handle(
+        _totalProteinMeta,
+        totalProtein.isAcceptableOrUnknown(
+          data['total_protein']!,
+          _totalProteinMeta,
+        ),
+      );
+    }
+    if (data.containsKey('total_fat')) {
+      context.handle(
+        _totalFatMeta,
+        totalFat.isAcceptableOrUnknown(data['total_fat']!, _totalFatMeta),
+      );
     }
     if (data.containsKey('completion_percentage')) {
       context.handle(
@@ -1359,6 +1422,18 @@ class $MealLogsTable extends MealLogs with TableInfo<$MealLogsTable, MealLog> {
         DriftSqlType.double,
         data['${effectivePrefix}estimated_carbs'],
       )!,
+      totalCalories: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}total_calories'],
+      )!,
+      totalProtein: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}total_protein'],
+      )!,
+      totalFat: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}total_fat'],
+      )!,
       completionPercentage: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}completion_percentage'],
@@ -1386,6 +1461,9 @@ class MealLog extends DataClass implements Insertable<MealLog> {
   final String? imagePath;
   final String? transcription;
   final double estimatedCarbs;
+  final double totalCalories;
+  final double totalProtein;
+  final double totalFat;
   final int completionPercentage;
   final String syncStatus;
   final bool isOfflineEstimate;
@@ -1395,6 +1473,9 @@ class MealLog extends DataClass implements Insertable<MealLog> {
     this.imagePath,
     this.transcription,
     required this.estimatedCarbs,
+    required this.totalCalories,
+    required this.totalProtein,
+    required this.totalFat,
     required this.completionPercentage,
     required this.syncStatus,
     required this.isOfflineEstimate,
@@ -1411,6 +1492,9 @@ class MealLog extends DataClass implements Insertable<MealLog> {
       map['transcription'] = Variable<String>(transcription);
     }
     map['estimated_carbs'] = Variable<double>(estimatedCarbs);
+    map['total_calories'] = Variable<double>(totalCalories);
+    map['total_protein'] = Variable<double>(totalProtein);
+    map['total_fat'] = Variable<double>(totalFat);
     map['completion_percentage'] = Variable<int>(completionPercentage);
     map['sync_status'] = Variable<String>(syncStatus);
     map['is_offline_estimate'] = Variable<bool>(isOfflineEstimate);
@@ -1428,6 +1512,9 @@ class MealLog extends DataClass implements Insertable<MealLog> {
           ? const Value.absent()
           : Value(transcription),
       estimatedCarbs: Value(estimatedCarbs),
+      totalCalories: Value(totalCalories),
+      totalProtein: Value(totalProtein),
+      totalFat: Value(totalFat),
       completionPercentage: Value(completionPercentage),
       syncStatus: Value(syncStatus),
       isOfflineEstimate: Value(isOfflineEstimate),
@@ -1445,6 +1532,9 @@ class MealLog extends DataClass implements Insertable<MealLog> {
       imagePath: serializer.fromJson<String?>(json['imagePath']),
       transcription: serializer.fromJson<String?>(json['transcription']),
       estimatedCarbs: serializer.fromJson<double>(json['estimatedCarbs']),
+      totalCalories: serializer.fromJson<double>(json['totalCalories']),
+      totalProtein: serializer.fromJson<double>(json['totalProtein']),
+      totalFat: serializer.fromJson<double>(json['totalFat']),
       completionPercentage: serializer.fromJson<int>(
         json['completionPercentage'],
       ),
@@ -1461,6 +1551,9 @@ class MealLog extends DataClass implements Insertable<MealLog> {
       'imagePath': serializer.toJson<String?>(imagePath),
       'transcription': serializer.toJson<String?>(transcription),
       'estimatedCarbs': serializer.toJson<double>(estimatedCarbs),
+      'totalCalories': serializer.toJson<double>(totalCalories),
+      'totalProtein': serializer.toJson<double>(totalProtein),
+      'totalFat': serializer.toJson<double>(totalFat),
       'completionPercentage': serializer.toJson<int>(completionPercentage),
       'syncStatus': serializer.toJson<String>(syncStatus),
       'isOfflineEstimate': serializer.toJson<bool>(isOfflineEstimate),
@@ -1473,6 +1566,9 @@ class MealLog extends DataClass implements Insertable<MealLog> {
     Value<String?> imagePath = const Value.absent(),
     Value<String?> transcription = const Value.absent(),
     double? estimatedCarbs,
+    double? totalCalories,
+    double? totalProtein,
+    double? totalFat,
     int? completionPercentage,
     String? syncStatus,
     bool? isOfflineEstimate,
@@ -1484,6 +1580,9 @@ class MealLog extends DataClass implements Insertable<MealLog> {
         ? transcription.value
         : this.transcription,
     estimatedCarbs: estimatedCarbs ?? this.estimatedCarbs,
+    totalCalories: totalCalories ?? this.totalCalories,
+    totalProtein: totalProtein ?? this.totalProtein,
+    totalFat: totalFat ?? this.totalFat,
     completionPercentage: completionPercentage ?? this.completionPercentage,
     syncStatus: syncStatus ?? this.syncStatus,
     isOfflineEstimate: isOfflineEstimate ?? this.isOfflineEstimate,
@@ -1499,6 +1598,13 @@ class MealLog extends DataClass implements Insertable<MealLog> {
       estimatedCarbs: data.estimatedCarbs.present
           ? data.estimatedCarbs.value
           : this.estimatedCarbs,
+      totalCalories: data.totalCalories.present
+          ? data.totalCalories.value
+          : this.totalCalories,
+      totalProtein: data.totalProtein.present
+          ? data.totalProtein.value
+          : this.totalProtein,
+      totalFat: data.totalFat.present ? data.totalFat.value : this.totalFat,
       completionPercentage: data.completionPercentage.present
           ? data.completionPercentage.value
           : this.completionPercentage,
@@ -1519,6 +1625,9 @@ class MealLog extends DataClass implements Insertable<MealLog> {
           ..write('imagePath: $imagePath, ')
           ..write('transcription: $transcription, ')
           ..write('estimatedCarbs: $estimatedCarbs, ')
+          ..write('totalCalories: $totalCalories, ')
+          ..write('totalProtein: $totalProtein, ')
+          ..write('totalFat: $totalFat, ')
           ..write('completionPercentage: $completionPercentage, ')
           ..write('syncStatus: $syncStatus, ')
           ..write('isOfflineEstimate: $isOfflineEstimate')
@@ -1533,6 +1642,9 @@ class MealLog extends DataClass implements Insertable<MealLog> {
     imagePath,
     transcription,
     estimatedCarbs,
+    totalCalories,
+    totalProtein,
+    totalFat,
     completionPercentage,
     syncStatus,
     isOfflineEstimate,
@@ -1546,6 +1658,9 @@ class MealLog extends DataClass implements Insertable<MealLog> {
           other.imagePath == this.imagePath &&
           other.transcription == this.transcription &&
           other.estimatedCarbs == this.estimatedCarbs &&
+          other.totalCalories == this.totalCalories &&
+          other.totalProtein == this.totalProtein &&
+          other.totalFat == this.totalFat &&
           other.completionPercentage == this.completionPercentage &&
           other.syncStatus == this.syncStatus &&
           other.isOfflineEstimate == this.isOfflineEstimate);
@@ -1557,6 +1672,9 @@ class MealLogsCompanion extends UpdateCompanion<MealLog> {
   final Value<String?> imagePath;
   final Value<String?> transcription;
   final Value<double> estimatedCarbs;
+  final Value<double> totalCalories;
+  final Value<double> totalProtein;
+  final Value<double> totalFat;
   final Value<int> completionPercentage;
   final Value<String> syncStatus;
   final Value<bool> isOfflineEstimate;
@@ -1566,6 +1684,9 @@ class MealLogsCompanion extends UpdateCompanion<MealLog> {
     this.imagePath = const Value.absent(),
     this.transcription = const Value.absent(),
     this.estimatedCarbs = const Value.absent(),
+    this.totalCalories = const Value.absent(),
+    this.totalProtein = const Value.absent(),
+    this.totalFat = const Value.absent(),
     this.completionPercentage = const Value.absent(),
     this.syncStatus = const Value.absent(),
     this.isOfflineEstimate = const Value.absent(),
@@ -1576,6 +1697,9 @@ class MealLogsCompanion extends UpdateCompanion<MealLog> {
     this.imagePath = const Value.absent(),
     this.transcription = const Value.absent(),
     required double estimatedCarbs,
+    this.totalCalories = const Value.absent(),
+    this.totalProtein = const Value.absent(),
+    this.totalFat = const Value.absent(),
     this.completionPercentage = const Value.absent(),
     this.syncStatus = const Value.absent(),
     this.isOfflineEstimate = const Value.absent(),
@@ -1587,6 +1711,9 @@ class MealLogsCompanion extends UpdateCompanion<MealLog> {
     Expression<String>? imagePath,
     Expression<String>? transcription,
     Expression<double>? estimatedCarbs,
+    Expression<double>? totalCalories,
+    Expression<double>? totalProtein,
+    Expression<double>? totalFat,
     Expression<int>? completionPercentage,
     Expression<String>? syncStatus,
     Expression<bool>? isOfflineEstimate,
@@ -1597,6 +1724,9 @@ class MealLogsCompanion extends UpdateCompanion<MealLog> {
       if (imagePath != null) 'image_path': imagePath,
       if (transcription != null) 'transcription': transcription,
       if (estimatedCarbs != null) 'estimated_carbs': estimatedCarbs,
+      if (totalCalories != null) 'total_calories': totalCalories,
+      if (totalProtein != null) 'total_protein': totalProtein,
+      if (totalFat != null) 'total_fat': totalFat,
       if (completionPercentage != null)
         'completion_percentage': completionPercentage,
       if (syncStatus != null) 'sync_status': syncStatus,
@@ -1610,6 +1740,9 @@ class MealLogsCompanion extends UpdateCompanion<MealLog> {
     Value<String?>? imagePath,
     Value<String?>? transcription,
     Value<double>? estimatedCarbs,
+    Value<double>? totalCalories,
+    Value<double>? totalProtein,
+    Value<double>? totalFat,
     Value<int>? completionPercentage,
     Value<String>? syncStatus,
     Value<bool>? isOfflineEstimate,
@@ -1620,6 +1753,9 @@ class MealLogsCompanion extends UpdateCompanion<MealLog> {
       imagePath: imagePath ?? this.imagePath,
       transcription: transcription ?? this.transcription,
       estimatedCarbs: estimatedCarbs ?? this.estimatedCarbs,
+      totalCalories: totalCalories ?? this.totalCalories,
+      totalProtein: totalProtein ?? this.totalProtein,
+      totalFat: totalFat ?? this.totalFat,
       completionPercentage: completionPercentage ?? this.completionPercentage,
       syncStatus: syncStatus ?? this.syncStatus,
       isOfflineEstimate: isOfflineEstimate ?? this.isOfflineEstimate,
@@ -1644,6 +1780,15 @@ class MealLogsCompanion extends UpdateCompanion<MealLog> {
     if (estimatedCarbs.present) {
       map['estimated_carbs'] = Variable<double>(estimatedCarbs.value);
     }
+    if (totalCalories.present) {
+      map['total_calories'] = Variable<double>(totalCalories.value);
+    }
+    if (totalProtein.present) {
+      map['total_protein'] = Variable<double>(totalProtein.value);
+    }
+    if (totalFat.present) {
+      map['total_fat'] = Variable<double>(totalFat.value);
+    }
     if (completionPercentage.present) {
       map['completion_percentage'] = Variable<int>(completionPercentage.value);
     }
@@ -1664,6 +1809,9 @@ class MealLogsCompanion extends UpdateCompanion<MealLog> {
           ..write('imagePath: $imagePath, ')
           ..write('transcription: $transcription, ')
           ..write('estimatedCarbs: $estimatedCarbs, ')
+          ..write('totalCalories: $totalCalories, ')
+          ..write('totalProtein: $totalProtein, ')
+          ..write('totalFat: $totalFat, ')
           ..write('completionPercentage: $completionPercentage, ')
           ..write('syncStatus: $syncStatus, ')
           ..write('isOfflineEstimate: $isOfflineEstimate')
@@ -2709,6 +2857,9 @@ typedef $$MealLogsTableCreateCompanionBuilder =
       Value<String?> imagePath,
       Value<String?> transcription,
       required double estimatedCarbs,
+      Value<double> totalCalories,
+      Value<double> totalProtein,
+      Value<double> totalFat,
       Value<int> completionPercentage,
       Value<String> syncStatus,
       Value<bool> isOfflineEstimate,
@@ -2720,6 +2871,9 @@ typedef $$MealLogsTableUpdateCompanionBuilder =
       Value<String?> imagePath,
       Value<String?> transcription,
       Value<double> estimatedCarbs,
+      Value<double> totalCalories,
+      Value<double> totalProtein,
+      Value<double> totalFat,
       Value<int> completionPercentage,
       Value<String> syncStatus,
       Value<bool> isOfflineEstimate,
@@ -2756,6 +2910,21 @@ class $$MealLogsTableFilterComposer
 
   ColumnFilters<double> get estimatedCarbs => $composableBuilder(
     column: $table.estimatedCarbs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get totalCalories => $composableBuilder(
+    column: $table.totalCalories,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get totalProtein => $composableBuilder(
+    column: $table.totalProtein,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get totalFat => $composableBuilder(
+    column: $table.totalFat,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2809,6 +2978,21 @@ class $$MealLogsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get totalCalories => $composableBuilder(
+    column: $table.totalCalories,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get totalProtein => $composableBuilder(
+    column: $table.totalProtein,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get totalFat => $composableBuilder(
+    column: $table.totalFat,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get completionPercentage => $composableBuilder(
     column: $table.completionPercentage,
     builder: (column) => ColumnOrderings(column),
@@ -2852,6 +3036,19 @@ class $$MealLogsTableAnnotationComposer
     column: $table.estimatedCarbs,
     builder: (column) => column,
   );
+
+  GeneratedColumn<double> get totalCalories => $composableBuilder(
+    column: $table.totalCalories,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get totalProtein => $composableBuilder(
+    column: $table.totalProtein,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get totalFat =>
+      $composableBuilder(column: $table.totalFat, builder: (column) => column);
 
   GeneratedColumn<int> get completionPercentage => $composableBuilder(
     column: $table.completionPercentage,
@@ -2902,6 +3099,9 @@ class $$MealLogsTableTableManager
                 Value<String?> imagePath = const Value.absent(),
                 Value<String?> transcription = const Value.absent(),
                 Value<double> estimatedCarbs = const Value.absent(),
+                Value<double> totalCalories = const Value.absent(),
+                Value<double> totalProtein = const Value.absent(),
+                Value<double> totalFat = const Value.absent(),
                 Value<int> completionPercentage = const Value.absent(),
                 Value<String> syncStatus = const Value.absent(),
                 Value<bool> isOfflineEstimate = const Value.absent(),
@@ -2911,6 +3111,9 @@ class $$MealLogsTableTableManager
                 imagePath: imagePath,
                 transcription: transcription,
                 estimatedCarbs: estimatedCarbs,
+                totalCalories: totalCalories,
+                totalProtein: totalProtein,
+                totalFat: totalFat,
                 completionPercentage: completionPercentage,
                 syncStatus: syncStatus,
                 isOfflineEstimate: isOfflineEstimate,
@@ -2922,6 +3125,9 @@ class $$MealLogsTableTableManager
                 Value<String?> imagePath = const Value.absent(),
                 Value<String?> transcription = const Value.absent(),
                 required double estimatedCarbs,
+                Value<double> totalCalories = const Value.absent(),
+                Value<double> totalProtein = const Value.absent(),
+                Value<double> totalFat = const Value.absent(),
                 Value<int> completionPercentage = const Value.absent(),
                 Value<String> syncStatus = const Value.absent(),
                 Value<bool> isOfflineEstimate = const Value.absent(),
@@ -2931,6 +3137,9 @@ class $$MealLogsTableTableManager
                 imagePath: imagePath,
                 transcription: transcription,
                 estimatedCarbs: estimatedCarbs,
+                totalCalories: totalCalories,
+                totalProtein: totalProtein,
+                totalFat: totalFat,
                 completionPercentage: completionPercentage,
                 syncStatus: syncStatus,
                 isOfflineEstimate: isOfflineEstimate,
