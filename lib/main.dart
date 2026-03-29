@@ -13,12 +13,20 @@ import 'views/splash/splash_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   configureDependencies();
-  await ReminderService.initialize();
+  try {
+    await ReminderService.initialize();
+  } catch (e) {
+    debugPrint('Reminder initialization failed: $e');
+  }
 
-  // Initialize & seed the Drift food databases (required for RAG pipeline).
-  await initDatabase();
-  await db.populateLocalFoodsIfEmpty(); // 7,803 USDA foods (carbs)
-  await db.populateN5kIfEmpty();        // 555 N5K ingredients (full macros)
+  try {
+    // Initialize & seed the Drift food databases (required for RAG pipeline).
+    await initDatabase();
+    await db.populateLocalFoodsIfEmpty(); // 7,803 USDA foods (carbs)
+    await db.populateN5kIfEmpty();        // 555 N5K ingredients (full macros)
+  } catch (e) {
+    debugPrint('Database initialization or seeding failed: $e');
+  }
 
   runApp(const ProviderScope(child: DiametricsApp()));
 }

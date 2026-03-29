@@ -45,7 +45,9 @@ Future<QueryExecutor> openEncryptedDatabase() async {
     dbKey = await secureStorage.read(key: 'sqlcipher_db_key');
   } catch (e) {
     debugPrint('Security: Keystore exception caught on startup: $e. Wiping storage.');
-    await secureStorage.deleteAll();
+    try {
+      await secureStorage.deleteAll();
+    } catch (_) {}
     dbKey = null;
   }
 
