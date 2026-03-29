@@ -79,8 +79,9 @@ class GlucoseProjectionService {
         riseRate *= 1.10;
       }
 
-      // Glucose-dependent clearance
-      final double clearanceRate = gCurrent * p1;
+      // Glucose-dependent clearance relies on subtracting a basal/fasting EGP balance
+      // Assume healthy baseline EGP cancels out clearance at ~90 mg/dL.
+      final double clearanceRate = max(0.0, gCurrent - 90.0) * p1;
 
       // Alcohol: inhibits gluconeogenesis → ~3 mg/dL drop per hour after 60 min
       final double alcoholDrop =

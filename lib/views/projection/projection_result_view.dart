@@ -292,10 +292,9 @@ class _MetricTile extends StatelessWidget {
     final allValues = points.map((p) => p.glucoseValue);
     final rawMin = allValues.reduce(min);
     final rawMax = allValues.reduce(max);
-    
-    // Add 20 padding, clamp minimum to 0
-    final yMin = max(0.0, rawMin - 20.0);
-    final yMax = rawMax + 20.0;
+    // Snapped to interval of 50 to prevent unaligned floating labels
+    final yMin = (max(0.0, rawMin - 20.0) / 50).floor() * 50.0;
+    final yMax = ((rawMax + 20.0) / 50).ceil() * 50.0;
 
     final spots = points
         .map((p) => FlSpot(p.timeMinutes.toDouble(), p.glucoseValue))

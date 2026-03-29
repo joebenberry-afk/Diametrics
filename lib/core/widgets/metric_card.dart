@@ -27,6 +27,11 @@ class MetricCard extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
+    // Enhance contrast for dark mode so icons are highly visible
+    final displayAccent = isDark 
+        ? HSLColor.fromColor(accentColor).withLightness(0.70).toColor()
+        : accentColor;
+
     return Semantics(
       label: '$title card showing $value $unit',
       hint: 'Tap to log or view details',
@@ -46,19 +51,19 @@ class MetricCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: accentColor.withValues(alpha: 0.1),
+                        color: displayAccent.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(
                           AppThemeTokens.radiusMd,
                         ),
                       ),
-                      child: Icon(icon, color: accentColor, size: 24),
+                      child: Icon(icon, color: displayAccent, size: 24),
                     ),
                     if (trendData.isNotEmpty)
                       Flexible(
                         child: ClipRect(
                           child: MicroChart(
                             dataPoints: trendData,
-                            color: accentColor,
+                            color: displayAccent,
                           ),
                         ),
                       ),
