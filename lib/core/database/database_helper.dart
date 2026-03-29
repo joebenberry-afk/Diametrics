@@ -5,7 +5,7 @@ import 'package:path_provider/path_provider.dart';
 
 class DatabaseHelper {
   static const _databaseName = "diametrics_v1.db";
-  static const _databaseVersion = 3; // v3: added name column to user_profiles
+  static const _databaseVersion = 4; // v4: added full macros to meal_logs
 
   DatabaseHelper._privateConstructor();
   static final DatabaseHelper instance = DatabaseHelper._privateConstructor();
@@ -45,6 +45,30 @@ class DatabaseHelper {
       // Add patient name column (safe for existing installs)
       await db.execute(
         "ALTER TABLE user_profiles ADD COLUMN name TEXT NOT NULL DEFAULT ''",
+      );
+    }
+    if (oldVersion < 4) {
+      // Add missing macros and calories to meal_logs
+      await db.execute(
+        "ALTER TABLE meal_logs ADD COLUMN carbohydrates REAL NOT NULL DEFAULT 0",
+      );
+      await db.execute(
+        "ALTER TABLE meal_logs ADD COLUMN dietaryFiber REAL NOT NULL DEFAULT 0",
+      );
+      await db.execute(
+        "ALTER TABLE meal_logs ADD COLUMN proteins REAL NOT NULL DEFAULT 0",
+      );
+      await db.execute(
+        "ALTER TABLE meal_logs ADD COLUMN fats REAL NOT NULL DEFAULT 0",
+      );
+      await db.execute(
+        "ALTER TABLE meal_logs ADD COLUMN calories REAL NOT NULL DEFAULT 0",
+      );
+      await db.execute(
+        "ALTER TABLE meal_logs ADD COLUMN containsAlcohol INTEGER NOT NULL DEFAULT 0",
+      );
+      await db.execute(
+        "ALTER TABLE meal_logs ADD COLUMN containsCaffeine INTEGER NOT NULL DEFAULT 0",
       );
     }
   }

@@ -40,7 +40,14 @@ Future<void> initDatabase() async {
 /// Migrates or generates a secure AES-256 key and returns the encrypted database connection.
 Future<QueryExecutor> openEncryptedDatabase() async {
   const secureStorage = FlutterSecureStorage();
-  String? dbKey = await secureStorage.read(key: 'sqlcipher_db_key');
+  String? dbKey;
+  try {
+    dbKey = await secureStorage.read(key: 'sqlcipher_db_key');
+  } catch (e) {
+    debugPrint('Security: Keystore exception caught on startup: $e. Wiping storage.');
+    await secureStorage.deleteAll();
+    dbKey = null;
+  }
 
   if (dbKey == null) {
     // 1. Try to migrate from insecure SharedPreferences (if it exists)
