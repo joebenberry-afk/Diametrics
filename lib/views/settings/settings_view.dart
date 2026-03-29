@@ -44,6 +44,11 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
   bool _usesPills = false;
   bool _usesCgm = false;
 
+  // ML Adaptive Model Parameters — mirrored from profile
+  double _metabolicClearanceRate = 0.010;
+  double _insulinSensitivityFactor = 50.0;
+  double _absorptionDelayBase = 40.0;
+
   bool _isDirty = false;
   bool _isSaving = false;
   bool _hasPopulated = false;
@@ -90,6 +95,11 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
       _usesInsulin = profile.usesInsulin;
       _usesPills = profile.usesPills;
       _usesCgm = profile.usesCgm;
+
+      // Populate ML parameters from profile
+      _metabolicClearanceRate = profile.metabolicClearanceRate;
+      _insulinSensitivityFactor = profile.insulinSensitivityFactor;
+      _absorptionDelayBase = profile.absorptionDelayBase;
     });
 
     _loadReminderSettings();
@@ -182,6 +192,11 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
         usesCgm: _usesCgm,
         targetGlucoseMin: minTarget,
         targetGlucoseMax: maxTarget,
+        // Persist the ML parameters (user-modified or tuned)
+        metabolicClearanceRate: _metabolicClearanceRate,
+        insulinSensitivityFactor: _insulinSensitivityFactor,
+        absorptionDelayBase: _absorptionDelayBase,
+        updatedAt: DateTime.now(),
       );
 
       await ref.read(userProfileProvider.notifier).updateProfile(updated);
@@ -635,6 +650,28 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                 ),
               ],
             ],
+          ),
+
+          const SizedBox(height: AppThemeTokens.spaceMd),
+
+          // ── Advanced Model Parameters ──────────────────────────────────
+          _MetabolicParamsSection(
+            isDark: isDark,
+            theme: theme,
+            clearanceRate: _metabolicClearanceRate,
+            isf: _insulinSensitivityFactor,
+            tMax: _absorptionDelayBase,
+            onClearanceChanged: (v) { setState(() => _metabolicClearanceRate = v); _markDirty(); },
+            onIsfChanged: (v) { setState(() => _insulinSensitivityFactor = v); _markDirty(); },
+            onTMaxChanged: (v) { setState(() => _absorptionDelayBase = v); _markDirty(); },
+            onReset: () {
+              setState(() {
+                _metabolicClearanceRate = 0.010;
+                _insulinSensitivityFactor = 50.0;
+                _absorptionDelayBase = 40.0;
+              });
+              _markDirty();
+            },
           ),
 
           const SizedBox(height: AppThemeTokens.spaceMd),
@@ -1390,6 +1427,524 @@ class _SaveBar extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Advanced Model Parameters Section
+// Allows expert users to view & override the ML-tuned metabolic constants with
+// strict gating, clinical warnings, and a one-tap "Reset to Defaults" option.
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _MetabolicParamsSection extends StatefulWidget {
+  final bool isDark;
+  final ThemeData theme;
+  final double clearanceRate;
+  final double isf;
+  final double tMax;
+  final ValueChanged<double> onClearanceChanged;
+  final ValueChanged<double> onIsfChanged;
+  final ValueChanged<double> onTMaxChanged;
+  final VoidCallback onReset;
+
+  const _MetabolicParamsSection({
+    required this.isDark,
+    required this.theme,
+    required this.clearanceRate,
+    required this.isf,
+    required this.tMax,
+    required this.onClearanceChanged,
+    required this.onIsfChanged,
+    required this.onTMaxChanged,
+    required this.onReset,
+  });
+
+  @override
+  State<_MetabolicParamsSection> createState() =>
+      _MetabolicParamsSectionState();
+}
+
+class _MetabolicParamsSectionState extends State<_MetabolicParamsSection> {
+  bool _unlocked = false;
+
+  static const double _p1Default = 0.010;
+  static const double _isfDefault = 50.0;
+  static const double _tMaxDefault = 40.0;
+
+  bool get _isAtDefault =>
+      (widget.clearanceRate - _p1Default).abs() < 1e-5 &&
+      (widget.isf - _isfDefault).abs() < 0.01 &&
+      (widget.tMax - _tMaxDefault).abs() < 0.01;
+
+  Future<void> _requestUnlock() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        icon: const Icon(
+          Icons.warning_amber_rounded,
+          color: Color(0xFFD97706),
+          size: 36,
+        ),
+        title: const Text(
+          'Clinical Parameter Warning',
+          style: TextStyle(fontWeight: FontWeight.w700),
+        ),
+        content: const Text(
+          'These parameters control how your glucose projections are '
+          'calculated. They are automatically tuned by the app as you '
+          'log meals and glucose readings.\n\n'
+          'Changing them manually can cause inaccurate predictions and '
+          'may affect clinical decisions. Only proceed if directed by a '
+          'healthcare professional.\n\n'
+          'Use "Reset to Defaults" at any time to restore population-level '
+          'averages and re-allow automatic learning.',
+          style: TextStyle(height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Keep Locked'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFD97706),
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('I Understand — Unlock'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && mounted) {
+      setState(() => _unlocked = true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = widget.isDark;
+    final textPrimary =
+        isDark ? Colors.white : AppThemeTokens.textPrimary;
+    final textSecondary =
+        isDark ? Colors.white60 : AppThemeTokens.textSecondary;
+    final cardColor = isDark
+        ? AppThemeTokens.bgSurfaceDark
+        : AppThemeTokens.bgSurface;
+    const amber = Color(0xFFD97706);
+    const amberLight = Color(0xFFFEF3C7);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(AppThemeTokens.radiusLg),
+        border: Border.all(
+          color: amber.withValues(alpha: 0.5),
+          width: 1.5,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Header ──────────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppThemeTokens.spaceLg,
+              AppThemeTokens.spaceLg,
+              AppThemeTokens.spaceLg,
+              AppThemeTokens.spaceMd,
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: amber.withValues(alpha: 0.12),
+                    borderRadius:
+                        BorderRadius.circular(AppThemeTokens.radiusMd),
+                  ),
+                  child: const Icon(
+                    LucideIcons.brainCircuit,
+                    color: amber,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: AppThemeTokens.spaceMd),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Advanced Model Parameters',
+                        style: TextStyle(
+                          color: textPrimary,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Auto-tuned by AI · Expert use only',
+                        style: TextStyle(
+                          color: amber,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Lock / Unlock toggle chip
+                GestureDetector(
+                  onTap: _unlocked
+                      ? () => setState(() => _unlocked = false)
+                      : _requestUnlock,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 250),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: _unlocked
+                          ? const Color(0xFFD1FAE5)
+                          : amberLight,
+                      borderRadius:
+                          BorderRadius.circular(AppThemeTokens.radiusFull),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _unlocked
+                              ? Icons.lock_open_rounded
+                              : LucideIcons.lock,
+                          size: 12,
+                          color: _unlocked
+                              ? const Color(0xFF059669)
+                              : amber,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          _unlocked ? 'Unlocked' : 'Locked',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: _unlocked
+                                ? const Color(0xFF059669)
+                                : amber,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // ── Warning Banner ───────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppThemeTokens.spaceLg),
+            child: Container(
+              padding: const EdgeInsets.all(AppThemeTokens.spaceSm),
+              decoration: BoxDecoration(
+                color: amber.withValues(alpha: 0.08),
+                borderRadius:
+                    BorderRadius.circular(AppThemeTokens.radiusMd),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline_rounded,
+                      color: amber, size: 16),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _unlocked
+                          ? 'You are editing clinical parameters. Changes affect glucose predictions.'
+                          : 'These values are automatically learned from your logs. No action needed.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark ? Colors.amber.shade200 : amber,
+                        fontWeight: FontWeight.w500,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: AppThemeTokens.spaceMd),
+
+          // ── Sliders ──────────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppThemeTokens.spaceLg),
+            child: AbsorbPointer(
+              absorbing: !_unlocked,
+              child: Opacity(
+                opacity: _unlocked ? 1.0 : 0.55,
+                child: Column(
+                  children: [
+                    _ParamSlider(
+                      label: 'Metabolic Clearance Rate',
+                      description:
+                          'How quickly excess glucose is cleared from blood.'
+                          ' Lower = slower clearance, higher post-meal spikes.',
+                      unit: 'min⁻¹',
+                      value: widget.clearanceRate,
+                      min: 0.002,
+                      max: 0.020,
+                      divisions: 18,
+                      displayDecimals: 3,
+                      defaultValue: _p1Default,
+                      isDark: isDark,
+                      textSecondary: textSecondary,
+                      onChanged: widget.onClearanceChanged,
+                    ),
+                    const SizedBox(height: AppThemeTokens.spaceMd),
+                    _ParamSlider(
+                      label: 'Insulin Sensitivity Factor',
+                      description:
+                          'How many mg/dL blood glucose drops per unit of '
+                          'rapid-acting insulin. Higher = more sensitive.',
+                      unit: 'mg/dL·U',
+                      value: widget.isf,
+                      min: 20.0,
+                      max: 150.0,
+                      divisions: 26,
+                      displayDecimals: 0,
+                      defaultValue: _isfDefault,
+                      isDark: isDark,
+                      textSecondary: textSecondary,
+                      onChanged: widget.onIsfChanged,
+                    ),
+                    const SizedBox(height: AppThemeTokens.spaceMd),
+                    _ParamSlider(
+                      label: 'Digestion Delay',
+                      description:
+                          'Time until peak gut glucose absorption. '
+                          'Longer = slower digestion, flatter but prolonged spike.',
+                      unit: 'minutes',
+                      value: widget.tMax,
+                      min: 20.0,
+                      max: 90.0,
+                      divisions: 14,
+                      displayDecimals: 0,
+                      defaultValue: _tMaxDefault,
+                      isDark: isDark,
+                      textSecondary: textSecondary,
+                      onChanged: widget.onTMaxChanged,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: AppThemeTokens.spaceMd),
+
+          // ── Reset to Defaults button ─────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppThemeTokens.spaceLg,
+              0,
+              AppThemeTokens.spaceLg,
+              AppThemeTokens.spaceLg,
+            ),
+            child: SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _isAtDefault
+                    ? null
+                    : () async {
+                        final ok = await showDialog<bool>(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title:
+                                const Text('Reset to Clinical Defaults?'),
+                            content: const Text(
+                              'This will restore population-level averages:\n\n'
+                              '• Clearance Rate: 0.010 min⁻¹\n'
+                              '• Insulin Sensitivity: 50 mg/dL·U\n'
+                              '• Digestion Delay: 40 minutes\n\n'
+                              'The AI will begin re-learning your personal '
+                              'parameters on your next meal logs.',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx, false),
+                                child: const Text('Cancel'),
+                              ),
+                              FilledButton(
+                                onPressed: () => Navigator.pop(ctx, true),
+                                child: const Text('Reset'),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (ok == true && mounted) {
+                          widget.onReset();
+                          setState(() => _unlocked = false);
+                        }
+                      },
+                icon: Icon(
+                  Icons.restart_alt_rounded,
+                  size: 16,
+                  color: _isAtDefault ? textSecondary : AppThemeTokens.brandPrimary,
+                ),
+                label: Text(
+                  _isAtDefault
+                      ? 'Already at Default Values'
+                      : 'Reset to Clinical Defaults',
+                  style: TextStyle(
+                    color: _isAtDefault
+                        ? textSecondary
+                        : AppThemeTokens.brandPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(
+                    color: _isAtDefault
+                        ? Colors.grey.shade300
+                        : AppThemeTokens.brandPrimary.withValues(alpha: 0.5),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.circular(AppThemeTokens.radiusMd),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Individual parameter slider row with label, description, current value,
+/// and a subtle "default" marker line.
+class _ParamSlider extends StatelessWidget {
+  final String label;
+  final String description;
+  final String unit;
+  final double value;
+  final double min;
+  final double max;
+  final int divisions;
+  final int displayDecimals;
+  final double defaultValue;
+  final bool isDark;
+  final Color textSecondary;
+  final ValueChanged<double> onChanged;
+
+  const _ParamSlider({
+    required this.label,
+    required this.description,
+    required this.unit,
+    required this.value,
+    required this.min,
+    required this.max,
+    required this.divisions,
+    required this.displayDecimals,
+    required this.defaultValue,
+    required this.isDark,
+    required this.textSecondary,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final atDefault = (value - defaultValue).abs() < 1e-5;
+    final accent = const Color(0xFFD97706);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  color: isDark ? Colors.white : AppThemeTokens.textPrimary,
+                ),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: atDefault
+                    ? const Color(0xFFD1FAE5)
+                    : accent.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(AppThemeTokens.radiusFull),
+              ),
+              child: Text(
+                '${value.toStringAsFixed(displayDecimals)} $unit',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: atDefault ? const Color(0xFF059669) : accent,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 2),
+        Text(
+          description,
+          style: TextStyle(
+            fontSize: 12,
+            color: textSecondary,
+            height: 1.4,
+          ),
+        ),
+        SliderTheme(
+          data: SliderThemeData(
+            activeTrackColor: accent,
+            thumbColor: accent,
+            inactiveTrackColor: accent.withValues(alpha: 0.2),
+            overlayColor: accent.withValues(alpha: 0.1),
+            trackHeight: 3,
+          ),
+          child: Slider(
+            value: value.clamp(min, max),
+            min: min,
+            max: max,
+            divisions: divisions,
+            onChanged: onChanged,
+          ),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              min.toStringAsFixed(displayDecimals),
+              style: TextStyle(fontSize: 10, color: textSecondary),
+            ),
+            Row(
+              children: [
+                Icon(Icons.arrow_drop_up_rounded,
+                    size: 14, color: textSecondary),
+                Text(
+                  'Default: ${defaultValue.toStringAsFixed(displayDecimals)}',
+                  style: TextStyle(fontSize: 10, color: textSecondary),
+                ),
+              ],
+            ),
+            Text(
+              max.toStringAsFixed(displayDecimals),
+              style: TextStyle(fontSize: 10, color: textSecondary),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
