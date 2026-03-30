@@ -72,31 +72,35 @@ class DatabaseHelper {
       );
     }
     if (oldVersion < 5) {
-      // We added createdAt, updatedAt, and targetWeightKg.
-      // Safest migration is to recreate the profile table so they fill it correctly.
+      // We added createdAt, updatedAt, targetWeightKg, and ML params.
+      // Recreate the entire profile table — users will re-enter profile on next launch.
       await db.execute('DROP TABLE IF EXISTS user_profiles');
-      _createUserProfileTable(db);
+      await _createUserProfileTable(db);
     }
     if (oldVersion < 6) {
-      // Add personalized ML parameters to UserProfile schema
+      // v6 added ML tuning columns. If upgrading from v5 directly the table
+      // was already recreated with those columns above. If upgrading from an
+      // earlier version that skipped v5, add them now.
       try {
         await db.execute("ALTER TABLE user_profiles ADD COLUMN metabolicClearanceRate REAL NOT NULL DEFAULT 0.010");
+      } catch (_) {} // column already exists — safe to ignore
+      try {
         await db.execute("ALTER TABLE user_profiles ADD COLUMN insulinSensitivityFactor REAL NOT NULL DEFAULT 50.0");
+      } catch (_) {} // column already exists — safe to ignore
+      try {
         await db.execute("ALTER TABLE user_profiles ADD COLUMN absorptionDelayBase REAL NOT NULL DEFAULT 40.0");
-      } catch (_) {
-        // In case the recreation in v5 happened simultaneously and already captured these
-      }
+      } catch (_) {} // column already exists — safe to ignore
     }
   }
 
   Future _createTables(Database db) async {
-    _createGlucoseTable(db);
-    _createMealTable(db);
-    _createMedicationTable(db);
-    _createUserProfileTable(db);
+    await _createGlucoseTable(db);
+    await _createMealTable(db);
+    await _createMedicationTable(db);
+    await _createUserProfileTable(db);
   }
 
-  void _createGlucoseTable(Database db) async {
+  Future<void> _createGlucoseTable(Database db) async {
     await db.execute('''
       CREATE TABLE glucose_logs (
         id TEXT PRIMARY KEY,
@@ -110,7 +114,7 @@ class DatabaseHelper {
     ''');
   }
 
-  void _createMealTable(Database db) async {
+  Future<void> _createMealTable(Database db) async {
     await db.execute('''
       CREATE TABLE meal_logs (
         id TEXT PRIMARY KEY,
@@ -130,7 +134,7 @@ class DatabaseHelper {
     ''');
   }
 
-  void _createMedicationTable(Database db) async {
+  Future<void> _createMedicationTable(Database db) async {
     await db.execute('''
       CREATE TABLE medication_logs (
         id TEXT PRIMARY KEY,
@@ -144,7 +148,7 @@ class DatabaseHelper {
     ''');
   }
 
-  void _createUserProfileTable(Database db) async {
+  Future<void> _createUserProfileTable(Database db) async {
     await db.execute('''
       CREATE TABLE user_profiles (
         id TEXT PRIMARY KEY,
