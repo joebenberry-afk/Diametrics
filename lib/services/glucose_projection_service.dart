@@ -112,7 +112,7 @@ class GlucoseProjectionService {
       gCurrent += deltaG;
 
       // Safety clamp to physiological bounds
-      gCurrent = gCurrent.clamp(30.0, 500.0);
+      gCurrent = gCurrent.clamp(10.0, 500.0);
 
       // Store every 5 minutes for plotting
       if (t % 5 == 0) {

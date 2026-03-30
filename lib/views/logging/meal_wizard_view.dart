@@ -1084,16 +1084,18 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                 child: ElevatedButton(
                   onPressed: canSave
                       ? () async {
-                          final result =
+                          final data =
                               await viewModel.saveMealWithProjection(
                             weightKg: _weightKg,
                           );
-                          if (result != null && context.mounted) {
+                          if (data != null && context.mounted) {
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
-                                builder: (_) =>
-                                    ProjectionResultView(result: result),
+                                builder: (_) => ProjectionResultView(
+                                  result: data['result'],
+                                  unit: data['unit'],
+                                ),
                               ),
                             );
                           }

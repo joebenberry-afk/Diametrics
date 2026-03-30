@@ -9,8 +9,18 @@ import '../../models/projection_result.dart';
 /// saved, including a 4-hour glucose curve, key metrics, and risk assessment.
 class ProjectionResultView extends StatelessWidget {
   final ProjectionResult result;
+  final String unit;
 
-  const ProjectionResultView({super.key, required this.result});
+  const ProjectionResultView({
+    super.key,
+    required this.result,
+    this.unit = 'mg/dL',
+  });
+
+  bool get _isMmol => unit == 'mmol/L';
+
+  // Conversion factor: mg/dL to mmol/L
+  double _toUser(double mgdl) => _isMmol ? mgdl / 18.0182 : mgdl;
 
   Color _riskColor() => switch (result.riskLevel) {
         'normal' => AppThemeTokens.brandSuccess,
@@ -90,8 +100,8 @@ class ProjectionResultView extends StatelessWidget {
                   Expanded(
                     child: _MetricTile(
                       label: 'Peak',
-                      value: result.peakGlucose.toStringAsFixed(0),
-                      unit: 'mg/dL',
+                      value: _toUser(result.peakGlucose).toStringAsFixed(_isMmol ? 1 : 0),
+                      unit: unit,
                       color: _riskColor(),
                     ),
                   ),
@@ -108,8 +118,8 @@ class ProjectionResultView extends StatelessWidget {
                   Expanded(
                     child: _MetricTile(
                       label: '2-Hour',
-                      value: result.twoHourGlucose.toStringAsFixed(0),
-                      unit: 'mg/dL',
+                      value: _toUser(result.twoHourGlucose).toStringAsFixed(_isMmol ? 1 : 0),
+                      unit: unit,
                       color: AppThemeTokens.brandPrimary,
                     ),
                   ),
@@ -188,12 +198,11 @@ class ProjectionResultView extends StatelessWidget {
               // ── Done Button ──
               ElevatedButton(
                 onPressed: () {
-                  // Pop back to dashboard (meal wizard was pushReplacement'd)
                   Navigator.pop(context);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppThemeTokens.brandPrimary,
-                  foregroundColor: AppThemeTokens.textPrimaryInverse,
+                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(
                     vertical: AppThemeTokens.spaceLg,
                   ),
@@ -228,9 +237,140 @@ class ProjectionResultView extends StatelessWidget {
       ),
     );
   }
-}
 
-// ── Metric Tile ─────────────────────────────────────────────────────────
+  LineChartData _buildChartData(List<ProjectionPoint> points, Color riskColor) {
+    if (points.isEmpty) return LineChartData();
+
+    final userPoints = points.map((p) => FlSpot(p.timeMinutes.toDouble(), _toUser(p.glucoseValue))).toList();
+    final allYValues = userPoints.map((s) => s.y);
+    final rawMin = allYValues.reduce(min);
+    final rawMax = allYValues.reduce(max);
+
+    // Dynamic intervals based on units
+    final interval = _isMmol ? 2.0 : 50.0;
+    final buffer = _isMmol ? 1.0 : 20.0;
+
+    final yMin = (max(0.0, rawMin - buffer) / interval).floor() * interval;
+    final yMax = ((rawMax + buffer) / interval).ceil() * interval;
+
+    final spots = userPoints;
+
+    return LineChartData(
+      minX: 0,
+      maxX: 240,
+      minY: yMin,
+      maxY: yMax,
+      gridData: FlGridData(
+        show: true,
+        drawVerticalLine: true,
+        horizontalInterval: interval,
+        verticalInterval: 60,
+        getDrawingHorizontalLine: (value) => FlLine(
+          color: Colors.grey.withValues(alpha: 0.2),
+          strokeWidth: 1,
+        ),
+        getDrawingVerticalLine: (value) => FlLine(
+          color: Colors.grey.withValues(alpha: 0.2),
+          strokeWidth: 1,
+        ),
+      ),
+      titlesData: FlTitlesData(
+        show: true,
+        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        leftTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            interval: interval,
+            reservedSize: 44,
+            getTitlesWidget: (value, meta) {
+              return Text(
+                _isMmol ? value.toStringAsFixed(1) : value.toInt().toString(),
+                style: const TextStyle(color: Colors.grey, fontSize: 10),
+                textAlign: TextAlign.right,
+              );
+            },
+          ),
+        ),
+        bottomTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            interval: 60,
+            reservedSize: 30,
+            getTitlesWidget: (value, meta) {
+              if (value == 0) return const Text('0', style: TextStyle(color: Colors.grey, fontSize: 10));
+              return Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Text(
+                  '${(value / 60).toInt()}hr',
+                  style: const TextStyle(color: Colors.grey, fontSize: 10),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+      borderData: FlBorderData(show: false),
+      lineBarsData: [
+        LineChartBarData(
+          spots: spots,
+          isCurved: true,
+          color: AppThemeTokens.brandPrimary,
+          barWidth: 3,
+          isStrokeCapRound: true,
+          dotData: FlDotData(
+            show: true,
+            checkToShowDot: (spot, barData) {
+              final isPeak = spot.y == rawMax;
+              return isPeak;
+            },
+            getDotPainter: (spot, percent, barData, index) {
+              return FlDotCirclePainter(
+                radius: 4,
+                color: riskColor,
+                strokeWidth: 2,
+                strokeColor: Colors.white,
+              );
+            },
+          ),
+          belowBarData: BarAreaData(
+            show: true,
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                AppThemeTokens.brandPrimary.withValues(alpha: 0.3),
+                AppThemeTokens.brandPrimary.withValues(alpha: 0.0),
+              ],
+            ),
+          ),
+        ),
+      ],
+      extraLinesData: ExtraLinesData(
+        horizontalLines: [
+          HorizontalLine(
+            y: _toUser(70),
+            color: AppThemeTokens.brandSuccess.withValues(alpha: 0.3),
+            strokeWidth: 1,
+            dashArray: [5, 5],
+          ),
+          HorizontalLine(
+            y: _toUser(140),
+            color: AppThemeTokens.brandSuccess.withValues(alpha: 0.3),
+            strokeWidth: 1,
+            dashArray: [5, 5],
+          ),
+          HorizontalLine(
+            y: _toUser(180),
+            color: AppThemeTokens.warning.withValues(alpha: 0.3),
+            strokeWidth: 1,
+            dashArray: [5, 5],
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class _MetricTile extends StatelessWidget {
   final String label;
@@ -285,135 +425,3 @@ class _MetricTile extends StatelessWidget {
     );
   }
 }
-
-  LineChartData _buildChartData(List<ProjectionPoint> points, Color riskColor) {
-    if (points.isEmpty) return LineChartData();
-
-    final allValues = points.map((p) => p.glucoseValue);
-    final rawMin = allValues.reduce(min);
-    final rawMax = allValues.reduce(max);
-    // Snapped to interval of 50 to prevent unaligned floating labels
-    final yMin = (max(0.0, rawMin - 20.0) / 50).floor() * 50.0;
-    final yMax = ((rawMax + 20.0) / 50).ceil() * 50.0;
-
-    final spots = points
-        .map((p) => FlSpot(p.timeMinutes.toDouble(), p.glucoseValue))
-        .toList();
-
-    return LineChartData(
-      minX: 0,
-      maxX: 240,
-      minY: yMin,
-      maxY: yMax,
-      gridData: FlGridData(
-        show: true,
-        drawVerticalLine: true,
-        horizontalInterval: 50,
-        verticalInterval: 60,
-        getDrawingHorizontalLine: (value) => FlLine(
-          color: Colors.grey.withValues(alpha: 0.2),
-          strokeWidth: 1,
-        ),
-        getDrawingVerticalLine: (value) => FlLine(
-          color: Colors.grey.withValues(alpha: 0.2),
-          strokeWidth: 1,
-        ),
-      ),
-      titlesData: FlTitlesData(
-        show: true,
-        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-        leftTitles: AxisTitles(
-          sideTitles: SideTitles(
-            showTitles: true,
-            interval: 50,
-            reservedSize: 40,
-            getTitlesWidget: (value, meta) {
-              return Text(
-                value.toInt().toString(),
-                style: const TextStyle(color: Colors.grey, fontSize: 10),
-                textAlign: TextAlign.right,
-              );
-            },
-          ),
-        ),
-        bottomTitles: AxisTitles(
-          sideTitles: SideTitles(
-            showTitles: true,
-            interval: 60,
-            reservedSize: 30,
-            getTitlesWidget: (value, meta) {
-              if (value == 0) return const Text('0', style: TextStyle(color: Colors.grey, fontSize: 10));
-              return Padding(
-                padding: const EdgeInsets.only(top: 8.0),
-                child: Text(
-                  '${(value / 60).toInt()}hr',
-                  style: const TextStyle(color: Colors.grey, fontSize: 10),
-                ),
-              );
-            },
-          ),
-        ),
-      ),
-      borderData: FlBorderData(show: false),
-      lineBarsData: [
-        LineChartBarData(
-          spots: spots,
-          isCurved: true,
-          color: AppThemeTokens.brandPrimary,
-          barWidth: 3,
-          isStrokeCapRound: true,
-          dotData: FlDotData(
-            show: true,
-            checkToShowDot: (spot, barData) {
-              // Only show dot at the peak
-              final isPeak = spot.y == rawMax;
-              return isPeak;
-            },
-            getDotPainter: (spot, percent, barData, index) {
-              return FlDotCirclePainter(
-                radius: 4,
-                color: riskColor,
-                strokeWidth: 2,
-                strokeColor: Colors.white,
-              );
-            },
-          ),
-          belowBarData: BarAreaData(
-            show: true,
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                AppThemeTokens.brandPrimary.withValues(alpha: 0.3),
-                AppThemeTokens.brandPrimary.withValues(alpha: 0.0),
-              ],
-            ),
-          ),
-        ),
-      ],
-      extraLinesData: ExtraLinesData(
-        horizontalLines: [
-          // Target zone limits
-          HorizontalLine(
-            y: 70,
-            color: AppThemeTokens.brandSuccess.withValues(alpha: 0.3),
-            strokeWidth: 1,
-            dashArray: [5, 5],
-          ),
-          HorizontalLine(
-            y: 140,
-            color: AppThemeTokens.brandSuccess.withValues(alpha: 0.3),
-            strokeWidth: 1,
-            dashArray: [5, 5],
-          ),
-          HorizontalLine(
-            y: 180,
-            color: AppThemeTokens.warning.withValues(alpha: 0.3),
-            strokeWidth: 1,
-            dashArray: [5, 5],
-          ),
-        ],
-      ),
-    );
-  }

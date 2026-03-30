@@ -240,8 +240,8 @@ class LoggingWizardViewModel extends StateNotifier<LoggingWizardState> {
   /// Saves the meal log, records the pre-meal glucose reading (if manually
   /// entered), then runs the Phase 1 Hovorka glucose projection.
   ///
-  /// Returns the [ProjectionResult] on success, or `null` on failure.
-  Future<ProjectionResult?> saveMealWithProjection({
+  /// Returns a Map with the [ProjectionResult] and user [unit] on success, or `null` on failure.
+  Future<Map<String, dynamic>?> saveMealWithProjection({
     double weightKg = 70.0,
   }) async {
     if (state.preMealGlucose == null ||
@@ -262,7 +262,7 @@ class LoggingWizardViewModel extends StateNotifier<LoggingWizardState> {
           id: _uuid.v4(),
           timestamp: DateTime.now(),
           value: state.preMealGlucose!,
-          unit: 'mg/dL',
+          unit: state.glucoseUnit,
           context: 'pre_meal',
         );
         await repo.addGlucoseLog(glucoseLog);
@@ -296,8 +296,16 @@ class LoggingWizardViewModel extends StateNotifier<LoggingWizardState> {
       // 3. Calculate IOB and run the projection using personalized ML params.
       final iob = await _calculateIOB();
       final profile = await UserRepository().getProfile();
+      final unit = profile?.preferredGlucoseUnit ?? 'mg/dL';
+      
+      // Normalize baseline to mg/dL for the projection service math
+      double normalizedBaseline = state.preMealGlucose!;
+      if (unit == 'mmol/L') {
+        normalizedBaseline *= 18.0182;
+      }
+
       final result = GlucoseProjectionService.project(
-        baselineGlucose: state.preMealGlucose!,
+        baselineGlucose: normalizedBaseline,
         carbsGrams: state.pendingCarbs!,
         fiberGrams: state.pendingFiber ?? 0.0,
         proteinGrams: state.pendingProteins!,
@@ -313,7 +321,10 @@ class LoggingWizardViewModel extends StateNotifier<LoggingWizardState> {
 
       // Reset wizard state
       state = LoggingWizardState();
-      return result;
+      return {
+        'result': result,
+        'unit': unit,
+      };
     } catch (e) {
       state = state.copyWith(isSubmitting: false, error: e.toString());
       return null;
