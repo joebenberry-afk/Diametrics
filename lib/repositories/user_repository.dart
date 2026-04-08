@@ -33,6 +33,13 @@ class UserRepository {
       'insulinSensitivityFactor': profile.insulinSensitivityFactor,
       'absorptionDelayBase': profile.absorptionDelayBase,
       'tuningMealCount': profile.tuningMealCount,
+      'fastingSetpoint': profile.fastingSetpoint,
+      'insulinCategory': profile.insulinCategory,
+      'insulinDiaMinutes': profile.insulinDiaMinutes,
+      // EKF covariance state
+      'ekfCovP1': profile.ekfCovP1,
+      'ekfCovISF': profile.ekfCovISF,
+      'ekfCovTMax': profile.ekfCovTMax,
       // Dates as ISO8601 strings
       'createdAt': profile.createdAt.toIso8601String(),
       'updatedAt': profile.updatedAt.toIso8601String(),
@@ -83,6 +90,13 @@ class UserRepository {
       'insulinSensitivityFactor': raw['insulinSensitivityFactor'] ?? 50.0,
       'absorptionDelayBase': raw['absorptionDelayBase'] ?? 40.0,
       'tuningMealCount': raw['tuningMealCount'] ?? 0,
+      'fastingSetpoint': raw['fastingSetpoint'] ?? 90.0,
+      'insulinCategory': raw['insulinCategory'] ?? 'standard_rapid',
+      'insulinDiaMinutes': raw['insulinDiaMinutes'] ?? 240.0,
+      // EKF covariance state
+      'ekfCovP1': raw['ekfCovP1'] ?? 1.0,
+      'ekfCovISF': raw['ekfCovISF'] ?? 1.0,
+      'ekfCovTMax': raw['ekfCovTMax'] ?? 1.0,
       // Dates are already ISO8601 strings — fromJson parses them
       'createdAt': raw['createdAt'],
       'updatedAt': raw['updatedAt'],

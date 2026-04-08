@@ -21,14 +21,33 @@ class _MedicationInfoScreenState extends ConsumerState<MedicationInfoScreen> {
   bool _usesInsulin = false;
   bool _usesPills = false;
   bool _usesCgm = false;
+  String _insulinCategory = 'standard_rapid';
 
   void _submit() {
+    double dia = 240.0;
+    switch (_insulinCategory) {
+      case 'ultra_fast':
+        dia = 180.0;
+        break;
+      case 'regular':
+        dia = 360.0;
+        break;
+      case 'basal_only':
+      case 'none':
+        dia = 0.0;
+        break;
+      default:
+        dia = 240.0; // standard_rapid
+    }
+
     ref
         .read(onboardingViewModelProvider.notifier)
         .updateMedicationFlags(
           usesInsulin: _usesInsulin,
           usesPills: _usesPills,
           usesCgm: _usesCgm,
+          insulinCategory: _usesInsulin ? _insulinCategory : 'none',
+          insulinDiaMinutes: _usesInsulin ? dia : 0.0,
         );
     widget.onNext();
   }
@@ -52,6 +71,10 @@ class _MedicationInfoScreenState extends ConsumerState<MedicationInfoScreen> {
             colorScheme: colorScheme,
             textTheme: textTheme,
           ),
+          if (_usesInsulin) ...[
+            const SizedBox(height: 12),
+            _buildInsulinDropdown(colorScheme, textTheme),
+          ],
           const SizedBox(height: 16),
           _buildCheckboxTile(
             title: "Pills / Oral Medication",
@@ -138,6 +161,67 @@ class _MedicationInfoScreenState extends ConsumerState<MedicationInfoScreen> {
         activeColor: colorScheme.primary,
         checkColor: colorScheme.onPrimary,
         controlAffinity: ListTileControlAffinity.trailing,
+      ),
+    );
+  }
+
+  Widget _buildInsulinDropdown(ColorScheme colorScheme, TextTheme textTheme) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Primary Mealtime Insulin Type',
+            style: textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            decoration: BoxDecoration(
+              color: colorScheme.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: colorScheme.outline),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: _insulinCategory,
+                isExpanded: true,
+                icon: Icon(Icons.arrow_drop_down, color: colorScheme.primary),
+                dropdownColor: colorScheme.surfaceContainer,
+                style: textTheme.bodyLarge?.copyWith(
+                  color: colorScheme.onSurface,
+                ),
+                onChanged: (String? newValue) {
+                  if (newValue != null) {
+                    setState(() => _insulinCategory = newValue);
+                  }
+                },
+                items: const [
+                  DropdownMenuItem(
+                    value: 'ultra_fast',
+                    child: Text('Ultra-Rapid (Fiasp, Lyumjev)'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'standard_rapid',
+                    child: Text('Standard Rapid (Humalog, Novolog)'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'regular',
+                    child: Text('Regular (Humulin R, Novolin R)'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'basal_only',
+                    child: Text('Basal / Long-Acting Only'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

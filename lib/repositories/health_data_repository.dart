@@ -53,6 +53,7 @@ class HealthDataRepository {
       map['isSynced'] = map['synced'] == 1;
       map['containsAlcohol'] = map['containsAlcohol'] == 1;
       map['containsCaffeine'] = map['containsCaffeine'] == 1;
+      map['postExercise'] = map['postExercise'] == 1;
       return MealLog.fromJson(map);
     }).toList();
   }
@@ -63,6 +64,7 @@ class HealthDataRepository {
     map['synced'] = map.remove('isSynced') == true ? 1 : 0;
     map['containsAlcohol'] = map['containsAlcohol'] == true ? 1 : 0;
     map['containsCaffeine'] = map['containsCaffeine'] == true ? 1 : 0;
+    map['postExercise'] = map['postExercise'] == true ? 1 : 0;
     // foodFormFactor is already a String, no conversion needed
     await db.insert('meal_logs', map);
   }

@@ -43,6 +43,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
   bool _usesInsulin = false;
   bool _usesPills = false;
   bool _usesCgm = false;
+  String _insulinCategory = 'standard_rapid';
 
   // ML Adaptive Model Parameters — mirrored from profile
   double _metabolicClearanceRate = 0.010;
@@ -95,6 +96,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
       _usesInsulin = profile.usesInsulin;
       _usesPills = profile.usesPills;
       _usesCgm = profile.usesCgm;
+      _insulinCategory = profile.insulinCategory ?? 'standard_rapid';
 
       // Populate ML parameters from profile
       _metabolicClearanceRate = profile.metabolicClearanceRate;
@@ -176,6 +178,22 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
     final current = ref.read(userProfileProvider).valueOrNull;
     if (current == null) return;
 
+    double dia = 240.0;
+    switch (_insulinCategory) {
+      case 'ultra_fast':
+        dia = 180.0;
+        break;
+      case 'regular':
+        dia = 360.0;
+        break;
+      case 'basal_only':
+      case 'none':
+        dia = 0.0;
+        break;
+      default:
+        dia = 240.0; // standard_rapid
+    }
+
     setState(() => _isSaving = true);
     try {
       final updated = current.copyWith(
@@ -190,6 +208,8 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
         usesInsulin: _usesInsulin,
         usesPills: _usesPills,
         usesCgm: _usesCgm,
+        insulinCategory: _usesInsulin ? _insulinCategory : 'none',
+        insulinDiaMinutes: _usesInsulin ? dia : 0.0,
         targetGlucoseMin: minTarget,
         targetGlucoseMax: maxTarget,
         // Persist the ML parameters (user-modified or tuned)
@@ -317,6 +337,74 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
       bottomNavigationBar: _isDirty
           ? _SaveBar(isSaving: _isSaving, onSave: _save)
           : null,
+    );
+  }
+
+  Widget _buildSettingsInsulinDropdown(bool isDark, ThemeData theme) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      title: Padding(
+        padding: const EdgeInsets.only(bottom: 8.0),
+        child: Text(
+          'Primary Mealtime Insulin Type',
+          style: TextStyle(
+            color: isDark ? Colors.white : AppThemeTokens.textPrimary,
+            fontWeight: FontWeight.w600,
+            fontSize: 15,
+          ),
+        ),
+      ),
+      subtitle: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12.0),
+        decoration: BoxDecoration(
+          color: isDark ? Colors.black26 : Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isDark ? const Color(0xFF3D3D3D) : const Color(0xFFE5E7EB),
+          ),
+        ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            value: _insulinCategory,
+            isExpanded: true,
+            icon: const Icon(
+              Icons.arrow_drop_down,
+              color: AppThemeTokens.brandPrimary,
+            ),
+            dropdownColor: isDark
+                ? AppThemeTokens.bgSurfaceDark
+                : AppThemeTokens.bgSurface,
+            style: TextStyle(
+              color: isDark ? Colors.white : AppThemeTokens.textPrimary,
+              fontSize: 14,
+            ),
+            onChanged: (String? newValue) {
+              if (newValue != null) {
+                setState(() => _insulinCategory = newValue);
+                _markDirty();
+              }
+            },
+            items: const [
+              DropdownMenuItem(
+                value: 'ultra_fast',
+                child: Text('Ultra-Rapid (Fiasp, Lyumjev)'),
+              ),
+              DropdownMenuItem(
+                value: 'standard_rapid',
+                child: Text('Standard Rapid (Humalog, Novolog)'),
+              ),
+              DropdownMenuItem(
+                value: 'regular',
+                child: Text('Regular (Humulin R, Novolin R)'),
+              ),
+              DropdownMenuItem(
+                value: 'basal_only',
+                child: Text('Basal / Long-Acting Only'),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -475,6 +563,10 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                   _markDirty();
                 },
               ),
+              if (_usesInsulin) ...[
+                const Divider(height: 1),
+                _buildSettingsInsulinDropdown(isDark, theme),
+              ],
               const Divider(height: 1),
               _SettingsSwitch(
                 label: 'Uses Oral Medication',

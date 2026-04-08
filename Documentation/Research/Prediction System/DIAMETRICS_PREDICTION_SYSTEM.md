@@ -1,21 +1,24 @@
 # DiaMetrics Glucose Prediction System
 ## Technical Architecture Document
 
-**Version:** 1.0  
+**Version:** 4.0  
 **Date:** April 2026  
-**Status:** Production (Phase 1)
+**Status:** Clinical Roadmap (Phase 4)
 
 ---
 
 ## 1. Executive Summary
 
-DiaMetrics uses a **deterministic physiological simulation** to predict post-meal blood glucose curves. Unlike machine learning approaches that require thousands of training samples, this system produces clinically meaningful projections from a single meal entry and improves its accuracy over time through a lightweight **adaptive gradient descent loop** that personalises three metabolic parameters to the individual user.
+DiaMetrics uses a **multi-compartment physiological simulation** to predict post-meal blood glucose curves. The Phase 4 engine introduces an Extended Kalman Filter for adaptive tuning, Dawn Phenomenon circadian correction, meal superposition for overlapping events, and localised Caribbean dietary heuristics.
 
 **Key design decisions:**
-- Deterministic model (reproducible, explainable, auditable)
-- Offline-first (runs entirely on-device, no cloud dependency)
-- Personalisation through feedback, not population statistics
-- No Glycemic Index dependency (no available food database provides it)
+- **Deterministic Dual-Kernel model** (separated carb/protein kinetics)
+- **Dynamic Walsh Bilinear IOB** (insulin-specific action curves)
+- **Extended Kalman Filter** (replaces gradient descent for state estimation)
+- **Dawn Phenomenon** (circadian baseline correction, 4-8 AM)
+- **Meal Superposition** (learning through overlapping meal events)
+- **Caribbean Dietary Heuristics** (regional absorption multipliers)
+- **Uncertainty Quantification** (time-varying sine envelope confidence bands)
 
 ---
 
@@ -42,245 +45,225 @@ User logs meal         User logs post-meal glucose
 ```
 
 **Source files:**
-- `lib/services/glucose_projection_service.dart` — Core simulation engine
-- `lib/services/adaptive_tuning_service.dart` — Feedback loop
-- `lib/models/projection_result.dart` — Output data model
-- `lib/models/meal_log.dart` — Meal input model
-- `lib/models/user_profile.dart` — Personalisation parameters
-- `lib/viewmodels/logging_wizard_viewmodel.dart` — Orchestration
-- `lib/views/projection/projection_result_view.dart` — Visualisation
+- `lib/services/glucose_projection_service.dart` -- Core Phase 4 simulation engine
+- `lib/services/ekf_tuning_service.dart` -- Extended Kalman Filter feedback loop
+- `lib/services/caribbean_food_heuristics.dart` -- Regional dietary multipliers
+- `lib/services/adaptive_tuning_service.dart` -- Deprecated (delegates to EKF)
+- `lib/models/projection_result.dart` -- Output model (with sine-envelope bands)
+- `lib/models/meal_log.dart` -- Input model (with post-exercise flag)
+- `lib/models/user_profile.dart` -- Personalised parameters + EKF covariance state
+- `lib/viewmodels/logging_wizard_viewmodel.dart` -- Dynamic DIA lookup logic
+- `lib/views/projection/projection_result_view.dart` -- Visualisation (FL Chart)
 
 ---
 
-## 3. Phase 1: Feed-Forward Projection (Hovorka Gut Absorption Model)
+## 3. Phase 3: Dual-Kernel Projection (Enhanced Clinical Roadmap)
 
 ### 3.1 Overview
 
-The projection engine simulates **minute-by-minute glucose dynamics** over a 240-minute (4-hour) window. Each minute, it computes:
+The Phase 4 projection engine enhances the minute-by-minute simulation with an Extended Kalman Filter, circadian baseline correction (Dawn Phenomenon), meal superposition for overlapping events, and localised Caribbean food absorption heuristics.
 
-1. How much glucose is being absorbed from the gut into the bloodstream
-2. How much glucose the body is clearing naturally (endogenous clearance)
-3. How much insulin-on-board is lowering glucose
-4. Any modifiers (alcohol, caffeine)
+The Phase 2 projection engine simulates **minute-by-minute glucose dynamics** using two separate metabolic pathways. This prevents the "carb-washing" effect where protein and fats are blended into a single curve, leading to over-prediction in the first hour and under-prediction in the fourth.
 
-The net of these four forces produces the glucose value at each minute.
+1. **Fast Pathway:** Rapidly absorbed carbohydrates and immediate metabolic effects.
+2. **Slow Pathway:** Delayed protein gluconeogenesis (starts 60 min post-meal).
+3. **IOB Correction:** Walsh Bilinear insulin action (peaking at ~72 min).
+4. **Adaptive Clearance:** Bergman's Minimal Model-derived disposal.
 
 ### 3.2 Input Parameters
 
 | Parameter | Source | Description |
 |---|---|---|
-| `baselineGlucose` | Pre-meal glucose reading (mg/dL) | Starting point for the curve |
-| `carbsGrams` | Meal log | Total carbohydrates in grams |
-| `fiberGrams` | Meal log | Dietary fiber in grams |
-| `proteinGrams` | Meal log | Total protein in grams |
-| `fatGrams` | Meal log | Total fat in grams |
-| `containsAlcohol` | Meal log (boolean) | Inhibits gluconeogenesis |
-| `containsCaffeine` | Meal log (boolean) | Can amplify glucose spike |
-| `weightKg` | User profile | Used for glucose distribution volume |
-| `insulinOnBoard` | Calculated from medication logs | Active rapid-acting insulin (units) |
-| `p1` | User profile (adaptive) | Metabolic clearance rate |
-| `isf` | User profile (adaptive) | Insulin sensitivity factor (mg/dL per unit) |
-| `tMaxBase` | User profile (adaptive) | Gut absorption delay base (minutes) |
+| `baselineGlucose` | Pre-meal log | Starting point (mg/dL) |
+| `carbs`, `fiber` | Meal log | Net carbs = Carbs - Fiber |
+| `proteins` | Meal log | Delayed glucose source (58% conversion) |
+| `fats` | Meal log | Absorption delay modifier (10% conversion) |
+| `foodFormFactor` | Meal log | `liquid`, `highFiber`, `processed`, `standard` |
+| `weightKg` | Profile | Distribution volume calculation |
+| `p1`, `isf`, `tMax` | Profile | Adaptive ML-refined constants |
+| `fastingSetpoint` | Profile | User's personal clearance equilibrium (mg/dL) |
+| `postExercise` | Meal log | Binary flag for 2-hour post-activity window |
+| `mealCount` | Profile | Determines confidence band width |
+| `mealTimestamp` | System | Real-world time for circadian correction |
+| `mealName` | Meal log | For regional Caribbean food heuristic lookup |
 
-### 3.3 Step-by-Step Algorithm
+### 3.3 Step-by-Step Algorithm (Phase 2)
 
-#### STEP 1: Total Available Glucose (TAG)
+#### STEP 1: Decoupled TAG Calculation
 
-Not all macronutrients raise blood glucose equally.
-
-```
-netCarbs = max(0, carbsGrams - fiberGrams)
-TAG = netCarbs + (0.58 x proteinGrams) + (0.10 x fatGrams)
-```
-
-**Rationale:**
-- **Fiber** is subtracted because it is not digestible and does not raise blood glucose.
-- **Protein** contributes ~58% of its weight to glucose via gluconeogenesis (3-6 hour delayed effect).
-- **Fat** contributes ~10% of its weight to glucose via glycerol backbone metabolism.
-
-**Reference:** Nutrition and Diabetes, Sieradzki (2010).
-
-If `TAG < 0.01`, the service returns a flat baseline (no projection needed).
-
-#### STEP 2: Hovorka Gut Absorption Parameters
+Instead of a single Total Available Glucose (TAG) value, we split the meal into two kinetic components:
 
 ```
-aG = 0.8              (bioavailability factor — 80% of ingested glucose reaches blood)
-tMax = tMaxBase        (time-to-peak absorption in minutes, default 40)
-vG = 0.16 x weightKg  (glucose distribution volume in litres)
+fastTAG    = netCarbs + (0.10 x fatGrams)
+proteinTAG = 0.58 x proteinGrams
+totalTAG   = fastTAG + proteinTAG
 ```
 
-**Absorption delay modifiers:**
-- If `fat > 40g` OR `protein > 25g`: `tMax += 30` minutes (the "pizza effect" — high fat/protein delays gastric emptying)
-- If `containsAlcohol`: `tMax += 20` minutes (alcohol delays gastric emptying)
+#### STEP 2: Food-Form Heuristics (GI Proxy)
 
-**Blood glucose equivalent rise** (total possible rise if all TAG were absorbed instantly):
-```
-bgEquivalent = aG x TAG x 100 / vG
-```
+Since local food databases lack reliable Glycemic Index (GI) data, we use **Food-Form Heuristics** to adjust the absorption delay (`tMax`):
 
-This converts grams of glucose into mg/dL rise for the individual's body volume.
+| Factor | tMax Adjustment | Clinical Rationale |
+|---|---|---|
+| **Liquid** | -15 minutes | No gastric breakdown required (e.g., juice) |
+| **Processed** | -10 minutes | Refined starches absorb significantly faster |
+| **High Fiber** | +10 minutes | Fiber matrix slows starch hydrolysis |
+| **High Fat/Protein** | +30 minutes | "Pizza effect" — delays gastric emptying |
 
-**Reference:** Hovorka R. et al. (2004), "Nonlinear model predictive control of glucose concentration in subjects with type 1 diabetes."
+#### STEP 3: Post-Exercise Disposal Boost
 
-#### STEP 3: Gamma Distribution Absorption Curve
+If the `postExercise` flag is active:
+- **Disposal Boost:** $p_1$ (clearance rate) is multiplied by **1.35x** (+35%).
+- **Absorption Lead:** $tMax$ is reduced by **10 minutes** to reflect faster systemic circulation.
 
-The gut does not release glucose all at once. The Hovorka model uses a **gamma-distribution kernel** to model the gradual absorption:
+#### STEP 4: Dual-Kernel Gamma Distribution
 
-```
-f(t) = t x exp(-t / tMax)
-```
+We pre-compute two separate **gamma-distribution kernels** ($t \cdot e^{-t/tMax}$):
 
-This curve:
-- Starts at zero (no glucose absorbed at time 0)
-- Peaks at `t = tMax` minutes
-- Decays exponentially after the peak
-
-The kernel is **normalised** so that the total area under the curve equals `bgEquivalent`:
-
-```
-gammaSum = sum(t=1 to 240) of [t x exp(-t / tMax)]
-riseRate(t) = bgEquivalent x [t x exp(-t / tMax)] / gammaSum
-```
-
-This guarantees that the total glucose delivered to the bloodstream over 4 hours matches the TAG-derived estimate — no more, no less.
+1. **Fast Kernel:** Peaks at the adjusted `tMax`. Handles the `fastTAG`.
+2. **Slow Kernel:** Uses an offset $t - 60$ and a fixed $tMax = 120$. This models the metabolic delay in converting protein to glucose via hepatic gluconeogenesis.
 
 #### STEP 4: Minute-by-Minute Simulation Loop
 
-For each minute `t` from 1 to 240:
+For each minute $t \in [1, 240]$:
 
-```
-// 1. Absorption rise
-gammaWeight = t x exp(-t / tMax)
-riseRate = bgEquivalent x gammaWeight / gammaSum
-if (containsCaffeine) riseRate *= 1.10    // +10% amplification
+1.  **Fast Rise:** `fastBgEquiv * fastGamma(t) / fastGammaSum`
+2.  **Protein Rise:** `proteinBgEquiv * proteinGamma(t-60) / proteinGammaSum` (if $t > 60$)
+3.  **Endogenous Clearance:** Based on distance from the user's **effective fasting setpoint** (see Dawn Phenomenon), scaled by current absorption fraction.
+4.  **Dawn Phenomenon:** Between 4:00-8:00 AM, the fasting setpoint is elevated by up to +15 mg/dL (sine-wave peak at 6:00 AM) to simulate cortisol-driven insulin resistance.
+5.  **Dynamic Walsh IOB:** Uses the drug-specific DIA (see Section 5) to calculate insulin delta.
+6.  **Net Change:** $G_{t} = G_{t-1} + Rise_{fast} + Rise_{protein} - Clearance - WalshIOB$
 
-// 2. Endogenous clearance (body's natural glucose disposal)
-// Only applies ABOVE the body's fasting equilibrium (~90 mg/dL).
-// Scaled by absorption fraction so clearance is minimal when
-// the meal is barely absorbed (prevents premature drops).
-absorptionFraction = gammaWeight / (gammaSum / 240)
-clearanceFraction = clamp(absorptionFraction / (absorptionFraction + 1), 0.1, 1.0)
-rawClearance = max(0, gCurrent - 90) x p1
-clearanceRate = min(rawClearance x clearanceFraction, 1.5)
+Every 5 minutes, we emit a point including the calculated value and the **Time-Varying Confidence Band** (sine envelope).
 
-// 3. Insulin on Board (linear decay over 4 hours)
-iobMinute = (gCurrent > 70) ? totalInsulinDrop / 240 : 0
+### 3.4 Risk Classification & Metrics
 
-// 4. Alcohol effect (delayed gluconeogenesis suppression)
-alcoholDrop = (containsAlcohol AND t > 60) ? 3.0/60 : 0
-
-// 5. Net change
-gCurrent += riseRate - clearanceRate - iobMinute - alcoholDrop
-gCurrent = clamp(gCurrent, 40, 500)    // physiological safety bounds
-```
-
-Every 5 minutes, a `ProjectionPoint(timeMinutes, glucoseValue)` is emitted to the output curve.
-
-**Key design details:**
-- **Clearance gating:** The `clearanceFraction` mechanism prevents the body from "clearing" glucose that hasn't arrived yet. Without this, the curve would dip below baseline before the food is absorbed.
-- **Hypo guard:** IOB is only subtracted when glucose is above 70 mg/dL, preventing the simulation from driving glucose into dangerous lows.
-- **Caffeine:** A flat +10% multiplier on absorption rate. Conservative estimate based on clinical literature showing caffeine can impair glucose uptake.
-- **Alcohol:** After 60 minutes, alcohol suppresses hepatic glucose output at ~3 mg/dL per hour.
-
-#### STEP 5: Output Extraction
-
-From the generated curve:
-
-| Metric | How it's computed |
+| Metric | Calculation |
 |---|---|
-| **Peak Glucose** | Maximum `glucoseValue` across all points |
-| **Time to Peak** | `timeMinutes` of the peak point |
-| **2-Hour Glucose** | `glucoseValue` at `timeMinutes == 120` |
-| **TAG** | The Total Available Glucose value from Step 1 |
-| **Risk Level** | Classified from peak value (see below) |
-| **Summary** | Human-readable string with all metrics |
+| **Peak Glucose** | Max $G_{t}$ |
+| **Time to Peak** | $t$ at Max $G_{t}$ |
+| **2nd-Hour Val** | $G_{120}$ |
+| **Confidence** | Narrowing $\pm$ range based on `mealCount` |
 
-**Risk Classification:**
-
-| Risk Level | Condition |
+| Risk Level | Logic |
 |---|---|
-| `hypo_risk` | Any point below 70 mg/dL |
+| `hypo_risk` | Any $G_{t} < 70$ mg/dL |
 | `high` | Peak > 250 mg/dL |
 | `elevated` | Peak > 180 mg/dL |
-| `normal` | All other cases |
+| `normal` | Within target range [70, 180] |
 
 ---
 
-## 4. Phase 2: Adaptive Parameter Tuning (Gradient Descent Feedback Loop)
+## 4. Phase 4: Extended Kalman Filter (EKF) Adaptive Tuning
 
 ### 4.1 Overview
 
-The projection from Phase 1 uses three personal metabolic constants. These start at population-average defaults and are **refined automatically** each time the user logs a post-meal glucose reading. No user action is required — the tuning runs silently in the background.
+The Phase 4 tuning engine replaces gradient descent with an **Extended Kalman Filter (EKF)**, a recursive Bayesian state estimator designed for non-linear systems. The EKF mathematically balances "trust" between the deterministic model prediction and the noisy sensor measurement.
 
-### 4.2 Parameters Tuned
+**State Vector:** `x = [p1, ISF, tMax]`
+**Covariance:** Diagonal `P = [ekfCovP1, ekfCovISF, ekfCovTMax]`
+**Measurement Noise (R):** 100.0 (finger-stick meter variance, ~10 mg/dL std dev)
 
-| Parameter | Symbol | Default | Bounds | What it represents |
-|---|---|---|---|---|
-| Metabolic Clearance Rate | `p1` | 0.010 | [0.002, 0.020] | How fast the body removes glucose from the bloodstream per minute |
-| Insulin Sensitivity Factor | `ISF` | 50.0 | [20.0, 150.0] | mg/dL drop per unit of insulin |
-| Absorption Delay Base | `tMax` | 40.0 | [20.0, 90.0] | Minutes to peak gut absorption |
+### 4.2 EKF vs Gradient Descent
 
-### 4.3 Trigger
+| Dimension | Gradient Descent (Phase 2) | EKF (Phase 4) |
+|---|---|---|
+| Noise handling | Fixed learning rate -- vulnerable | Kalman gain adapts to uncertainty |
+| Bad reading impact | Can severely skew parameters | Naturally down-weighted by R |
+| Convergence tracking | Implicit (meal count) | Explicit (covariance diagonal) |
+| Overlapping meals | Aborts tuning | Superposition engine continues |
 
-Tuning fires when the user logs a glucose reading with context `post_meal`, `post_meal_120`, or `post_meal_30`. The service:
-
-1. Finds the most recent meal logged **within 3 hours before** the glucose reading
-2. Finds the pre-meal glucose reading **within 30 minutes before** that meal
-3. Re-runs the projection using current profile parameters
-4. Interpolates the projected value at the exact elapsed time
-5. Computes the signed error: `delta = actual - predicted`
-
-### 4.4 Update Rules
+### 4.3 Update Equations (Simplified Scalar Per Parameter)
 
 ```
-Learning rate (lr) = 0.0001
-
-newP1   = clamp(p1   - delta x lr,       [0.002, 0.020])
-newISF  = clamp(ISF  + delta x lr x 10,  [20.0, 150.0])
-newTMax = clamp(tMax  - delta x lr x 2,  [20.0, 90.0])
+Innovation:    y = actual_glucose - projected_glucose
+Kalman Gain:   K = P / (P + R)
+State Update:  x_new = x + K * y * sensitivity
+Cov Update:    P_new = (1 - K) * P
+Process Noise: P += Q  (injected each cycle to prevent starvation)
 ```
 
-**Intuition:**
-- If `actual > predicted` (spike was worse than expected):
-  - `p1` decreases (body clears glucose slower than we assumed)
-  - `tMax` decreases (food absorbed faster than we assumed)
-- If `actual < predicted` (spike was milder than expected):
-  - `p1` increases (body clears glucose faster than we assumed)
-  - `ISF` increases (insulin is more effective than we assumed)
+### 4.4 Decoupled Context (Preserved from Phase 2)
 
-**Safety:**
-- All parameters are hard-clamped to clinically valid ranges per ADA/Hovorka guidance.
-- Changes are only persisted if they exceed a noise threshold (`p1 > 1e-6`, `ISF > 0.01`, `tMax > 0.01`).
-- The learning rate is deliberately conservative — convergence takes ~15-20 meals to resist single-day anomalies (e.g., unexpected exercise).
-- The entire tuning block is wrapped in `try/catch` with silent failure — tuning never crashes the app.
+| Reading Context | Timing | Parameter Updated | Rationale |
+|---|---|---|---|
+| `post_meal_30` | ~30 min | `tMax` (Absorption) | Early error is dominated by delivery speed, not clearance. |
+| `post_meal_120` | ~120 min | `p1` & `ISF` (Clearance) | Absorption is mostly complete; error reflects disposal efficiency. |
+| `post_meal` | Any | `p1` & `ISF` | Default to clearance tuning for late-stage readings. |
 
-### 4.5 Convergence Properties
+### 4.5 Uncertainty Quantifier
 
-| Property | Value |
-|---|---|
-| Expected convergence | ~15-20 logged meals |
-| Max single-meal adjustment (p1) | 0.0001 x delta |
-| Max single-meal adjustment (tMax) | 0.0002 x delta |
-| Anomaly resistance | High (lr = 0.0001 with clamped bounds) |
-| Data requirement | Minimum 1 pre-meal glucose + 1 meal + 1 post-meal glucose |
+The EKF covariance diagonal serves as a direct measure of estimation quality:
+- **High covariance** (new user): Wide confidence bands, large Kalman gains
+- **Low covariance** (established user): Narrow bands, small gains (resistant to noise)
 
----
+Additionally, `tuningMealCount` is still incremented for backward-compatible confidence band width calculation.
 
-## 5. Insulin on Board (IOB) Calculation
+### 4.6 Meal Superposition (Replaces Overlap Guard)
 
-When a meal is logged, the system queries all rapid-acting insulin doses from the last 4 hours and computes remaining active insulin using a **linear decay model**:
+Instead of aborting tuning when overlapping meals are detected, the Phase 4 engine calculates the **residual glucose contribution** from each overlapping meal's deterministic kernel tail.
+
+**Algorithm:**
+1. Detect meals logged between the primary meal and the glucose reading.
+2. If <= 2 overlapping meals: calculate each meal's decaying tail contribution at the reading time.
+3. Subtract the combined residual from the actual reading to isolate the primary meal's signal.
+4. Continue with the EKF update using the adjusted innovation.
+5. If > 2 overlapping meals: abort (triple-stacking introduces too much uncertainty).
+
+### 4.7 Safety & Convergence
+
+- **Convergence:** Typical convergence within 15-20 high-quality log pairs (same as Phase 2).
+- **Process noise (Q):** Small constant injected each cycle to track slow physiological drift.
+- **Physiological clamps:** All ADA/Hovorka bounds preserved.
+
+## 5. Insulin on Board (IOB) Calculation (Profile-Level Walsh Bilinear)
+
+Phase 3 implements **Profile-Level Dynamic Walsh Bilinear** modeling, where the Duration of Insulin Action (DIA) is configured **once during onboarding** rather than per-dose. This aligns with the clinical reality that most patients use a single type of rapid-acting insulin.
+
+### 5.1 Two-Question Insulin Wizard (UX)
+
+The onboarding flow uses a tiered approach to minimize cognitive load:
+
+**Q1: "Do you take insulin for meals?"**
+- **Yes, I take a shot/dose before eating** → Show bolus type picker (Q2)
+- **Yes, but only a background/daily dose** → Set category to `basal_only`, skip IOB
+- **No** → Set category to `none`, skip IOB entirely
+
+**Q2: "Which type?" (if bolus)**
+| Option | DIA | Insulin Category |
+|---|---|---|
+| Ultra-fast (Fiasp, Lyumjev, Afrezza) | 180 min | `ultra_fast` |
+| Standard rapid (Humalog, NovoLog, Apidra) | 240 min | `standard_rapid` |
+| Regular / short-acting (Humulin R) | 360 min | `regular` |
+| I'm not sure | 240 min | `standard_rapid` (safe default) |
+
+### 5.2 Basal-Only Guard
+
+If `insulinCategory` is `basal_only` or `none`, the IOB calculation returns **0.0 immediately**. This prevents a user who only takes Lantus or Tresiba from having phantom mealtime IOB incorrectly suppress their projected glucose curve.
+
+### 5.3 The Walsh Curve
+
+The Walsh model uses a sigmoid (S-curve) approximation where $t$ is the fraction of the user's configured `insulinDiaMinutes`:
 
 ```
-For each rapid-acting insulin dose:
-    elapsedMinutes = now - dose.timestamp
-    remaining = clamp(1.0 - elapsedMinutes / 240, 0, 1)
-    iob += dose.units x remaining
-
-Duration of Insulin Action (DIA) = 240 minutes (4 hours)
+t = elapsedMinutes / profile.insulinDiaMinutes
+iobFraction = 1.0 - (t^2 * (3.0 - 2.0 * t))
 ```
 
-The total IOB is multiplied by ISF to get the expected glucose drop, which is spread evenly across the projection window.
+**Clinical Properties:**
+- **Smooth Onset:** Action starts slowly, mimicking subcutaneous absorption.
+- **Accurate Peak:** Peak insulin action occurs at approximately 30% of the DIA (~72 minutes for a 4-hour DIA).
+- **Realistic Tail:** Insulin action tapers off gradually rather than cutting off abruptly.
+
+### 5.2 Minute-by-Minute Impact
+
+In the simulation loop, the insulin impact for each minute is calculated as the differential of the Walsh curve:
+
+```
+iobMinute = (iobFraction(t-1) - iobFraction(t)) * (units * ISF)
+```
+
+This ensures that the total area under the insulin action curve equals the total dose multiplied by the user's Insulin Sensitivity Factor (ISF).
 
 ---
 
@@ -345,8 +328,32 @@ ProjectionResult(
   totalAvailableGlucose: double,       // TAG in grams
   riskLevel: String,                   // 'normal' | 'elevated' | 'high' | 'hypo_risk'
   summary: String,                     // Human-readable summary
+  upperBand: List<ProjectionPoint>,    // +Confidence width
+  lowerBand: List<ProjectionPoint>,    // -Confidence width
+  confidenceWidth: double,             // Half-width in mg/dL
 )
 ```
+
+### 8.1 Uncertainty Quantification (Sine Envelope Confidence Bands)
+
+Phase 3 introduces **Time-Varying Sine Envelope** bands to more accurately reflect the probability distribution of glucose outcomes.
+
+- **Phase 1/2:** Constant uniform band width.
+- **Phase 3:** Cone-shaped "fan" envelope using a sine function.
+
+**Band Logic:**
+```
+Phase = elapsedMinute / 240.0
+Envelope = sin(Phase * PI)
+currentWidth = maxWidth * Envelope
+```
+
+**Interpretation:**
+- **t=0:** Zero band width (the starting point is a known fact).
+- **t=120:** Maximum band width (peak uncertainty during active digestion).
+- **t=240:** Zero band width (re-convergence upon the predicted fasting baseline).
+
+The `maxWidth` itself continues to narrow from $\pm$ 25 to $\pm$ 10 mg/dL as the `mealCount` increases.
 
 ---
 
@@ -367,21 +374,20 @@ The `ProjectionResultView` renders:
 
 For comparing this system against alternative approaches:
 
-| Dimension | DiaMetrics Approach |
+| Dimension | DiaMetrics Phase 3 Approach |
 |---|---|
-| **Model type** | Deterministic compartmental (Hovorka) |
-| **Training data required** | None (starts from population defaults) |
-| **Personalisation method** | Online gradient descent on 3 physiological parameters |
+| **Model type** | Deterministic Dual-Kernel (Hovorka based) |
+| **Training data required** | Zero-start (population defaults) |
+| **Personalisation method** | **Extended Kalman Filter (EKF)** |
 | **Prediction horizon** | 4 hours (240 minutes) |
-| **Output granularity** | Minute-by-minute (displayed every 5 min) |
-| **Macronutrient handling** | TAG formula (carbs, protein at 58%, fat at 10%) |
-| **Fiber handling** | Subtracted from total carbs (net carbs) |
-| **Fat/protein delay** | Absorption delay shift (+30 min for high fat/protein meals) |
-| **Insulin modeling** | Linear IOB decay over 4-hour DIA |
-| **Runs on-device** | Yes (no cloud dependency) |
-| **Computational cost** | O(240) — single loop, sub-millisecond |
-| **Explainability** | Full (every variable is traceable) |
-| **Known limitations** | No GI weighting, no exercise modeling, linear IOB decay |
+| **Macronutrient handling** | **Decoupled TAG** (Separate Carb/Protein kernels) |
+| **GI weighting** | **Food-Form Heuristics + Caribbean Regional Multipliers** |
+| **Insulin modeling** | **Dynamic Walsh Bilinear** (drug-specific DIA) |
+| **Circadian modeling** | **Dawn Phenomenon** (sine-wave 4-8 AM) |
+| **Overlapping meals** | **Superposition Engine** (residual tail calculation) |
+| **Confidence tracking** | **Time-Varying Sine Envelope + EKF Covariance** |
+| **Explainability** | Full (deterministic differential equations) |
+| **Known limitations** | No stress/illness modeling |
 
 ---
 
@@ -396,9 +402,17 @@ For comparing this system against alternative approaches:
 
 ## 12. Known Limitations
 
-1. **No Glycemic Index weighting** — All carbohydrates are treated equally. No available local food database provides GI values.
-2. **Linear IOB decay** — Real insulin action follows a curvilinear profile. A trapezoidal or exponential model would be more accurate.
-3. **No exercise modeling** — Physical activity significantly affects glucose disposal but is not captured.
-4. **No stress/illness modeling** — Cortisol and inflammatory responses can raise glucose independent of meals.
-5. **Single-meal assumption** — The projection assumes only one meal is being digested. Overlapping meals are not modeled.
-6. **Population-average starting parameters** — New users receive generic defaults until enough meals are logged for the adaptive loop to converge.
+1. **No direct stress/illness modeling** — Cortisol and inflammatory responses can raise glucose independent of meals.
+2. **Generic Defaults** — Non-Type-1/Type-2 users may experience high initial error until the adaptive loop completes ~15 tuning events.
+
+### 12.1 Addressed Limitations (from Phase 1, 2, & 3)
+
+- Fixed: Dynamic Walsh Bilinear IOB (Insulin-specific DIA).
+- Fixed: Post-Exercise disposal boosts (1.35x p1).
+- Fixed: Time-Varying Confidence Bands (Cone/Sine Envelope).
+- Fixed: Meal Overlap Guard -> upgraded to Superposition Engine.
+- Fixed: Personalized Fasting Setpoints.
+- Fixed: Dawn Phenomenon circadian correction (4-8 AM).
+- Fixed: Noise-resistant tuning via EKF (replaces gradient descent).
+- Fixed: Caribbean regional dietary heuristics.
+- Fixed: Single-meal assumption (superposition handles overlapping meals).

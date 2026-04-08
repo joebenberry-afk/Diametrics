@@ -22,6 +22,7 @@ abstract class MealLog with _$MealLog {
     String? notes,
     @Default('standard')
     String foodFormFactor, // Enum: standard, liquid, highFiber, processed
+    @Default(false) bool postExercise,
     @Default(false) bool isSynced,
   }) = _MealLog;
 

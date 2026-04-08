@@ -5,7 +5,7 @@ import '../models/meal_log.dart';
 import '../models/medication_log.dart';
 import '../models/projection_result.dart';
 import '../repositories/user_repository.dart';
-import '../services/adaptive_tuning_service.dart';
+import '../services/ekf_tuning_service.dart';
 import '../services/glucose_projection_service.dart';
 import 'health_data_viewmodel.dart';
 
@@ -26,6 +26,7 @@ class LoggingWizardState {
   final bool containsCaffeine;
   final String mealType;
   final String foodFormFactor; // standard, liquid, highFiber, processed
+  final String? mealName; // For regional heuristic lookup
 
   // Pre-meal glucose gate (used by Meal Wizard)
   final double? preMealGlucose;
@@ -34,6 +35,8 @@ class LoggingWizardState {
   // Medication Wizard
   final double? pendingMedicationUnits;
   final String medicationType;
+
+  final bool postExercise; // Track exercise flag for meal wizard
 
   final bool isSubmitting;
   final String? error;
@@ -51,10 +54,12 @@ class LoggingWizardState {
     this.containsCaffeine = false,
     this.mealType = 'lunch',
     this.foodFormFactor = 'standard',
+    this.mealName,
     this.preMealGlucose,
     this.hasAutoDetectedGlucose = false,
     this.pendingMedicationUnits,
     this.medicationType = 'rapid_acting_insulin',
+    this.postExercise = false,
     this.isSubmitting = false,
     this.error,
   });
@@ -72,10 +77,12 @@ class LoggingWizardState {
     bool? containsCaffeine,
     String? mealType,
     String? foodFormFactor,
+    String? mealName,
     double? preMealGlucose,
     bool? hasAutoDetectedGlucose,
     double? pendingMedicationUnits,
     String? medicationType,
+    bool? postExercise,
     bool? isSubmitting,
     String? error,
   }) {
@@ -92,12 +99,14 @@ class LoggingWizardState {
       containsCaffeine: containsCaffeine ?? this.containsCaffeine,
       mealType: mealType ?? this.mealType,
       foodFormFactor: foodFormFactor ?? this.foodFormFactor,
+      mealName: mealName ?? this.mealName,
       preMealGlucose: preMealGlucose ?? this.preMealGlucose,
       hasAutoDetectedGlucose:
           hasAutoDetectedGlucose ?? this.hasAutoDetectedGlucose,
       pendingMedicationUnits:
           pendingMedicationUnits ?? this.pendingMedicationUnits,
       medicationType: medicationType ?? this.medicationType,
+      postExercise: postExercise ?? this.postExercise,
       isSubmitting: isSubmitting ?? this.isSubmitting,
       error: error ?? this.error,
     );
@@ -165,6 +174,8 @@ class LoggingWizardViewModel extends StateNotifier<LoggingWizardState> {
   void updateMealType(String type) => state = state.copyWith(mealType: type);
   void updateFoodFormFactor(String factor) =>
       state = state.copyWith(foodFormFactor: factor);
+  void togglePostExercise(bool val) =>
+      state = state.copyWith(postExercise: val);
 
   /// Populates meal macro fields from a barcode scan result (FoodItem).
   /// Called after the user successfully scans a packaged food barcode.
@@ -191,19 +202,26 @@ class LoggingWizardViewModel extends StateNotifier<LoggingWizardState> {
 
   // --- IOB Calculation (Walsh Bilinear) ---
 
-  /// Calculates Insulin-on-Board from rapid-acting insulin logged in the
-  /// last 4 hours, using the Walsh bilinear decay model (DIA = 240 min).
+  /// Calculates Insulin-on-Board from rapid-acting insulin logged within the
+  /// user's configured DIA window, using the Walsh bilinear decay model.
   ///
-  /// The Walsh curve better models rapid-acting insulins (Humalog, NovoLog)
-  /// which peak at ~60-90 min and tail off -- unlike linear decay which
-  /// overestimates early action and underestimates late action.
+  /// The DIA is stored at the **profile level** (set once during onboarding)
+  /// rather than per-dose, reducing cognitive load. If the user's insulin
+  /// category is 'basal_only' or 'none', IOB is zero — preventing phantom
+  /// bolus action from corrupting projections for non-bolus users.
   Future<double> _calculateIOB() async {
+    final profile = await UserRepository().getProfile();
+    final category = profile?.insulinCategory ?? 'standard_rapid';
+
+    // Guard: basal-only or non-insulin users have no mealtime IOB
+    if (category == 'basal_only' || category == 'none') return 0.0;
+
+    final double dia = profile?.insulinDiaMinutes ?? 240.0;
     final repo = ref.read(healthDataRepositoryProvider);
     final recentMeds = await repo.getRecentMedicationLogs(
-      const Duration(hours: 4),
+      Duration(minutes: dia.toInt()),
     );
     double iob = 0.0;
-    const double dia = 240.0;
     final now = DateTime.now();
     for (final med in recentMeds) {
       if (med.medicationType != 'rapid_acting_insulin') continue;
@@ -235,9 +253,9 @@ class LoggingWizardViewModel extends StateNotifier<LoggingWizardState> {
       await dataRepo.addGlucoseLog(log);
       ref.invalidate(glucoseLogsProvider);
 
-      // Fire adaptive tuning in the background for post-meal readings.
+      // Fire adaptive tuning (EKF) in the background for post-meal readings.
       // Never awaited so it never blocks or disrupts the user flow.
-      AdaptiveTuningService.tuneFromGlucoseLog(
+      EkfTuningService.tuneFromGlucoseLog(
         glucoseLog: log,
         dataRepo: dataRepo,
         userRepo: UserRepository(),
@@ -304,6 +322,7 @@ class LoggingWizardViewModel extends StateNotifier<LoggingWizardState> {
         containsCaffeine: state.containsCaffeine,
         mealType: state.mealType,
         foodFormFactor: state.foodFormFactor,
+        postExercise: state.postExercise,
       );
       await repo.addMealLog(mealLog);
       ref.invalidate(mealLogsProvider);
@@ -333,8 +352,12 @@ class LoggingWizardViewModel extends StateNotifier<LoggingWizardState> {
         p1: profile?.metabolicClearanceRate ?? 0.010,
         isf: profile?.insulinSensitivityFactor ?? 50.0,
         tMaxBase: profile?.absorptionDelayBase ?? 40.0,
+        fastingSetpoint: profile?.fastingSetpoint ?? 90.0,
         foodFormFactor: state.foodFormFactor,
+        postExercise: state.postExercise,
         mealCount: mealCount,
+        mealTimestamp: DateTime.now(),
+        mealName: state.mealName,
       );
 
       // Reset wizard state
@@ -379,6 +402,7 @@ class LoggingWizardViewModel extends StateNotifier<LoggingWizardState> {
         containsCaffeine: state.containsCaffeine,
         mealType: state.mealType,
         foodFormFactor: state.foodFormFactor,
+        postExercise: state.postExercise,
       );
 
       await ref.read(healthDataRepositoryProvider).addMealLog(log);
@@ -400,6 +424,7 @@ class LoggingWizardViewModel extends StateNotifier<LoggingWizardState> {
         id: _uuid.v4(),
         timestamp: DateTime.now(),
         medicationType: state.medicationType,
+        insulinType: state.medicationType == 'rapid_acting_insulin' ? 'Humalog / NovoLog' : 'N/A', // Auto-set generic for now, the UI can pass it later.
         units: state.pendingMedicationUnits!,
       );
 

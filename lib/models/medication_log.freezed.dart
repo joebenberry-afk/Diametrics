@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 mixin _$MedicationLog {
 
  String get id; DateTime get timestamp; String get medicationType;// Enum: rapid_acting_insulin, long_acting_insulin, pill
- String? get name;// e.g., Humalog, Metformin
+ String get insulinType; String? get name;// e.g., Humalog, Metformin
  double get units;// Active drug volume to deduct from future boluses
  String? get notes; bool get isSynced;
 /// Create a copy of MedicationLog
@@ -31,16 +31,16 @@ $MedicationLogCopyWith<MedicationLog> get copyWith => _$MedicationLogCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MedicationLog&&(identical(other.id, id) || other.id == id)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.medicationType, medicationType) || other.medicationType == medicationType)&&(identical(other.name, name) || other.name == name)&&(identical(other.units, units) || other.units == units)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.isSynced, isSynced) || other.isSynced == isSynced));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MedicationLog&&(identical(other.id, id) || other.id == id)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.medicationType, medicationType) || other.medicationType == medicationType)&&(identical(other.insulinType, insulinType) || other.insulinType == insulinType)&&(identical(other.name, name) || other.name == name)&&(identical(other.units, units) || other.units == units)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.isSynced, isSynced) || other.isSynced == isSynced));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,timestamp,medicationType,name,units,notes,isSynced);
+int get hashCode => Object.hash(runtimeType,id,timestamp,medicationType,insulinType,name,units,notes,isSynced);
 
 @override
 String toString() {
-  return 'MedicationLog(id: $id, timestamp: $timestamp, medicationType: $medicationType, name: $name, units: $units, notes: $notes, isSynced: $isSynced)';
+  return 'MedicationLog(id: $id, timestamp: $timestamp, medicationType: $medicationType, insulinType: $insulinType, name: $name, units: $units, notes: $notes, isSynced: $isSynced)';
 }
 
 
@@ -51,7 +51,7 @@ abstract mixin class $MedicationLogCopyWith<$Res>  {
   factory $MedicationLogCopyWith(MedicationLog value, $Res Function(MedicationLog) _then) = _$MedicationLogCopyWithImpl;
 @useResult
 $Res call({
- String id, DateTime timestamp, String medicationType, String? name, double units, String? notes, bool isSynced
+ String id, DateTime timestamp, String medicationType, String insulinType, String? name, double units, String? notes, bool isSynced
 });
 
 
@@ -68,11 +68,12 @@ class _$MedicationLogCopyWithImpl<$Res>
 
 /// Create a copy of MedicationLog
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? timestamp = null,Object? medicationType = null,Object? name = freezed,Object? units = null,Object? notes = freezed,Object? isSynced = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? timestamp = null,Object? medicationType = null,Object? insulinType = null,Object? name = freezed,Object? units = null,Object? notes = freezed,Object? isSynced = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,timestamp: null == timestamp ? _self.timestamp : timestamp // ignore: cast_nullable_to_non_nullable
 as DateTime,medicationType: null == medicationType ? _self.medicationType : medicationType // ignore: cast_nullable_to_non_nullable
+as String,insulinType: null == insulinType ? _self.insulinType : insulinType // ignore: cast_nullable_to_non_nullable
 as String,name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String?,units: null == units ? _self.units : units // ignore: cast_nullable_to_non_nullable
 as double,notes: freezed == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
@@ -162,10 +163,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  DateTime timestamp,  String medicationType,  String? name,  double units,  String? notes,  bool isSynced)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  DateTime timestamp,  String medicationType,  String insulinType,  String? name,  double units,  String? notes,  bool isSynced)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MedicationLog() when $default != null:
-return $default(_that.id,_that.timestamp,_that.medicationType,_that.name,_that.units,_that.notes,_that.isSynced);case _:
+return $default(_that.id,_that.timestamp,_that.medicationType,_that.insulinType,_that.name,_that.units,_that.notes,_that.isSynced);case _:
   return orElse();
 
 }
@@ -183,10 +184,10 @@ return $default(_that.id,_that.timestamp,_that.medicationType,_that.name,_that.u
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  DateTime timestamp,  String medicationType,  String? name,  double units,  String? notes,  bool isSynced)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  DateTime timestamp,  String medicationType,  String insulinType,  String? name,  double units,  String? notes,  bool isSynced)  $default,) {final _that = this;
 switch (_that) {
 case _MedicationLog():
-return $default(_that.id,_that.timestamp,_that.medicationType,_that.name,_that.units,_that.notes,_that.isSynced);case _:
+return $default(_that.id,_that.timestamp,_that.medicationType,_that.insulinType,_that.name,_that.units,_that.notes,_that.isSynced);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -203,10 +204,10 @@ return $default(_that.id,_that.timestamp,_that.medicationType,_that.name,_that.u
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  DateTime timestamp,  String medicationType,  String? name,  double units,  String? notes,  bool isSynced)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  DateTime timestamp,  String medicationType,  String insulinType,  String? name,  double units,  String? notes,  bool isSynced)?  $default,) {final _that = this;
 switch (_that) {
 case _MedicationLog() when $default != null:
-return $default(_that.id,_that.timestamp,_that.medicationType,_that.name,_that.units,_that.notes,_that.isSynced);case _:
+return $default(_that.id,_that.timestamp,_that.medicationType,_that.insulinType,_that.name,_that.units,_that.notes,_that.isSynced);case _:
   return null;
 
 }
@@ -218,13 +219,14 @@ return $default(_that.id,_that.timestamp,_that.medicationType,_that.name,_that.u
 @JsonSerializable()
 
 class _MedicationLog implements MedicationLog {
-  const _MedicationLog({required this.id, required this.timestamp, required this.medicationType, this.name, required this.units, this.notes, this.isSynced = false});
+  const _MedicationLog({required this.id, required this.timestamp, required this.medicationType, this.insulinType = 'Humalog / NovoLog', this.name, required this.units, this.notes, this.isSynced = false});
   factory _MedicationLog.fromJson(Map<String, dynamic> json) => _$MedicationLogFromJson(json);
 
 @override final  String id;
 @override final  DateTime timestamp;
 @override final  String medicationType;
 // Enum: rapid_acting_insulin, long_acting_insulin, pill
+@override@JsonKey() final  String insulinType;
 @override final  String? name;
 // e.g., Humalog, Metformin
 @override final  double units;
@@ -245,16 +247,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MedicationLog&&(identical(other.id, id) || other.id == id)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.medicationType, medicationType) || other.medicationType == medicationType)&&(identical(other.name, name) || other.name == name)&&(identical(other.units, units) || other.units == units)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.isSynced, isSynced) || other.isSynced == isSynced));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MedicationLog&&(identical(other.id, id) || other.id == id)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.medicationType, medicationType) || other.medicationType == medicationType)&&(identical(other.insulinType, insulinType) || other.insulinType == insulinType)&&(identical(other.name, name) || other.name == name)&&(identical(other.units, units) || other.units == units)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.isSynced, isSynced) || other.isSynced == isSynced));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,timestamp,medicationType,name,units,notes,isSynced);
+int get hashCode => Object.hash(runtimeType,id,timestamp,medicationType,insulinType,name,units,notes,isSynced);
 
 @override
 String toString() {
-  return 'MedicationLog(id: $id, timestamp: $timestamp, medicationType: $medicationType, name: $name, units: $units, notes: $notes, isSynced: $isSynced)';
+  return 'MedicationLog(id: $id, timestamp: $timestamp, medicationType: $medicationType, insulinType: $insulinType, name: $name, units: $units, notes: $notes, isSynced: $isSynced)';
 }
 
 
@@ -265,7 +267,7 @@ abstract mixin class _$MedicationLogCopyWith<$Res> implements $MedicationLogCopy
   factory _$MedicationLogCopyWith(_MedicationLog value, $Res Function(_MedicationLog) _then) = __$MedicationLogCopyWithImpl;
 @override @useResult
 $Res call({
- String id, DateTime timestamp, String medicationType, String? name, double units, String? notes, bool isSynced
+ String id, DateTime timestamp, String medicationType, String insulinType, String? name, double units, String? notes, bool isSynced
 });
 
 
@@ -282,11 +284,12 @@ class __$MedicationLogCopyWithImpl<$Res>
 
 /// Create a copy of MedicationLog
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? timestamp = null,Object? medicationType = null,Object? name = freezed,Object? units = null,Object? notes = freezed,Object? isSynced = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? timestamp = null,Object? medicationType = null,Object? insulinType = null,Object? name = freezed,Object? units = null,Object? notes = freezed,Object? isSynced = null,}) {
   return _then(_MedicationLog(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,timestamp: null == timestamp ? _self.timestamp : timestamp // ignore: cast_nullable_to_non_nullable
 as DateTime,medicationType: null == medicationType ? _self.medicationType : medicationType // ignore: cast_nullable_to_non_nullable
+as String,insulinType: null == insulinType ? _self.insulinType : insulinType // ignore: cast_nullable_to_non_nullable
 as String,name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String?,units: null == units ? _self.units : units // ignore: cast_nullable_to_non_nullable
 as double,notes: freezed == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable

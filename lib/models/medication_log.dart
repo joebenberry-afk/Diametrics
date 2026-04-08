@@ -10,6 +10,7 @@ abstract class MedicationLog with _$MedicationLog {
     required DateTime timestamp,
     required String
     medicationType, // Enum: rapid_acting_insulin, long_acting_insulin, pill
+    @Default('Humalog / NovoLog') String insulinType,
     String? name, // e.g., Humalog, Metformin
     required double units, // Active drug volume to deduct from future boluses
     String? notes,

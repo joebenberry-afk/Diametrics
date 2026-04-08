@@ -100,12 +100,7 @@ class GeminiFoodAnalyzerImpl implements FoodAnalyzerRepository {
     return enrichedResult;
   }
 
-  @override
-  Future<FoodAnalysisResult> analyzeText(String userQuery) async {
-    throw UnimplementedError(
-      'analyzeText not yet supported on Gemini implementation',
-    );
-  }
+
 
   /// Retries [action] up to [_maxRetries] times with exponential backoff.
   ///

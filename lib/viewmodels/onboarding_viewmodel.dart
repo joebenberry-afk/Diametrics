@@ -70,11 +70,15 @@ class OnboardingViewModel extends StateNotifier<UserProfile> {
     required bool usesInsulin,
     required bool usesPills,
     required bool usesCgm,
+    String insulinCategory = 'standard_rapid',
+    double insulinDiaMinutes = 240.0,
   }) {
     state = state.copyWith(
       usesInsulin: usesInsulin,
       usesPills: usesPills,
       usesCgm: usesCgm,
+      insulinCategory: insulinCategory,
+      insulinDiaMinutes: insulinDiaMinutes,
     );
   }
 

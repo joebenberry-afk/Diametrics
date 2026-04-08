@@ -20,6 +20,7 @@ _MealLog _$MealLogFromJson(Map<String, dynamic> json) => _MealLog(
   mealType: json['mealType'] as String,
   notes: json['notes'] as String?,
   foodFormFactor: json['foodFormFactor'] as String? ?? 'standard',
+  postExercise: json['postExercise'] as bool? ?? false,
   isSynced: json['isSynced'] as bool? ?? false,
 );
 
@@ -37,5 +38,6 @@ Map<String, dynamic> _$MealLogToJson(_MealLog instance) => <String, dynamic>{
   'mealType': instance.mealType,
   'notes': instance.notes,
   'foodFormFactor': instance.foodFormFactor,
+  'postExercise': instance.postExercise,
   'isSynced': instance.isSynced,
 };

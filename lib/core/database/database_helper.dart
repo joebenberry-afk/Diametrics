@@ -5,7 +5,7 @@ import 'package:path_provider/path_provider.dart';
 
 class DatabaseHelper {
   static const _databaseName = "diametrics_v1.db";
-  static const _databaseVersion = 7; // v7: prediction overhaul schema
+  static const _databaseVersion = 8; // v8: EKF covariance + postExercise
 
   DatabaseHelper._privateConstructor();
   static final DatabaseHelper instance = DatabaseHelper._privateConstructor();
@@ -100,6 +100,30 @@ class DatabaseHelper {
         await db.execute("ALTER TABLE meal_logs ADD COLUMN foodFormFactor TEXT NOT NULL DEFAULT 'standard'");
       } catch (_) {} // column already exists — safe to ignore
     }
+    if (oldVersion < 8) {
+      // v8: EKF covariance state + postExercise flag
+      try {
+        await db.execute("ALTER TABLE user_profiles ADD COLUMN ekfCovP1 REAL NOT NULL DEFAULT 1.0");
+      } catch (_) {} // column already exists — safe to ignore
+      try {
+        await db.execute("ALTER TABLE user_profiles ADD COLUMN ekfCovISF REAL NOT NULL DEFAULT 1.0");
+      } catch (_) {} // column already exists — safe to ignore
+      try {
+        await db.execute("ALTER TABLE user_profiles ADD COLUMN ekfCovTMax REAL NOT NULL DEFAULT 1.0");
+      } catch (_) {} // column already exists — safe to ignore
+      try {
+        await db.execute("ALTER TABLE meal_logs ADD COLUMN postExercise INTEGER NOT NULL DEFAULT 0");
+      } catch (_) {} // column already exists — safe to ignore
+      try {
+        await db.execute("ALTER TABLE user_profiles ADD COLUMN fastingSetpoint REAL NOT NULL DEFAULT 90.0");
+      } catch (_) {} // column already exists — safe to ignore
+      try {
+        await db.execute("ALTER TABLE user_profiles ADD COLUMN insulinCategory TEXT NOT NULL DEFAULT 'standard_rapid'");
+      } catch (_) {} // column already exists — safe to ignore
+      try {
+        await db.execute("ALTER TABLE user_profiles ADD COLUMN insulinDiaMinutes REAL NOT NULL DEFAULT 240.0");
+      } catch (_) {} // column already exists — safe to ignore
+    }
   }
 
   Future _createTables(Database db) async {
@@ -136,6 +160,7 @@ class DatabaseHelper {
         containsAlcohol INTEGER NOT NULL DEFAULT 0,
         containsCaffeine INTEGER NOT NULL DEFAULT 0,
         foodFormFactor TEXT NOT NULL DEFAULT 'standard',
+        postExercise INTEGER NOT NULL DEFAULT 0,
         mealType TEXT NOT NULL,
         timestamp TEXT NOT NULL,
         notes TEXT,
@@ -180,6 +205,12 @@ class DatabaseHelper {
         insulinSensitivityFactor REAL NOT NULL DEFAULT 50.0,
         absorptionDelayBase REAL NOT NULL DEFAULT 40.0,
         tuningMealCount INTEGER NOT NULL DEFAULT 0,
+        fastingSetpoint REAL NOT NULL DEFAULT 90.0,
+        insulinCategory TEXT NOT NULL DEFAULT 'standard_rapid',
+        insulinDiaMinutes REAL NOT NULL DEFAULT 240.0,
+        ekfCovP1 REAL NOT NULL DEFAULT 1.0,
+        ekfCovISF REAL NOT NULL DEFAULT 1.0,
+        ekfCovTMax REAL NOT NULL DEFAULT 1.0,
         hasAgreedToDisclaimer INTEGER NOT NULL DEFAULT 0,
         createdAt TEXT NOT NULL,
         updatedAt TEXT NOT NULL

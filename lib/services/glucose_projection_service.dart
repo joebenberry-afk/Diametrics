@@ -1,5 +1,6 @@
 import 'dart:math';
 import '../models/projection_result.dart';
+import 'caribbean_food_heuristics.dart';
 
 /// Post-meal blood glucose projection using a simplified Hovorka gut absorption
 /// model with Total Available Glucose (TAG) and Insulin-on-Board (IOB) safety
@@ -46,6 +47,39 @@ class GlucoseProjectionService {
     return (1.0 - (t * t * (3.0 - 2.0 * t))).clamp(0.0, 1.0);
   }
 
+  // ── Dawn Phenomenon Circadian Modifier ──────────────────────────────
+
+  /// Maximum fasting setpoint elevation during the dawn window (mg/dL).
+  /// Conservative clinical estimate for mixed T1D/T2D population.
+  static const double _dawnAmplitude = 15.0;
+
+  /// Returns the circadian fasting setpoint modifier for a given simulation
+  /// minute, based on the meal's real-world timestamp.
+  ///
+  /// Between 4:00 AM and 8:00 AM, cortisol and growth hormone release
+  /// causes temporary insulin resistance, raising the body's natural
+  /// glucose equilibrium. This method applies a sine-wave bump peaking
+  /// at 6:00 AM (+[_dawnAmplitude] mg/dL) and returning to 0 outside
+  /// the window.
+  ///
+  /// [mealTime] is when the meal was consumed in local time.
+  /// [simulationMinute] is the current simulation offset (1..240).
+  static double _dawnPhenomenonModifier(
+    DateTime mealTime,
+    int simulationMinute,
+  ) {
+    // Calculate the real-world time at this simulation minute
+    final realTime = mealTime.add(Duration(minutes: simulationMinute));
+    final hour = realTime.hour + realTime.minute / 60.0;
+
+    // Dawn window: 4:00 AM to 8:00 AM (4 hours)
+    if (hour < 4.0 || hour > 8.0) return 0.0;
+
+    // Sine-wave phase: 0 at 4 AM, pi at 8 AM, peak (pi/2) at 6 AM
+    final phase = (hour - 4.0) / 4.0 * pi;
+    return _dawnAmplitude * sin(phase);
+  }
+
   /// Computes the confidence band half-width in mg/dL based on how many
   /// meals have contributed to adaptive tuning.
   /// Starts at +/-25 mg/dL for new users, narrows to +/-10 after ~20 meals.
@@ -70,9 +104,14 @@ class GlucoseProjectionService {
     double p1 = 0.010, // ML parameter: metabolicClearanceRate
     double isf = 50.0, // ML parameter: insulinSensitivityFactor
     double tMaxBase = 40.0, // ML parameter: absorptionDelayBase
+    double fastingSetpoint = 90.0, // ML parameter: clearance equilibrium point
     String foodFormFactor = 'standard', // Food form heuristic
+    bool postExercise = false, // Post-exercise disposal boost
     int mealCount = 0, // Logged meals for confidence band width
+    DateTime? mealTimestamp, // When the meal was consumed (for circadian)
+    String? mealName, // Meal name (for regional heuristics)
   }) {
+    final effectiveMealTime = mealTimestamp ?? DateTime.now();
     // ── STEP 1: Total Available Glucose — split into fast and slow ──────
     final netCarbs = max(0.0, carbsGrams - fiberGrams);
 
@@ -110,8 +149,16 @@ class GlucoseProjectionService {
     // ── STEP 2: Hovorka Parameters ────────────────────────────────────
     const double aG = 0.8; // Bioavailability factor
 
+    // Apply post-exercise heuristics before basic logic
+    double effectiveP1 = p1;
+    double effectiveTMax = tMaxBase;
+    if (postExercise) {
+      effectiveP1 *= 1.35; // 35% faster disposal
+      effectiveTMax -= 10.0; // slightly faster absorption too
+    }
+
     // Time-to-maximum gut absorption in minutes (fast carb component)
-    double tMax = tMaxBase;
+    double tMax = effectiveTMax;
     if (fatGrams > 40 || proteinGrams > 25) tMax += 30.0;
     if (containsAlcohol) tMax += 20.0;
 
@@ -128,6 +175,16 @@ class GlucoseProjectionService {
     }
     tMax = tMax.clamp(15.0, 120.0); // Safety clamp
 
+    // ── STEP 2b: Caribbean Regional Heuristics ──────────────────────
+    // Apply regional absorption and TAG multipliers for Caribbean foods.
+    // This is invisible to the user — the intelligence lives in the data layer.
+    final regionalAbsorption =
+        CaribbeanFoodHeuristics.getRegionalAbsorptionMultiplier(mealName);
+    final regionalTag =
+        CaribbeanFoodHeuristics.getRegionalTagMultiplier(mealName);
+    tMax *= regionalAbsorption;
+    tMax = tMax.clamp(15.0, 120.0); // Re-clamp after regional adjustment
+
     // Protein kernel tMax (always slower than carb absorption)
     final double proteinTMax = _proteinTMaxDefault;
 
@@ -135,7 +192,8 @@ class GlucoseProjectionService {
     final double vG = 0.16 * weightKg;
 
     // Blood-glucose-equivalent rise from fast and slow components
-    final double fastBgEquiv = aG * fastTAG * 100.0 / vG;
+    // (with regional TAG scaling applied to the fast component)
+    final double fastBgEquiv = aG * (fastTAG * regionalTag) * 100.0 / vG;
     final double proteinBgEquiv = aG * proteinTAG * 100.0 / vG;
 
     // ── STEP 3: Pre-compute gamma-distribution weights ─────────────────
@@ -160,7 +218,14 @@ class GlucoseProjectionService {
     final double totalInsulinDrop = insulinOnBoard * isf;
 
     // Confidence band half-width
-    final double bandWidth = _confidenceWidth(mealCount);
+    final double bandWidthMaxWidth = _confidenceWidth(mealCount);
+
+    double bandAtTime(int minute) {
+      // Error grows with time, peaks around midway, shrinks toward t=240
+      final phase = minute / _projectionMinutes.toDouble();
+      final envelope = sin(phase * pi); // 0 -> 1 -> 0 shape
+      return bandWidthMaxWidth * envelope;
+    }
 
     // ── STEP 4: Minute-by-minute simulation ───────────────────────────
     double gCurrent = baselineGlucose;
@@ -191,12 +256,16 @@ class GlucoseProjectionService {
       if (containsCaffeine) riseRate *= 1.10;
 
       // — Endogenous clearance —
-      // Only applies ABOVE the body's natural fasting equilibrium (~90 mg/dL).
+      // Only applies ABOVE the body's natural fasting equilibrium.
+      // Dawn Phenomenon: shift the equilibrium upward between 4-8 AM.
+      final double dawnShift =
+          _dawnPhenomenonModifier(effectiveMealTime, t);
+      final double effectiveFasting = fastingSetpoint + dawnShift;
       // Clearance is scaled by the current absorption fraction so glucose
       // does not plummet before the food arrives.
       final double absorptionFraction = fastGamma / (fastGammaSum / _projectionMinutes);
       final double clearanceFraction = (absorptionFraction / (absorptionFraction + 1.0)).clamp(0.1, 1.0);
-      final double rawClearance = max(0.0, gCurrent - 90.0) * p1;
+      final double rawClearance = max(0.0, gCurrent - effectiveFasting) * effectiveP1;
       final double clearanceRate = min(rawClearance * clearanceFraction, 1.5);
 
       // — Insulin on Board (Walsh bilinear) —
@@ -222,17 +291,18 @@ class GlucoseProjectionService {
 
       if (t % 5 == 0) {
         final roundedValue = double.parse(gCurrent.toStringAsFixed(1));
+        final currentBandWidth = bandAtTime(t);
         points.add(ProjectionPoint(
           timeMinutes: t,
           glucoseValue: roundedValue,
         ));
         upperBand.add(ProjectionPoint(
           timeMinutes: t,
-          glucoseValue: (roundedValue + bandWidth).clamp(40.0, 500.0),
+          glucoseValue: (roundedValue + currentBandWidth).clamp(40.0, 500.0),
         ));
         lowerBand.add(ProjectionPoint(
           timeMinutes: t,
-          glucoseValue: (roundedValue - bandWidth).clamp(40.0, 500.0),
+          glucoseValue: (roundedValue - currentBandWidth).clamp(40.0, 500.0),
         ));
       }
     }
@@ -292,7 +362,7 @@ class GlucoseProjectionService {
       summary: summary,
       upperBand: upperBand,
       lowerBand: lowerBand,
-      confidenceWidth: bandWidth,
+      confidenceWidth: bandWidthMaxWidth,
     );
   }
 }
