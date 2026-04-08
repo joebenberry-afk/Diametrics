@@ -14,10 +14,20 @@ import 'glucose_projection_service.dart';
 /// reading is logged. Over 15-20 logged meals the projection accuracy
 /// converges to the individual's true metabolism.
 ///
+/// Phase 2 improvement: **Decoupled gradient descent** — instead of updating
+/// all three parameters from every reading, the service uses the reading's
+/// temporal context to update only the most informative parameter(s):
+///
+///   - `post_meal_30` -> updates `tMax` only (early absorption speed)
+///   - `post_meal_120` -> updates `p1` and `ISF` (clearance + insulin)
+///
+/// This prevents parameter confounding where a high spike could be from
+/// faster absorption OR lower clearance, and the system couldn't distinguish.
+///
 /// Parameters tuned:
-///   - [UserProfile.metabolicClearanceRate]  (p1)  — how fast glucose clears
-///   - [UserProfile.insulinSensitivityFactor] (ISF) — mg/dL drop per 1 unit
-///   - [UserProfile.absorptionDelayBase]      (tMax) — digestion lag (minutes)
+///   - [UserProfile.metabolicClearanceRate]  (p1)  -- how fast glucose clears
+///   - [UserProfile.insulinSensitivityFactor] (ISF) -- mg/dL drop per 1 unit
+///   - [UserProfile.absorptionDelayBase]      (tMax) -- digestion lag (minutes)
 ///
 /// Safety constraints (per ADA/Hovorka guidance):
 ///   - metabolicClearanceRate   : [0.002, 0.020]
@@ -87,6 +97,8 @@ class AdaptiveTuningService {
         p1: profile.metabolicClearanceRate,
         isf: profile.insulinSensitivityFactor,
         tMaxBase: profile.absorptionDelayBase,
+        foodFormFactor: meal.foodFormFactor,
+        mealCount: profile.tuningMealCount,
       );
 
       // Determine the projection value at the matching time offset
@@ -103,24 +115,28 @@ class AdaptiveTuningService {
       final double actual = glucoseLog.value;
       final double delta = actual - predictedAtTime;
 
-      // ── Gradient Descent Updates ──────────────────────────────────────────
-      // If actual > predicted: glucose rose more than expected.
-      //   → clearance was too aggressive (p1 too high) → decrease p1
-      //   → glucose absorbed faster than expected (tMax too long) → decrease tMax
-      // If actual < predicted: glucose rose less than expected.
-      //   → clearance was too slow (p1 too low) → increase p1
+      // ── Decoupled Gradient Descent Updates ─────────────────────────────
+      // Instead of updating all three parameters from one error reading,
+      // use timed contexts to disentangle the signals.
 
-      final double newP1 = (profile.metabolicClearanceRate - delta * _lr)
-          .clamp(_p1Min, _p1Max);
+      double newP1 = profile.metabolicClearanceRate;
+      double newISF = profile.insulinSensitivityFactor;
+      double newTMax = profile.absorptionDelayBase;
 
-      // ISF: only meaningful when insulin was active (delta > 30 = insulin hit harder)
-      //   If actual >> predicted and delta is large, ISF may be underestimated → increase
-      final double newISF = (profile.insulinSensitivityFactor + delta * _lr * 10)
-          .clamp(_isfMin, _isfMax);
-
-      // tMax: if underpredicted (spike higher & earlier), digestion is faster → reduce tMax
-      final double newTMax = (profile.absorptionDelayBase - delta * _lr * 2)
-          .clamp(_tMaxMin, _tMaxMax);
+      if (ctx == 'post_meal_30') {
+        // 30-min reading: early spike is dominated by absorption speed.
+        // Only update tMax — a 30-min reading tells us nothing reliable
+        // about clearance or insulin sensitivity yet.
+        newTMax = (profile.absorptionDelayBase - delta * _lr * 3)
+            .clamp(_tMaxMin, _tMaxMax);
+      } else if (ctx == 'post_meal_120' || ctx == 'post_meal') {
+        // 120-min reading: absorption is mostly done, clearance dominates.
+        // Update p1 and ISF only.
+        newP1 = (profile.metabolicClearanceRate - delta * _lr)
+            .clamp(_p1Min, _p1Max);
+        newISF = (profile.insulinSensitivityFactor + delta * _lr * 10)
+            .clamp(_isfMin, _isfMax);
+      }
 
       // Only update if change is meaningful (avoid churn on tiny noise)
       final p1Changed = (newP1 - profile.metabolicClearanceRate).abs() > 1e-6;
@@ -133,6 +149,7 @@ class AdaptiveTuningService {
         metabolicClearanceRate: newP1,
         insulinSensitivityFactor: newISF,
         absorptionDelayBase: newTMax,
+        tuningMealCount: profile.tuningMealCount + 1,
         updatedAt: DateTime.now(),
       );
       await userRepo.saveProfile(updated);

@@ -24,6 +24,9 @@ abstract class ProjectionResult with _$ProjectionResult {
     required double totalAvailableGlucose, // TAG value
     required String riskLevel, // normal / elevated / high / hypo_risk
     required String summary,
+    @Default([]) List<ProjectionPoint> upperBand, // +1 SD confidence bound
+    @Default([]) List<ProjectionPoint> lowerBand, // -1 SD confidence bound
+    @Default(25.0) double confidenceWidth, // mg/dL half-width of band
   }) = _ProjectionResult;
 
   factory ProjectionResult.fromJson(Map<String, dynamic> json) =>

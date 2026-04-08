@@ -283,7 +283,9 @@ mixin _$ProjectionResult {
 
  List<ProjectionPoint> get points; double get peakGlucose; int get peakTimeMinutes; double get twoHourGlucose; double get totalAvailableGlucose;// TAG value
  String get riskLevel;// normal / elevated / high / hypo_risk
- String get summary;
+ String get summary; List<ProjectionPoint> get upperBand;// +1 SD confidence bound
+ List<ProjectionPoint> get lowerBand;// -1 SD confidence bound
+ double get confidenceWidth;
 /// Create a copy of ProjectionResult
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -296,16 +298,16 @@ $ProjectionResultCopyWith<ProjectionResult> get copyWith => _$ProjectionResultCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ProjectionResult&&const DeepCollectionEquality().equals(other.points, points)&&(identical(other.peakGlucose, peakGlucose) || other.peakGlucose == peakGlucose)&&(identical(other.peakTimeMinutes, peakTimeMinutes) || other.peakTimeMinutes == peakTimeMinutes)&&(identical(other.twoHourGlucose, twoHourGlucose) || other.twoHourGlucose == twoHourGlucose)&&(identical(other.totalAvailableGlucose, totalAvailableGlucose) || other.totalAvailableGlucose == totalAvailableGlucose)&&(identical(other.riskLevel, riskLevel) || other.riskLevel == riskLevel)&&(identical(other.summary, summary) || other.summary == summary));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ProjectionResult&&const DeepCollectionEquality().equals(other.points, points)&&(identical(other.peakGlucose, peakGlucose) || other.peakGlucose == peakGlucose)&&(identical(other.peakTimeMinutes, peakTimeMinutes) || other.peakTimeMinutes == peakTimeMinutes)&&(identical(other.twoHourGlucose, twoHourGlucose) || other.twoHourGlucose == twoHourGlucose)&&(identical(other.totalAvailableGlucose, totalAvailableGlucose) || other.totalAvailableGlucose == totalAvailableGlucose)&&(identical(other.riskLevel, riskLevel) || other.riskLevel == riskLevel)&&(identical(other.summary, summary) || other.summary == summary)&&const DeepCollectionEquality().equals(other.upperBand, upperBand)&&const DeepCollectionEquality().equals(other.lowerBand, lowerBand)&&(identical(other.confidenceWidth, confidenceWidth) || other.confidenceWidth == confidenceWidth));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(points),peakGlucose,peakTimeMinutes,twoHourGlucose,totalAvailableGlucose,riskLevel,summary);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(points),peakGlucose,peakTimeMinutes,twoHourGlucose,totalAvailableGlucose,riskLevel,summary,const DeepCollectionEquality().hash(upperBand),const DeepCollectionEquality().hash(lowerBand),confidenceWidth);
 
 @override
 String toString() {
-  return 'ProjectionResult(points: $points, peakGlucose: $peakGlucose, peakTimeMinutes: $peakTimeMinutes, twoHourGlucose: $twoHourGlucose, totalAvailableGlucose: $totalAvailableGlucose, riskLevel: $riskLevel, summary: $summary)';
+  return 'ProjectionResult(points: $points, peakGlucose: $peakGlucose, peakTimeMinutes: $peakTimeMinutes, twoHourGlucose: $twoHourGlucose, totalAvailableGlucose: $totalAvailableGlucose, riskLevel: $riskLevel, summary: $summary, upperBand: $upperBand, lowerBand: $lowerBand, confidenceWidth: $confidenceWidth)';
 }
 
 
@@ -316,7 +318,7 @@ abstract mixin class $ProjectionResultCopyWith<$Res>  {
   factory $ProjectionResultCopyWith(ProjectionResult value, $Res Function(ProjectionResult) _then) = _$ProjectionResultCopyWithImpl;
 @useResult
 $Res call({
- List<ProjectionPoint> points, double peakGlucose, int peakTimeMinutes, double twoHourGlucose, double totalAvailableGlucose, String riskLevel, String summary
+ List<ProjectionPoint> points, double peakGlucose, int peakTimeMinutes, double twoHourGlucose, double totalAvailableGlucose, String riskLevel, String summary, List<ProjectionPoint> upperBand, List<ProjectionPoint> lowerBand, double confidenceWidth
 });
 
 
@@ -333,7 +335,7 @@ class _$ProjectionResultCopyWithImpl<$Res>
 
 /// Create a copy of ProjectionResult
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? points = null,Object? peakGlucose = null,Object? peakTimeMinutes = null,Object? twoHourGlucose = null,Object? totalAvailableGlucose = null,Object? riskLevel = null,Object? summary = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? points = null,Object? peakGlucose = null,Object? peakTimeMinutes = null,Object? twoHourGlucose = null,Object? totalAvailableGlucose = null,Object? riskLevel = null,Object? summary = null,Object? upperBand = null,Object? lowerBand = null,Object? confidenceWidth = null,}) {
   return _then(_self.copyWith(
 points: null == points ? _self.points : points // ignore: cast_nullable_to_non_nullable
 as List<ProjectionPoint>,peakGlucose: null == peakGlucose ? _self.peakGlucose : peakGlucose // ignore: cast_nullable_to_non_nullable
@@ -342,7 +344,10 @@ as int,twoHourGlucose: null == twoHourGlucose ? _self.twoHourGlucose : twoHourGl
 as double,totalAvailableGlucose: null == totalAvailableGlucose ? _self.totalAvailableGlucose : totalAvailableGlucose // ignore: cast_nullable_to_non_nullable
 as double,riskLevel: null == riskLevel ? _self.riskLevel : riskLevel // ignore: cast_nullable_to_non_nullable
 as String,summary: null == summary ? _self.summary : summary // ignore: cast_nullable_to_non_nullable
-as String,
+as String,upperBand: null == upperBand ? _self.upperBand : upperBand // ignore: cast_nullable_to_non_nullable
+as List<ProjectionPoint>,lowerBand: null == lowerBand ? _self.lowerBand : lowerBand // ignore: cast_nullable_to_non_nullable
+as List<ProjectionPoint>,confidenceWidth: null == confidenceWidth ? _self.confidenceWidth : confidenceWidth // ignore: cast_nullable_to_non_nullable
+as double,
   ));
 }
 
@@ -427,10 +432,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<ProjectionPoint> points,  double peakGlucose,  int peakTimeMinutes,  double twoHourGlucose,  double totalAvailableGlucose,  String riskLevel,  String summary)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<ProjectionPoint> points,  double peakGlucose,  int peakTimeMinutes,  double twoHourGlucose,  double totalAvailableGlucose,  String riskLevel,  String summary,  List<ProjectionPoint> upperBand,  List<ProjectionPoint> lowerBand,  double confidenceWidth)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ProjectionResult() when $default != null:
-return $default(_that.points,_that.peakGlucose,_that.peakTimeMinutes,_that.twoHourGlucose,_that.totalAvailableGlucose,_that.riskLevel,_that.summary);case _:
+return $default(_that.points,_that.peakGlucose,_that.peakTimeMinutes,_that.twoHourGlucose,_that.totalAvailableGlucose,_that.riskLevel,_that.summary,_that.upperBand,_that.lowerBand,_that.confidenceWidth);case _:
   return orElse();
 
 }
@@ -448,10 +453,10 @@ return $default(_that.points,_that.peakGlucose,_that.peakTimeMinutes,_that.twoHo
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<ProjectionPoint> points,  double peakGlucose,  int peakTimeMinutes,  double twoHourGlucose,  double totalAvailableGlucose,  String riskLevel,  String summary)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<ProjectionPoint> points,  double peakGlucose,  int peakTimeMinutes,  double twoHourGlucose,  double totalAvailableGlucose,  String riskLevel,  String summary,  List<ProjectionPoint> upperBand,  List<ProjectionPoint> lowerBand,  double confidenceWidth)  $default,) {final _that = this;
 switch (_that) {
 case _ProjectionResult():
-return $default(_that.points,_that.peakGlucose,_that.peakTimeMinutes,_that.twoHourGlucose,_that.totalAvailableGlucose,_that.riskLevel,_that.summary);case _:
+return $default(_that.points,_that.peakGlucose,_that.peakTimeMinutes,_that.twoHourGlucose,_that.totalAvailableGlucose,_that.riskLevel,_that.summary,_that.upperBand,_that.lowerBand,_that.confidenceWidth);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -468,10 +473,10 @@ return $default(_that.points,_that.peakGlucose,_that.peakTimeMinutes,_that.twoHo
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<ProjectionPoint> points,  double peakGlucose,  int peakTimeMinutes,  double twoHourGlucose,  double totalAvailableGlucose,  String riskLevel,  String summary)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<ProjectionPoint> points,  double peakGlucose,  int peakTimeMinutes,  double twoHourGlucose,  double totalAvailableGlucose,  String riskLevel,  String summary,  List<ProjectionPoint> upperBand,  List<ProjectionPoint> lowerBand,  double confidenceWidth)?  $default,) {final _that = this;
 switch (_that) {
 case _ProjectionResult() when $default != null:
-return $default(_that.points,_that.peakGlucose,_that.peakTimeMinutes,_that.twoHourGlucose,_that.totalAvailableGlucose,_that.riskLevel,_that.summary);case _:
+return $default(_that.points,_that.peakGlucose,_that.peakTimeMinutes,_that.twoHourGlucose,_that.totalAvailableGlucose,_that.riskLevel,_that.summary,_that.upperBand,_that.lowerBand,_that.confidenceWidth);case _:
   return null;
 
 }
@@ -483,7 +488,7 @@ return $default(_that.points,_that.peakGlucose,_that.peakTimeMinutes,_that.twoHo
 @JsonSerializable()
 
 class _ProjectionResult implements ProjectionResult {
-  const _ProjectionResult({required final  List<ProjectionPoint> points, required this.peakGlucose, required this.peakTimeMinutes, required this.twoHourGlucose, required this.totalAvailableGlucose, required this.riskLevel, required this.summary}): _points = points;
+  const _ProjectionResult({required final  List<ProjectionPoint> points, required this.peakGlucose, required this.peakTimeMinutes, required this.twoHourGlucose, required this.totalAvailableGlucose, required this.riskLevel, required this.summary, final  List<ProjectionPoint> upperBand = const [], final  List<ProjectionPoint> lowerBand = const [], this.confidenceWidth = 25.0}): _points = points,_upperBand = upperBand,_lowerBand = lowerBand;
   factory _ProjectionResult.fromJson(Map<String, dynamic> json) => _$ProjectionResultFromJson(json);
 
  final  List<ProjectionPoint> _points;
@@ -501,6 +506,24 @@ class _ProjectionResult implements ProjectionResult {
 @override final  String riskLevel;
 // normal / elevated / high / hypo_risk
 @override final  String summary;
+ final  List<ProjectionPoint> _upperBand;
+@override@JsonKey() List<ProjectionPoint> get upperBand {
+  if (_upperBand is EqualUnmodifiableListView) return _upperBand;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_upperBand);
+}
+
+// +1 SD confidence bound
+ final  List<ProjectionPoint> _lowerBand;
+// +1 SD confidence bound
+@override@JsonKey() List<ProjectionPoint> get lowerBand {
+  if (_lowerBand is EqualUnmodifiableListView) return _lowerBand;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_lowerBand);
+}
+
+// -1 SD confidence bound
+@override@JsonKey() final  double confidenceWidth;
 
 /// Create a copy of ProjectionResult
 /// with the given fields replaced by the non-null parameter values.
@@ -515,16 +538,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ProjectionResult&&const DeepCollectionEquality().equals(other._points, _points)&&(identical(other.peakGlucose, peakGlucose) || other.peakGlucose == peakGlucose)&&(identical(other.peakTimeMinutes, peakTimeMinutes) || other.peakTimeMinutes == peakTimeMinutes)&&(identical(other.twoHourGlucose, twoHourGlucose) || other.twoHourGlucose == twoHourGlucose)&&(identical(other.totalAvailableGlucose, totalAvailableGlucose) || other.totalAvailableGlucose == totalAvailableGlucose)&&(identical(other.riskLevel, riskLevel) || other.riskLevel == riskLevel)&&(identical(other.summary, summary) || other.summary == summary));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ProjectionResult&&const DeepCollectionEquality().equals(other._points, _points)&&(identical(other.peakGlucose, peakGlucose) || other.peakGlucose == peakGlucose)&&(identical(other.peakTimeMinutes, peakTimeMinutes) || other.peakTimeMinutes == peakTimeMinutes)&&(identical(other.twoHourGlucose, twoHourGlucose) || other.twoHourGlucose == twoHourGlucose)&&(identical(other.totalAvailableGlucose, totalAvailableGlucose) || other.totalAvailableGlucose == totalAvailableGlucose)&&(identical(other.riskLevel, riskLevel) || other.riskLevel == riskLevel)&&(identical(other.summary, summary) || other.summary == summary)&&const DeepCollectionEquality().equals(other._upperBand, _upperBand)&&const DeepCollectionEquality().equals(other._lowerBand, _lowerBand)&&(identical(other.confidenceWidth, confidenceWidth) || other.confidenceWidth == confidenceWidth));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_points),peakGlucose,peakTimeMinutes,twoHourGlucose,totalAvailableGlucose,riskLevel,summary);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_points),peakGlucose,peakTimeMinutes,twoHourGlucose,totalAvailableGlucose,riskLevel,summary,const DeepCollectionEquality().hash(_upperBand),const DeepCollectionEquality().hash(_lowerBand),confidenceWidth);
 
 @override
 String toString() {
-  return 'ProjectionResult(points: $points, peakGlucose: $peakGlucose, peakTimeMinutes: $peakTimeMinutes, twoHourGlucose: $twoHourGlucose, totalAvailableGlucose: $totalAvailableGlucose, riskLevel: $riskLevel, summary: $summary)';
+  return 'ProjectionResult(points: $points, peakGlucose: $peakGlucose, peakTimeMinutes: $peakTimeMinutes, twoHourGlucose: $twoHourGlucose, totalAvailableGlucose: $totalAvailableGlucose, riskLevel: $riskLevel, summary: $summary, upperBand: $upperBand, lowerBand: $lowerBand, confidenceWidth: $confidenceWidth)';
 }
 
 
@@ -535,7 +558,7 @@ abstract mixin class _$ProjectionResultCopyWith<$Res> implements $ProjectionResu
   factory _$ProjectionResultCopyWith(_ProjectionResult value, $Res Function(_ProjectionResult) _then) = __$ProjectionResultCopyWithImpl;
 @override @useResult
 $Res call({
- List<ProjectionPoint> points, double peakGlucose, int peakTimeMinutes, double twoHourGlucose, double totalAvailableGlucose, String riskLevel, String summary
+ List<ProjectionPoint> points, double peakGlucose, int peakTimeMinutes, double twoHourGlucose, double totalAvailableGlucose, String riskLevel, String summary, List<ProjectionPoint> upperBand, List<ProjectionPoint> lowerBand, double confidenceWidth
 });
 
 
@@ -552,7 +575,7 @@ class __$ProjectionResultCopyWithImpl<$Res>
 
 /// Create a copy of ProjectionResult
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? points = null,Object? peakGlucose = null,Object? peakTimeMinutes = null,Object? twoHourGlucose = null,Object? totalAvailableGlucose = null,Object? riskLevel = null,Object? summary = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? points = null,Object? peakGlucose = null,Object? peakTimeMinutes = null,Object? twoHourGlucose = null,Object? totalAvailableGlucose = null,Object? riskLevel = null,Object? summary = null,Object? upperBand = null,Object? lowerBand = null,Object? confidenceWidth = null,}) {
   return _then(_ProjectionResult(
 points: null == points ? _self._points : points // ignore: cast_nullable_to_non_nullable
 as List<ProjectionPoint>,peakGlucose: null == peakGlucose ? _self.peakGlucose : peakGlucose // ignore: cast_nullable_to_non_nullable
@@ -561,7 +584,10 @@ as int,twoHourGlucose: null == twoHourGlucose ? _self.twoHourGlucose : twoHourGl
 as double,totalAvailableGlucose: null == totalAvailableGlucose ? _self.totalAvailableGlucose : totalAvailableGlucose // ignore: cast_nullable_to_non_nullable
 as double,riskLevel: null == riskLevel ? _self.riskLevel : riskLevel // ignore: cast_nullable_to_non_nullable
 as String,summary: null == summary ? _self.summary : summary // ignore: cast_nullable_to_non_nullable
-as String,
+as String,upperBand: null == upperBand ? _self._upperBand : upperBand // ignore: cast_nullable_to_non_nullable
+as List<ProjectionPoint>,lowerBand: null == lowerBand ? _self._lowerBand : lowerBand // ignore: cast_nullable_to_non_nullable
+as List<ProjectionPoint>,confidenceWidth: null == confidenceWidth ? _self.confidenceWidth : confidenceWidth // ignore: cast_nullable_to_non_nullable
+as double,
   ));
 }
 

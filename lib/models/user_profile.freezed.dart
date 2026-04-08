@@ -20,7 +20,8 @@ mixin _$UserProfile {
  String get diabetesType; int get diagnosisYear; String get preferredGlucoseUnit;// Management
  bool get usesInsulin; bool get usesPills; bool get usesCgm;// Targets
  double get targetGlucoseMin; double get targetGlucoseMax;// ML Metabolic Parameters (Local Adaptive Tuning Constants)
- double get metabolicClearanceRate; double get insulinSensitivityFactor; double get absorptionDelayBase;// Meta
+ double get metabolicClearanceRate; double get insulinSensitivityFactor; double get absorptionDelayBase; int get tuningMealCount;// Tracks meals used for adaptive tuning
+// Meta
  bool get hasAgreedToDisclaimer; DateTime get createdAt; DateTime get updatedAt;
 /// Create a copy of UserProfile
 /// with the given fields replaced by the non-null parameter values.
@@ -34,16 +35,16 @@ $UserProfileCopyWith<UserProfile> get copyWith => _$UserProfileCopyWithImpl<User
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserProfile&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.age, age) || other.age == age)&&(identical(other.gender, gender) || other.gender == gender)&&(identical(other.heightCm, heightCm) || other.heightCm == heightCm)&&(identical(other.weightKg, weightKg) || other.weightKg == weightKg)&&(identical(other.targetWeightKg, targetWeightKg) || other.targetWeightKg == targetWeightKg)&&(identical(other.diabetesType, diabetesType) || other.diabetesType == diabetesType)&&(identical(other.diagnosisYear, diagnosisYear) || other.diagnosisYear == diagnosisYear)&&(identical(other.preferredGlucoseUnit, preferredGlucoseUnit) || other.preferredGlucoseUnit == preferredGlucoseUnit)&&(identical(other.usesInsulin, usesInsulin) || other.usesInsulin == usesInsulin)&&(identical(other.usesPills, usesPills) || other.usesPills == usesPills)&&(identical(other.usesCgm, usesCgm) || other.usesCgm == usesCgm)&&(identical(other.targetGlucoseMin, targetGlucoseMin) || other.targetGlucoseMin == targetGlucoseMin)&&(identical(other.targetGlucoseMax, targetGlucoseMax) || other.targetGlucoseMax == targetGlucoseMax)&&(identical(other.metabolicClearanceRate, metabolicClearanceRate) || other.metabolicClearanceRate == metabolicClearanceRate)&&(identical(other.insulinSensitivityFactor, insulinSensitivityFactor) || other.insulinSensitivityFactor == insulinSensitivityFactor)&&(identical(other.absorptionDelayBase, absorptionDelayBase) || other.absorptionDelayBase == absorptionDelayBase)&&(identical(other.hasAgreedToDisclaimer, hasAgreedToDisclaimer) || other.hasAgreedToDisclaimer == hasAgreedToDisclaimer)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserProfile&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.age, age) || other.age == age)&&(identical(other.gender, gender) || other.gender == gender)&&(identical(other.heightCm, heightCm) || other.heightCm == heightCm)&&(identical(other.weightKg, weightKg) || other.weightKg == weightKg)&&(identical(other.targetWeightKg, targetWeightKg) || other.targetWeightKg == targetWeightKg)&&(identical(other.diabetesType, diabetesType) || other.diabetesType == diabetesType)&&(identical(other.diagnosisYear, diagnosisYear) || other.diagnosisYear == diagnosisYear)&&(identical(other.preferredGlucoseUnit, preferredGlucoseUnit) || other.preferredGlucoseUnit == preferredGlucoseUnit)&&(identical(other.usesInsulin, usesInsulin) || other.usesInsulin == usesInsulin)&&(identical(other.usesPills, usesPills) || other.usesPills == usesPills)&&(identical(other.usesCgm, usesCgm) || other.usesCgm == usesCgm)&&(identical(other.targetGlucoseMin, targetGlucoseMin) || other.targetGlucoseMin == targetGlucoseMin)&&(identical(other.targetGlucoseMax, targetGlucoseMax) || other.targetGlucoseMax == targetGlucoseMax)&&(identical(other.metabolicClearanceRate, metabolicClearanceRate) || other.metabolicClearanceRate == metabolicClearanceRate)&&(identical(other.insulinSensitivityFactor, insulinSensitivityFactor) || other.insulinSensitivityFactor == insulinSensitivityFactor)&&(identical(other.absorptionDelayBase, absorptionDelayBase) || other.absorptionDelayBase == absorptionDelayBase)&&(identical(other.tuningMealCount, tuningMealCount) || other.tuningMealCount == tuningMealCount)&&(identical(other.hasAgreedToDisclaimer, hasAgreedToDisclaimer) || other.hasAgreedToDisclaimer == hasAgreedToDisclaimer)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,id,name,age,gender,heightCm,weightKg,targetWeightKg,diabetesType,diagnosisYear,preferredGlucoseUnit,usesInsulin,usesPills,usesCgm,targetGlucoseMin,targetGlucoseMax,metabolicClearanceRate,insulinSensitivityFactor,absorptionDelayBase,hasAgreedToDisclaimer,createdAt,updatedAt]);
+int get hashCode => Object.hashAll([runtimeType,id,name,age,gender,heightCm,weightKg,targetWeightKg,diabetesType,diagnosisYear,preferredGlucoseUnit,usesInsulin,usesPills,usesCgm,targetGlucoseMin,targetGlucoseMax,metabolicClearanceRate,insulinSensitivityFactor,absorptionDelayBase,tuningMealCount,hasAgreedToDisclaimer,createdAt,updatedAt]);
 
 @override
 String toString() {
-  return 'UserProfile(id: $id, name: $name, age: $age, gender: $gender, heightCm: $heightCm, weightKg: $weightKg, targetWeightKg: $targetWeightKg, diabetesType: $diabetesType, diagnosisYear: $diagnosisYear, preferredGlucoseUnit: $preferredGlucoseUnit, usesInsulin: $usesInsulin, usesPills: $usesPills, usesCgm: $usesCgm, targetGlucoseMin: $targetGlucoseMin, targetGlucoseMax: $targetGlucoseMax, metabolicClearanceRate: $metabolicClearanceRate, insulinSensitivityFactor: $insulinSensitivityFactor, absorptionDelayBase: $absorptionDelayBase, hasAgreedToDisclaimer: $hasAgreedToDisclaimer, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'UserProfile(id: $id, name: $name, age: $age, gender: $gender, heightCm: $heightCm, weightKg: $weightKg, targetWeightKg: $targetWeightKg, diabetesType: $diabetesType, diagnosisYear: $diagnosisYear, preferredGlucoseUnit: $preferredGlucoseUnit, usesInsulin: $usesInsulin, usesPills: $usesPills, usesCgm: $usesCgm, targetGlucoseMin: $targetGlucoseMin, targetGlucoseMax: $targetGlucoseMax, metabolicClearanceRate: $metabolicClearanceRate, insulinSensitivityFactor: $insulinSensitivityFactor, absorptionDelayBase: $absorptionDelayBase, tuningMealCount: $tuningMealCount, hasAgreedToDisclaimer: $hasAgreedToDisclaimer, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -54,7 +55,7 @@ abstract mixin class $UserProfileCopyWith<$Res>  {
   factory $UserProfileCopyWith(UserProfile value, $Res Function(UserProfile) _then) = _$UserProfileCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, int age, String gender, double heightCm, double weightKg, double? targetWeightKg, String diabetesType, int diagnosisYear, String preferredGlucoseUnit, bool usesInsulin, bool usesPills, bool usesCgm, double targetGlucoseMin, double targetGlucoseMax, double metabolicClearanceRate, double insulinSensitivityFactor, double absorptionDelayBase, bool hasAgreedToDisclaimer, DateTime createdAt, DateTime updatedAt
+ String id, String name, int age, String gender, double heightCm, double weightKg, double? targetWeightKg, String diabetesType, int diagnosisYear, String preferredGlucoseUnit, bool usesInsulin, bool usesPills, bool usesCgm, double targetGlucoseMin, double targetGlucoseMax, double metabolicClearanceRate, double insulinSensitivityFactor, double absorptionDelayBase, int tuningMealCount, bool hasAgreedToDisclaimer, DateTime createdAt, DateTime updatedAt
 });
 
 
@@ -71,7 +72,7 @@ class _$UserProfileCopyWithImpl<$Res>
 
 /// Create a copy of UserProfile
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? age = null,Object? gender = null,Object? heightCm = null,Object? weightKg = null,Object? targetWeightKg = freezed,Object? diabetesType = null,Object? diagnosisYear = null,Object? preferredGlucoseUnit = null,Object? usesInsulin = null,Object? usesPills = null,Object? usesCgm = null,Object? targetGlucoseMin = null,Object? targetGlucoseMax = null,Object? metabolicClearanceRate = null,Object? insulinSensitivityFactor = null,Object? absorptionDelayBase = null,Object? hasAgreedToDisclaimer = null,Object? createdAt = null,Object? updatedAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? age = null,Object? gender = null,Object? heightCm = null,Object? weightKg = null,Object? targetWeightKg = freezed,Object? diabetesType = null,Object? diagnosisYear = null,Object? preferredGlucoseUnit = null,Object? usesInsulin = null,Object? usesPills = null,Object? usesCgm = null,Object? targetGlucoseMin = null,Object? targetGlucoseMax = null,Object? metabolicClearanceRate = null,Object? insulinSensitivityFactor = null,Object? absorptionDelayBase = null,Object? tuningMealCount = null,Object? hasAgreedToDisclaimer = null,Object? createdAt = null,Object? updatedAt = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -91,7 +92,8 @@ as double,targetGlucoseMax: null == targetGlucoseMax ? _self.targetGlucoseMax : 
 as double,metabolicClearanceRate: null == metabolicClearanceRate ? _self.metabolicClearanceRate : metabolicClearanceRate // ignore: cast_nullable_to_non_nullable
 as double,insulinSensitivityFactor: null == insulinSensitivityFactor ? _self.insulinSensitivityFactor : insulinSensitivityFactor // ignore: cast_nullable_to_non_nullable
 as double,absorptionDelayBase: null == absorptionDelayBase ? _self.absorptionDelayBase : absorptionDelayBase // ignore: cast_nullable_to_non_nullable
-as double,hasAgreedToDisclaimer: null == hasAgreedToDisclaimer ? _self.hasAgreedToDisclaimer : hasAgreedToDisclaimer // ignore: cast_nullable_to_non_nullable
+as double,tuningMealCount: null == tuningMealCount ? _self.tuningMealCount : tuningMealCount // ignore: cast_nullable_to_non_nullable
+as int,hasAgreedToDisclaimer: null == hasAgreedToDisclaimer ? _self.hasAgreedToDisclaimer : hasAgreedToDisclaimer // ignore: cast_nullable_to_non_nullable
 as bool,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,
@@ -179,10 +181,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  int age,  String gender,  double heightCm,  double weightKg,  double? targetWeightKg,  String diabetesType,  int diagnosisYear,  String preferredGlucoseUnit,  bool usesInsulin,  bool usesPills,  bool usesCgm,  double targetGlucoseMin,  double targetGlucoseMax,  double metabolicClearanceRate,  double insulinSensitivityFactor,  double absorptionDelayBase,  bool hasAgreedToDisclaimer,  DateTime createdAt,  DateTime updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  int age,  String gender,  double heightCm,  double weightKg,  double? targetWeightKg,  String diabetesType,  int diagnosisYear,  String preferredGlucoseUnit,  bool usesInsulin,  bool usesPills,  bool usesCgm,  double targetGlucoseMin,  double targetGlucoseMax,  double metabolicClearanceRate,  double insulinSensitivityFactor,  double absorptionDelayBase,  int tuningMealCount,  bool hasAgreedToDisclaimer,  DateTime createdAt,  DateTime updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _UserProfile() when $default != null:
-return $default(_that.id,_that.name,_that.age,_that.gender,_that.heightCm,_that.weightKg,_that.targetWeightKg,_that.diabetesType,_that.diagnosisYear,_that.preferredGlucoseUnit,_that.usesInsulin,_that.usesPills,_that.usesCgm,_that.targetGlucoseMin,_that.targetGlucoseMax,_that.metabolicClearanceRate,_that.insulinSensitivityFactor,_that.absorptionDelayBase,_that.hasAgreedToDisclaimer,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.name,_that.age,_that.gender,_that.heightCm,_that.weightKg,_that.targetWeightKg,_that.diabetesType,_that.diagnosisYear,_that.preferredGlucoseUnit,_that.usesInsulin,_that.usesPills,_that.usesCgm,_that.targetGlucoseMin,_that.targetGlucoseMax,_that.metabolicClearanceRate,_that.insulinSensitivityFactor,_that.absorptionDelayBase,_that.tuningMealCount,_that.hasAgreedToDisclaimer,_that.createdAt,_that.updatedAt);case _:
   return orElse();
 
 }
@@ -200,10 +202,10 @@ return $default(_that.id,_that.name,_that.age,_that.gender,_that.heightCm,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  int age,  String gender,  double heightCm,  double weightKg,  double? targetWeightKg,  String diabetesType,  int diagnosisYear,  String preferredGlucoseUnit,  bool usesInsulin,  bool usesPills,  bool usesCgm,  double targetGlucoseMin,  double targetGlucoseMax,  double metabolicClearanceRate,  double insulinSensitivityFactor,  double absorptionDelayBase,  bool hasAgreedToDisclaimer,  DateTime createdAt,  DateTime updatedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  int age,  String gender,  double heightCm,  double weightKg,  double? targetWeightKg,  String diabetesType,  int diagnosisYear,  String preferredGlucoseUnit,  bool usesInsulin,  bool usesPills,  bool usesCgm,  double targetGlucoseMin,  double targetGlucoseMax,  double metabolicClearanceRate,  double insulinSensitivityFactor,  double absorptionDelayBase,  int tuningMealCount,  bool hasAgreedToDisclaimer,  DateTime createdAt,  DateTime updatedAt)  $default,) {final _that = this;
 switch (_that) {
 case _UserProfile():
-return $default(_that.id,_that.name,_that.age,_that.gender,_that.heightCm,_that.weightKg,_that.targetWeightKg,_that.diabetesType,_that.diagnosisYear,_that.preferredGlucoseUnit,_that.usesInsulin,_that.usesPills,_that.usesCgm,_that.targetGlucoseMin,_that.targetGlucoseMax,_that.metabolicClearanceRate,_that.insulinSensitivityFactor,_that.absorptionDelayBase,_that.hasAgreedToDisclaimer,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.name,_that.age,_that.gender,_that.heightCm,_that.weightKg,_that.targetWeightKg,_that.diabetesType,_that.diagnosisYear,_that.preferredGlucoseUnit,_that.usesInsulin,_that.usesPills,_that.usesCgm,_that.targetGlucoseMin,_that.targetGlucoseMax,_that.metabolicClearanceRate,_that.insulinSensitivityFactor,_that.absorptionDelayBase,_that.tuningMealCount,_that.hasAgreedToDisclaimer,_that.createdAt,_that.updatedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -220,10 +222,10 @@ return $default(_that.id,_that.name,_that.age,_that.gender,_that.heightCm,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  int age,  String gender,  double heightCm,  double weightKg,  double? targetWeightKg,  String diabetesType,  int diagnosisYear,  String preferredGlucoseUnit,  bool usesInsulin,  bool usesPills,  bool usesCgm,  double targetGlucoseMin,  double targetGlucoseMax,  double metabolicClearanceRate,  double insulinSensitivityFactor,  double absorptionDelayBase,  bool hasAgreedToDisclaimer,  DateTime createdAt,  DateTime updatedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  int age,  String gender,  double heightCm,  double weightKg,  double? targetWeightKg,  String diabetesType,  int diagnosisYear,  String preferredGlucoseUnit,  bool usesInsulin,  bool usesPills,  bool usesCgm,  double targetGlucoseMin,  double targetGlucoseMax,  double metabolicClearanceRate,  double insulinSensitivityFactor,  double absorptionDelayBase,  int tuningMealCount,  bool hasAgreedToDisclaimer,  DateTime createdAt,  DateTime updatedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _UserProfile() when $default != null:
-return $default(_that.id,_that.name,_that.age,_that.gender,_that.heightCm,_that.weightKg,_that.targetWeightKg,_that.diabetesType,_that.diagnosisYear,_that.preferredGlucoseUnit,_that.usesInsulin,_that.usesPills,_that.usesCgm,_that.targetGlucoseMin,_that.targetGlucoseMax,_that.metabolicClearanceRate,_that.insulinSensitivityFactor,_that.absorptionDelayBase,_that.hasAgreedToDisclaimer,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.name,_that.age,_that.gender,_that.heightCm,_that.weightKg,_that.targetWeightKg,_that.diabetesType,_that.diagnosisYear,_that.preferredGlucoseUnit,_that.usesInsulin,_that.usesPills,_that.usesCgm,_that.targetGlucoseMin,_that.targetGlucoseMax,_that.metabolicClearanceRate,_that.insulinSensitivityFactor,_that.absorptionDelayBase,_that.tuningMealCount,_that.hasAgreedToDisclaimer,_that.createdAt,_that.updatedAt);case _:
   return null;
 
 }
@@ -235,7 +237,7 @@ return $default(_that.id,_that.name,_that.age,_that.gender,_that.heightCm,_that.
 @JsonSerializable()
 
 class _UserProfile implements UserProfile {
-  const _UserProfile({required this.id, this.name = '', required this.age, required this.gender, required this.heightCm, required this.weightKg, this.targetWeightKg, required this.diabetesType, required this.diagnosisYear, this.preferredGlucoseUnit = 'mg/dL', this.usesInsulin = false, this.usesPills = false, this.usesCgm = false, this.targetGlucoseMin = 70.0, this.targetGlucoseMax = 180.0, this.metabolicClearanceRate = 0.010, this.insulinSensitivityFactor = 50.0, this.absorptionDelayBase = 40.0, this.hasAgreedToDisclaimer = false, required this.createdAt, required this.updatedAt});
+  const _UserProfile({required this.id, this.name = '', required this.age, required this.gender, required this.heightCm, required this.weightKg, this.targetWeightKg, required this.diabetesType, required this.diagnosisYear, this.preferredGlucoseUnit = 'mg/dL', this.usesInsulin = false, this.usesPills = false, this.usesCgm = false, this.targetGlucoseMin = 70.0, this.targetGlucoseMax = 180.0, this.metabolicClearanceRate = 0.010, this.insulinSensitivityFactor = 50.0, this.absorptionDelayBase = 40.0, this.tuningMealCount = 0, this.hasAgreedToDisclaimer = false, required this.createdAt, required this.updatedAt});
   factory _UserProfile.fromJson(Map<String, dynamic> json) => _$UserProfileFromJson(json);
 
 @override final  String id;
@@ -261,6 +263,8 @@ class _UserProfile implements UserProfile {
 @override@JsonKey() final  double metabolicClearanceRate;
 @override@JsonKey() final  double insulinSensitivityFactor;
 @override@JsonKey() final  double absorptionDelayBase;
+@override@JsonKey() final  int tuningMealCount;
+// Tracks meals used for adaptive tuning
 // Meta
 @override@JsonKey() final  bool hasAgreedToDisclaimer;
 @override final  DateTime createdAt;
@@ -279,16 +283,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserProfile&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.age, age) || other.age == age)&&(identical(other.gender, gender) || other.gender == gender)&&(identical(other.heightCm, heightCm) || other.heightCm == heightCm)&&(identical(other.weightKg, weightKg) || other.weightKg == weightKg)&&(identical(other.targetWeightKg, targetWeightKg) || other.targetWeightKg == targetWeightKg)&&(identical(other.diabetesType, diabetesType) || other.diabetesType == diabetesType)&&(identical(other.diagnosisYear, diagnosisYear) || other.diagnosisYear == diagnosisYear)&&(identical(other.preferredGlucoseUnit, preferredGlucoseUnit) || other.preferredGlucoseUnit == preferredGlucoseUnit)&&(identical(other.usesInsulin, usesInsulin) || other.usesInsulin == usesInsulin)&&(identical(other.usesPills, usesPills) || other.usesPills == usesPills)&&(identical(other.usesCgm, usesCgm) || other.usesCgm == usesCgm)&&(identical(other.targetGlucoseMin, targetGlucoseMin) || other.targetGlucoseMin == targetGlucoseMin)&&(identical(other.targetGlucoseMax, targetGlucoseMax) || other.targetGlucoseMax == targetGlucoseMax)&&(identical(other.metabolicClearanceRate, metabolicClearanceRate) || other.metabolicClearanceRate == metabolicClearanceRate)&&(identical(other.insulinSensitivityFactor, insulinSensitivityFactor) || other.insulinSensitivityFactor == insulinSensitivityFactor)&&(identical(other.absorptionDelayBase, absorptionDelayBase) || other.absorptionDelayBase == absorptionDelayBase)&&(identical(other.hasAgreedToDisclaimer, hasAgreedToDisclaimer) || other.hasAgreedToDisclaimer == hasAgreedToDisclaimer)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserProfile&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.age, age) || other.age == age)&&(identical(other.gender, gender) || other.gender == gender)&&(identical(other.heightCm, heightCm) || other.heightCm == heightCm)&&(identical(other.weightKg, weightKg) || other.weightKg == weightKg)&&(identical(other.targetWeightKg, targetWeightKg) || other.targetWeightKg == targetWeightKg)&&(identical(other.diabetesType, diabetesType) || other.diabetesType == diabetesType)&&(identical(other.diagnosisYear, diagnosisYear) || other.diagnosisYear == diagnosisYear)&&(identical(other.preferredGlucoseUnit, preferredGlucoseUnit) || other.preferredGlucoseUnit == preferredGlucoseUnit)&&(identical(other.usesInsulin, usesInsulin) || other.usesInsulin == usesInsulin)&&(identical(other.usesPills, usesPills) || other.usesPills == usesPills)&&(identical(other.usesCgm, usesCgm) || other.usesCgm == usesCgm)&&(identical(other.targetGlucoseMin, targetGlucoseMin) || other.targetGlucoseMin == targetGlucoseMin)&&(identical(other.targetGlucoseMax, targetGlucoseMax) || other.targetGlucoseMax == targetGlucoseMax)&&(identical(other.metabolicClearanceRate, metabolicClearanceRate) || other.metabolicClearanceRate == metabolicClearanceRate)&&(identical(other.insulinSensitivityFactor, insulinSensitivityFactor) || other.insulinSensitivityFactor == insulinSensitivityFactor)&&(identical(other.absorptionDelayBase, absorptionDelayBase) || other.absorptionDelayBase == absorptionDelayBase)&&(identical(other.tuningMealCount, tuningMealCount) || other.tuningMealCount == tuningMealCount)&&(identical(other.hasAgreedToDisclaimer, hasAgreedToDisclaimer) || other.hasAgreedToDisclaimer == hasAgreedToDisclaimer)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,id,name,age,gender,heightCm,weightKg,targetWeightKg,diabetesType,diagnosisYear,preferredGlucoseUnit,usesInsulin,usesPills,usesCgm,targetGlucoseMin,targetGlucoseMax,metabolicClearanceRate,insulinSensitivityFactor,absorptionDelayBase,hasAgreedToDisclaimer,createdAt,updatedAt]);
+int get hashCode => Object.hashAll([runtimeType,id,name,age,gender,heightCm,weightKg,targetWeightKg,diabetesType,diagnosisYear,preferredGlucoseUnit,usesInsulin,usesPills,usesCgm,targetGlucoseMin,targetGlucoseMax,metabolicClearanceRate,insulinSensitivityFactor,absorptionDelayBase,tuningMealCount,hasAgreedToDisclaimer,createdAt,updatedAt]);
 
 @override
 String toString() {
-  return 'UserProfile(id: $id, name: $name, age: $age, gender: $gender, heightCm: $heightCm, weightKg: $weightKg, targetWeightKg: $targetWeightKg, diabetesType: $diabetesType, diagnosisYear: $diagnosisYear, preferredGlucoseUnit: $preferredGlucoseUnit, usesInsulin: $usesInsulin, usesPills: $usesPills, usesCgm: $usesCgm, targetGlucoseMin: $targetGlucoseMin, targetGlucoseMax: $targetGlucoseMax, metabolicClearanceRate: $metabolicClearanceRate, insulinSensitivityFactor: $insulinSensitivityFactor, absorptionDelayBase: $absorptionDelayBase, hasAgreedToDisclaimer: $hasAgreedToDisclaimer, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'UserProfile(id: $id, name: $name, age: $age, gender: $gender, heightCm: $heightCm, weightKg: $weightKg, targetWeightKg: $targetWeightKg, diabetesType: $diabetesType, diagnosisYear: $diagnosisYear, preferredGlucoseUnit: $preferredGlucoseUnit, usesInsulin: $usesInsulin, usesPills: $usesPills, usesCgm: $usesCgm, targetGlucoseMin: $targetGlucoseMin, targetGlucoseMax: $targetGlucoseMax, metabolicClearanceRate: $metabolicClearanceRate, insulinSensitivityFactor: $insulinSensitivityFactor, absorptionDelayBase: $absorptionDelayBase, tuningMealCount: $tuningMealCount, hasAgreedToDisclaimer: $hasAgreedToDisclaimer, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -299,7 +303,7 @@ abstract mixin class _$UserProfileCopyWith<$Res> implements $UserProfileCopyWith
   factory _$UserProfileCopyWith(_UserProfile value, $Res Function(_UserProfile) _then) = __$UserProfileCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, int age, String gender, double heightCm, double weightKg, double? targetWeightKg, String diabetesType, int diagnosisYear, String preferredGlucoseUnit, bool usesInsulin, bool usesPills, bool usesCgm, double targetGlucoseMin, double targetGlucoseMax, double metabolicClearanceRate, double insulinSensitivityFactor, double absorptionDelayBase, bool hasAgreedToDisclaimer, DateTime createdAt, DateTime updatedAt
+ String id, String name, int age, String gender, double heightCm, double weightKg, double? targetWeightKg, String diabetesType, int diagnosisYear, String preferredGlucoseUnit, bool usesInsulin, bool usesPills, bool usesCgm, double targetGlucoseMin, double targetGlucoseMax, double metabolicClearanceRate, double insulinSensitivityFactor, double absorptionDelayBase, int tuningMealCount, bool hasAgreedToDisclaimer, DateTime createdAt, DateTime updatedAt
 });
 
 
@@ -316,7 +320,7 @@ class __$UserProfileCopyWithImpl<$Res>
 
 /// Create a copy of UserProfile
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? age = null,Object? gender = null,Object? heightCm = null,Object? weightKg = null,Object? targetWeightKg = freezed,Object? diabetesType = null,Object? diagnosisYear = null,Object? preferredGlucoseUnit = null,Object? usesInsulin = null,Object? usesPills = null,Object? usesCgm = null,Object? targetGlucoseMin = null,Object? targetGlucoseMax = null,Object? metabolicClearanceRate = null,Object? insulinSensitivityFactor = null,Object? absorptionDelayBase = null,Object? hasAgreedToDisclaimer = null,Object? createdAt = null,Object? updatedAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? age = null,Object? gender = null,Object? heightCm = null,Object? weightKg = null,Object? targetWeightKg = freezed,Object? diabetesType = null,Object? diagnosisYear = null,Object? preferredGlucoseUnit = null,Object? usesInsulin = null,Object? usesPills = null,Object? usesCgm = null,Object? targetGlucoseMin = null,Object? targetGlucoseMax = null,Object? metabolicClearanceRate = null,Object? insulinSensitivityFactor = null,Object? absorptionDelayBase = null,Object? tuningMealCount = null,Object? hasAgreedToDisclaimer = null,Object? createdAt = null,Object? updatedAt = null,}) {
   return _then(_UserProfile(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -336,7 +340,8 @@ as double,targetGlucoseMax: null == targetGlucoseMax ? _self.targetGlucoseMax : 
 as double,metabolicClearanceRate: null == metabolicClearanceRate ? _self.metabolicClearanceRate : metabolicClearanceRate // ignore: cast_nullable_to_non_nullable
 as double,insulinSensitivityFactor: null == insulinSensitivityFactor ? _self.insulinSensitivityFactor : insulinSensitivityFactor // ignore: cast_nullable_to_non_nullable
 as double,absorptionDelayBase: null == absorptionDelayBase ? _self.absorptionDelayBase : absorptionDelayBase // ignore: cast_nullable_to_non_nullable
-as double,hasAgreedToDisclaimer: null == hasAgreedToDisclaimer ? _self.hasAgreedToDisclaimer : hasAgreedToDisclaimer // ignore: cast_nullable_to_non_nullable
+as double,tuningMealCount: null == tuningMealCount ? _self.tuningMealCount : tuningMealCount // ignore: cast_nullable_to_non_nullable
+as int,hasAgreedToDisclaimer: null == hasAgreedToDisclaimer ? _self.hasAgreedToDisclaimer : hasAgreedToDisclaimer // ignore: cast_nullable_to_non_nullable
 as bool,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,

@@ -63,6 +63,7 @@ class HealthDataRepository {
     map['synced'] = map.remove('isSynced') == true ? 1 : 0;
     map['containsAlcohol'] = map['containsAlcohol'] == true ? 1 : 0;
     map['containsCaffeine'] = map['containsCaffeine'] == true ? 1 : 0;
+    // foodFormFactor is already a String, no conversion needed
     await db.insert('meal_logs', map);
   }
 

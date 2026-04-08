@@ -987,7 +987,7 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                       ),
                     ),
                     subtitle: Text(
-                      'Alcohol and caffeine affect glucose absorption',
+                      'Alcohol, caffeine, and food form affect glucose',
                       style: TextStyle(
                         color: isDark ? Colors.white54 : AppThemeTokens.textSecondary,
                         fontSize: 12,
@@ -1039,6 +1039,72 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                         value: state.containsCaffeine,
                         onChanged: viewModel.toggleCaffeine,
                         activeThumbColor: AppThemeTokens.brandAccent,
+                      ),
+                      const Divider(height: 1),
+
+                      // ── Food Form Factor Chips ──
+                      Padding(
+                        padding: const EdgeInsets.all(AppThemeTokens.spaceMd),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Food Form',
+                              style: TextStyle(
+                                color: isDark
+                                    ? Colors.white
+                                    : AppThemeTokens.textPrimary,
+                                fontWeight: FontWeight.w500,
+                                fontSize: 15,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Affects absorption speed — liquid carbs spike faster',
+                              style: TextStyle(
+                                color: isDark
+                                    ? Colors.white54
+                                    : AppThemeTokens.textSecondary,
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(height: AppThemeTokens.spaceSm),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 6,
+                              children: [
+                                _FoodFormChip(
+                                  label: 'Standard',
+                                  icon: LucideIcons.utensils,
+                                  isSelected: state.foodFormFactor == 'standard',
+                                  isDark: isDark,
+                                  onTap: () => viewModel.updateFoodFormFactor('standard'),
+                                ),
+                                _FoodFormChip(
+                                  label: 'Liquid',
+                                  icon: LucideIcons.glassWater,
+                                  isSelected: state.foodFormFactor == 'liquid',
+                                  isDark: isDark,
+                                  onTap: () => viewModel.updateFoodFormFactor('liquid'),
+                                ),
+                                _FoodFormChip(
+                                  label: 'Whole Grain',
+                                  icon: LucideIcons.wheat,
+                                  isSelected: state.foodFormFactor == 'highFiber',
+                                  isDark: isDark,
+                                  onTap: () => viewModel.updateFoodFormFactor('highFiber'),
+                                ),
+                                _FoodFormChip(
+                                  label: 'Processed',
+                                  icon: LucideIcons.cookie,
+                                  isSelected: state.foodFormFactor == 'processed',
+                                  isDark: isDark,
+                                  onTap: () => viewModel.updateFoodFormFactor('processed'),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -1095,6 +1161,7 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                                 builder: (_) => ProjectionResultView(
                                   result: data['result'],
                                   unit: data['unit'],
+                                  mealCount: data['mealCount'] ?? 0,
                                 ),
                               ),
                             );
@@ -1335,6 +1402,77 @@ class _MacroInputRow extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Chip widget for selecting food form factor (standard, liquid, highFiber, processed).
+class _FoodFormChip extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool isSelected;
+  final bool isDark;
+  final VoidCallback onTap;
+
+  const _FoodFormChip({
+    required this.label,
+    required this.icon,
+    required this.isSelected,
+    required this.isDark,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppThemeTokens.brandPrimary.withValues(alpha: 0.15)
+              : isDark
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(AppThemeTokens.radiusFull),
+          border: Border.all(
+            color: isSelected
+                ? AppThemeTokens.brandPrimary
+                : isDark
+                    ? Colors.white.withValues(alpha: 0.15)
+                    : Colors.grey.shade300,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 14,
+              color: isSelected
+                  ? AppThemeTokens.brandPrimary
+                  : isDark
+                      ? Colors.white54
+                      : AppThemeTokens.textSecondary,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                color: isSelected
+                    ? AppThemeTokens.brandPrimary
+                    : isDark
+                        ? Colors.white70
+                        : AppThemeTokens.textPrimary,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

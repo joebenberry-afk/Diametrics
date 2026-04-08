@@ -28,6 +28,7 @@ _UserProfile _$UserProfileFromJson(Map<String, dynamic> json) => _UserProfile(
       (json['insulinSensitivityFactor'] as num?)?.toDouble() ?? 50.0,
   absorptionDelayBase:
       (json['absorptionDelayBase'] as num?)?.toDouble() ?? 40.0,
+  tuningMealCount: (json['tuningMealCount'] as num?)?.toInt() ?? 0,
   hasAgreedToDisclaimer: json['hasAgreedToDisclaimer'] as bool? ?? false,
   createdAt: DateTime.parse(json['createdAt'] as String),
   updatedAt: DateTime.parse(json['updatedAt'] as String),
@@ -53,6 +54,7 @@ Map<String, dynamic> _$UserProfileToJson(_UserProfile instance) =>
       'metabolicClearanceRate': instance.metabolicClearanceRate,
       'insulinSensitivityFactor': instance.insulinSensitivityFactor,
       'absorptionDelayBase': instance.absorptionDelayBase,
+      'tuningMealCount': instance.tuningMealCount,
       'hasAgreedToDisclaimer': instance.hasAgreedToDisclaimer,
       'createdAt': instance.createdAt.toIso8601String(),
       'updatedAt': instance.updatedAt.toIso8601String(),

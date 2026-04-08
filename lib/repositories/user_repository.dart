@@ -32,6 +32,7 @@ class UserRepository {
       'metabolicClearanceRate': profile.metabolicClearanceRate,
       'insulinSensitivityFactor': profile.insulinSensitivityFactor,
       'absorptionDelayBase': profile.absorptionDelayBase,
+      'tuningMealCount': profile.tuningMealCount,
       // Dates as ISO8601 strings
       'createdAt': profile.createdAt.toIso8601String(),
       'updatedAt': profile.updatedAt.toIso8601String(),
@@ -81,6 +82,7 @@ class UserRepository {
       'metabolicClearanceRate': raw['metabolicClearanceRate'] ?? 0.010,
       'insulinSensitivityFactor': raw['insulinSensitivityFactor'] ?? 50.0,
       'absorptionDelayBase': raw['absorptionDelayBase'] ?? 40.0,
+      'tuningMealCount': raw['tuningMealCount'] ?? 0,
       // Dates are already ISO8601 strings — fromJson parses them
       'createdAt': raw['createdAt'],
       'updatedAt': raw['updatedAt'],

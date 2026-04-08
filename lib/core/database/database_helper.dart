@@ -5,7 +5,7 @@ import 'package:path_provider/path_provider.dart';
 
 class DatabaseHelper {
   static const _databaseName = "diametrics_v1.db";
-  static const _databaseVersion = 6; // v6: adaptive ML tuning schema
+  static const _databaseVersion = 7; // v7: prediction overhaul schema
 
   DatabaseHelper._privateConstructor();
   static final DatabaseHelper instance = DatabaseHelper._privateConstructor();
@@ -91,6 +91,15 @@ class DatabaseHelper {
         await db.execute("ALTER TABLE user_profiles ADD COLUMN absorptionDelayBase REAL NOT NULL DEFAULT 40.0");
       } catch (_) {} // column already exists — safe to ignore
     }
+    if (oldVersion < 7) {
+      // v7: prediction system overhaul — add tuningMealCount and foodFormFactor
+      try {
+        await db.execute("ALTER TABLE user_profiles ADD COLUMN tuningMealCount INTEGER NOT NULL DEFAULT 0");
+      } catch (_) {} // column already exists — safe to ignore
+      try {
+        await db.execute("ALTER TABLE meal_logs ADD COLUMN foodFormFactor TEXT NOT NULL DEFAULT 'standard'");
+      } catch (_) {} // column already exists — safe to ignore
+    }
   }
 
   Future _createTables(Database db) async {
@@ -126,6 +135,7 @@ class DatabaseHelper {
         calories REAL NOT NULL,
         containsAlcohol INTEGER NOT NULL DEFAULT 0,
         containsCaffeine INTEGER NOT NULL DEFAULT 0,
+        foodFormFactor TEXT NOT NULL DEFAULT 'standard',
         mealType TEXT NOT NULL,
         timestamp TEXT NOT NULL,
         notes TEXT,
@@ -169,6 +179,7 @@ class DatabaseHelper {
         metabolicClearanceRate REAL NOT NULL DEFAULT 0.010,
         insulinSensitivityFactor REAL NOT NULL DEFAULT 50.0,
         absorptionDelayBase REAL NOT NULL DEFAULT 40.0,
+        tuningMealCount INTEGER NOT NULL DEFAULT 0,
         hasAgreedToDisclaimer INTEGER NOT NULL DEFAULT 0,
         createdAt TEXT NOT NULL,
         updatedAt TEXT NOT NULL

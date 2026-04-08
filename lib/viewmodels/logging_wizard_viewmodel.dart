@@ -25,6 +25,7 @@ class LoggingWizardState {
   final bool containsAlcohol;
   final bool containsCaffeine;
   final String mealType;
+  final String foodFormFactor; // standard, liquid, highFiber, processed
 
   // Pre-meal glucose gate (used by Meal Wizard)
   final double? preMealGlucose;
@@ -49,6 +50,7 @@ class LoggingWizardState {
     this.containsAlcohol = false,
     this.containsCaffeine = false,
     this.mealType = 'lunch',
+    this.foodFormFactor = 'standard',
     this.preMealGlucose,
     this.hasAutoDetectedGlucose = false,
     this.pendingMedicationUnits,
@@ -69,6 +71,7 @@ class LoggingWizardState {
     bool? containsAlcohol,
     bool? containsCaffeine,
     String? mealType,
+    String? foodFormFactor,
     double? preMealGlucose,
     bool? hasAutoDetectedGlucose,
     double? pendingMedicationUnits,
@@ -88,6 +91,7 @@ class LoggingWizardState {
       containsAlcohol: containsAlcohol ?? this.containsAlcohol,
       containsCaffeine: containsCaffeine ?? this.containsCaffeine,
       mealType: mealType ?? this.mealType,
+      foodFormFactor: foodFormFactor ?? this.foodFormFactor,
       preMealGlucose: preMealGlucose ?? this.preMealGlucose,
       hasAutoDetectedGlucose:
           hasAutoDetectedGlucose ?? this.hasAutoDetectedGlucose,
@@ -159,6 +163,8 @@ class LoggingWizardViewModel extends StateNotifier<LoggingWizardState> {
   void toggleCaffeine(bool val) =>
       state = state.copyWith(containsCaffeine: val);
   void updateMealType(String type) => state = state.copyWith(mealType: type);
+  void updateFoodFormFactor(String factor) =>
+      state = state.copyWith(foodFormFactor: factor);
 
   /// Populates meal macro fields from a barcode scan result (FoodItem).
   /// Called after the user successfully scans a packaged food barcode.
@@ -183,21 +189,29 @@ class LoggingWizardViewModel extends StateNotifier<LoggingWizardState> {
   void updateMedicationType(String type) =>
       state = state.copyWith(medicationType: type);
 
-  // --- IOB Calculation ---
+  // --- IOB Calculation (Walsh Bilinear) ---
 
   /// Calculates Insulin-on-Board from rapid-acting insulin logged in the
-  /// last 4 hours, using a simple linear decay model (DIA = 240 min).
+  /// last 4 hours, using the Walsh bilinear decay model (DIA = 240 min).
+  ///
+  /// The Walsh curve better models rapid-acting insulins (Humalog, NovoLog)
+  /// which peak at ~60-90 min and tail off -- unlike linear decay which
+  /// overestimates early action and underestimates late action.
   Future<double> _calculateIOB() async {
     final repo = ref.read(healthDataRepositoryProvider);
     final recentMeds = await repo.getRecentMedicationLogs(
       const Duration(hours: 4),
     );
     double iob = 0.0;
+    const double dia = 240.0;
     final now = DateTime.now();
     for (final med in recentMeds) {
       if (med.medicationType != 'rapid_acting_insulin') continue;
-      final elapsedMin = now.difference(med.timestamp).inMinutes;
-      final remaining = (1.0 - elapsedMin / 240.0).clamp(0.0, 1.0);
+      final elapsedMin = now.difference(med.timestamp).inMinutes.toDouble();
+      if (elapsedMin >= dia) continue;
+      // Walsh bilinear: S-curve fraction remaining
+      final t = elapsedMin / dia;
+      final remaining = (1.0 - (t * t * (3.0 - 2.0 * t))).clamp(0.0, 1.0);
       iob += med.units * remaining;
     }
     return iob;
@@ -289,6 +303,7 @@ class LoggingWizardViewModel extends StateNotifier<LoggingWizardState> {
         containsAlcohol: state.containsAlcohol,
         containsCaffeine: state.containsCaffeine,
         mealType: state.mealType,
+        foodFormFactor: state.foodFormFactor,
       );
       await repo.addMealLog(mealLog);
       ref.invalidate(mealLogsProvider);
@@ -297,6 +312,7 @@ class LoggingWizardViewModel extends StateNotifier<LoggingWizardState> {
       final iob = await _calculateIOB();
       final profile = await UserRepository().getProfile();
       final unit = profile?.preferredGlucoseUnit ?? 'mg/dL';
+      final mealCount = profile?.tuningMealCount ?? 0;
       
       // Normalize baseline to mg/dL for the projection service math
       double normalizedBaseline = state.preMealGlucose!;
@@ -317,6 +333,8 @@ class LoggingWizardViewModel extends StateNotifier<LoggingWizardState> {
         p1: profile?.metabolicClearanceRate ?? 0.010,
         isf: profile?.insulinSensitivityFactor ?? 50.0,
         tMaxBase: profile?.absorptionDelayBase ?? 40.0,
+        foodFormFactor: state.foodFormFactor,
+        mealCount: mealCount,
       );
 
       // Reset wizard state
@@ -324,6 +342,7 @@ class LoggingWizardViewModel extends StateNotifier<LoggingWizardState> {
       return {
         'result': result,
         'unit': unit,
+        'mealCount': mealCount,
       };
     } catch (e) {
       state = state.copyWith(isSubmitting: false, error: e.toString());
@@ -359,6 +378,7 @@ class LoggingWizardViewModel extends StateNotifier<LoggingWizardState> {
         containsAlcohol: state.containsAlcohol,
         containsCaffeine: state.containsCaffeine,
         mealType: state.mealType,
+        foodFormFactor: state.foodFormFactor,
       );
 
       await ref.read(healthDataRepositoryProvider).addMealLog(log);

@@ -20,6 +20,8 @@ abstract class MealLog with _$MealLog {
     required String
     mealType, // Enum stored as string: breakfast, lunch, dinner, snack
     String? notes,
+    @Default('standard')
+    String foodFormFactor, // Enum: standard, liquid, highFiber, processed
     @Default(false) bool isSynced,
   }) = _MealLog;
 

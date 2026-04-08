@@ -5,16 +5,19 @@ import 'package:fl_chart/fl_chart.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../models/projection_result.dart';
 
-/// Displays the Phase 1 Hovorka glucose projection result after a meal is
-/// saved, including a 4-hour glucose curve, key metrics, and risk assessment.
+/// Displays the Phase 2 Hovorka glucose projection result after a meal is
+/// saved, including a 4-hour glucose curve with confidence band, key metrics,
+/// convergence indicator, and risk assessment.
 class ProjectionResultView extends StatelessWidget {
   final ProjectionResult result;
   final String unit;
+  final int mealCount;
 
   const ProjectionResultView({
     super.key,
     required this.result,
     this.unit = 'mg/dL',
+    this.mealCount = 0,
   });
 
   bool get _isMmol => unit == 'mmol/L';
@@ -73,7 +76,7 @@ class ProjectionResultView extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // ── Chart ──
+              // ── Chart with Confidence Band ──
               Container(
                 height: 260,
                 padding: const EdgeInsets.fromLTRB(8, 16, 16, 8),
@@ -91,6 +94,39 @@ class ProjectionResultView extends StatelessWidget {
                         _buildChartData(result.points, _riskColor()),
                       ),
               ),
+
+              const SizedBox(height: AppThemeTokens.spaceSm),
+
+              // ── Confidence Band Legend ──
+              if (result.upperBand.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppThemeTokens.spaceSm,
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: AppThemeTokens.brandPrimary.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(2),
+                          border: Border.all(
+                            color: AppThemeTokens.brandPrimary.withValues(alpha: 0.3),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '+/- ${_isMmol ? _toUser(result.confidenceWidth).toStringAsFixed(1) : result.confidenceWidth.toStringAsFixed(0)} $unit confidence band',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: AppThemeTokens.textSecondary,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
               const SizedBox(height: AppThemeTokens.spaceLg),
 
@@ -151,6 +187,11 @@ class ProjectionResultView extends StatelessWidget {
                   ],
                 ),
               ),
+
+              const SizedBox(height: AppThemeTokens.spaceMd),
+
+              // ── Convergence Progress Indicator ──
+              _ConvergenceIndicator(mealCount: mealCount),
 
               const SizedBox(height: AppThemeTokens.spaceMd),
 
@@ -242,7 +283,18 @@ class ProjectionResultView extends StatelessWidget {
     if (points.isEmpty) return LineChartData();
 
     final userPoints = points.map((p) => FlSpot(p.timeMinutes.toDouble(), _toUser(p.glucoseValue))).toList();
-    final allYValues = userPoints.map((s) => s.y);
+
+    // Include band points in Y-axis range calculation
+    final allYValues = <double>[
+      ...userPoints.map((s) => s.y),
+    ];
+    if (result.upperBand.isNotEmpty) {
+      allYValues.addAll(result.upperBand.map((p) => _toUser(p.glucoseValue)));
+    }
+    if (result.lowerBand.isNotEmpty) {
+      allYValues.addAll(result.lowerBand.map((p) => _toUser(p.glucoseValue)));
+    }
+
     final rawMin = allYValues.reduce(min);
     final rawMax = allYValues.reduce(max);
 
@@ -254,6 +306,78 @@ class ProjectionResultView extends StatelessWidget {
     final yMax = ((rawMax + buffer) / interval).ceil() * interval;
 
     final spots = userPoints;
+
+    // Build band line data if available
+    final lineBarsData = <LineChartBarData>[
+      // Upper confidence band (invisible line, used for betweenBars fill)
+      if (result.upperBand.isNotEmpty)
+        LineChartBarData(
+          spots: result.upperBand
+              .map((p) => FlSpot(p.timeMinutes.toDouble(), _toUser(p.glucoseValue)))
+              .toList(),
+          isCurved: true,
+          color: Colors.transparent,
+          barWidth: 0,
+          dotData: const FlDotData(show: false),
+        ),
+      // Lower confidence band (invisible line, used for betweenBars fill)
+      if (result.lowerBand.isNotEmpty)
+        LineChartBarData(
+          spots: result.lowerBand
+              .map((p) => FlSpot(p.timeMinutes.toDouble(), _toUser(p.glucoseValue)))
+              .toList(),
+          isCurved: true,
+          color: Colors.transparent,
+          barWidth: 0,
+          dotData: const FlDotData(show: false),
+        ),
+      // Main projection curve
+      LineChartBarData(
+        spots: spots,
+        isCurved: true,
+        color: AppThemeTokens.brandPrimary,
+        barWidth: 3,
+        isStrokeCapRound: true,
+        dotData: FlDotData(
+          show: true,
+          checkToShowDot: (spot, barData) {
+            final isPeak = spot.y == userPoints.map((s) => s.y).reduce(max);
+            return isPeak;
+          },
+          getDotPainter: (spot, percent, barData, index) {
+            return FlDotCirclePainter(
+              radius: 4,
+              color: riskColor,
+              strokeWidth: 2,
+              strokeColor: Colors.white,
+            );
+          },
+        ),
+        belowBarData: BarAreaData(
+          show: true,
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              AppThemeTokens.brandPrimary.withValues(alpha: 0.3),
+              AppThemeTokens.brandPrimary.withValues(alpha: 0.0),
+            ],
+          ),
+        ),
+      ),
+    ];
+
+    // Confidence band fill between upper and lower curves
+    final betweenBarsData = <BetweenBarsData>[];
+    if (result.upperBand.isNotEmpty && result.lowerBand.isNotEmpty) {
+      betweenBarsData.add(
+        BetweenBarsData(
+          fromIndex: 0, // upper band line index
+          toIndex: 1, // lower band line index
+          color: AppThemeTokens.brandPrimary.withValues(alpha: 0.12),
+        ),
+      );
+    }
 
     return LineChartData(
       minX: 0,
@@ -311,41 +435,8 @@ class ProjectionResultView extends StatelessWidget {
         ),
       ),
       borderData: FlBorderData(show: false),
-      lineBarsData: [
-        LineChartBarData(
-          spots: spots,
-          isCurved: true,
-          color: AppThemeTokens.brandPrimary,
-          barWidth: 3,
-          isStrokeCapRound: true,
-          dotData: FlDotData(
-            show: true,
-            checkToShowDot: (spot, barData) {
-              final isPeak = spot.y == rawMax;
-              return isPeak;
-            },
-            getDotPainter: (spot, percent, barData, index) {
-              return FlDotCirclePainter(
-                radius: 4,
-                color: riskColor,
-                strokeWidth: 2,
-                strokeColor: Colors.white,
-              );
-            },
-          ),
-          belowBarData: BarAreaData(
-            show: true,
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                AppThemeTokens.brandPrimary.withValues(alpha: 0.3),
-                AppThemeTokens.brandPrimary.withValues(alpha: 0.0),
-              ],
-            ),
-          ),
-        ),
-      ],
+      lineBarsData: lineBarsData,
+      betweenBarsData: betweenBarsData,
       extraLinesData: ExtraLinesData(
         horizontalLines: [
           HorizontalLine(
@@ -365,6 +456,100 @@ class ProjectionResultView extends StatelessWidget {
             color: AppThemeTokens.warning.withValues(alpha: 0.3),
             strokeWidth: 1,
             dashArray: [5, 5],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Convergence progress indicator showing how many post-meal readings
+/// have contributed to personalisation. Encourages users to keep logging.
+class _ConvergenceIndicator extends StatelessWidget {
+  final int mealCount;
+
+  /// Target number of meals for full convergence.
+  static const int _targetMeals = 20;
+
+  const _ConvergenceIndicator({required this.mealCount});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final progress = (mealCount / _targetMeals).clamp(0.0, 1.0);
+    final isConverged = mealCount >= _targetMeals;
+
+    return Container(
+      padding: const EdgeInsets.all(AppThemeTokens.spaceMd),
+      decoration: BoxDecoration(
+        color: isDark ? AppThemeTokens.bgSurfaceDark : AppThemeTokens.bgSurface,
+        borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
+        border: Border.all(
+          color: isConverged
+              ? AppThemeTokens.brandSuccess.withValues(alpha: 0.3)
+              : AppThemeTokens.brandPrimary.withValues(alpha: 0.15),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                isConverged ? LucideIcons.checkCircle : LucideIcons.brain,
+                size: 16,
+                color: isConverged
+                    ? AppThemeTokens.brandSuccess
+                    : AppThemeTokens.brandPrimary,
+              ),
+              const SizedBox(width: AppThemeTokens.spaceSm),
+              Expanded(
+                child: Text(
+                  isConverged
+                      ? 'Personalisation complete'
+                      : 'Personalisation progress',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: isConverged
+                        ? AppThemeTokens.brandSuccess
+                        : AppThemeTokens.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Text(
+                '$mealCount / $_targetMeals meals',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: AppThemeTokens.textSecondary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 6,
+              backgroundColor: isDark
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : Colors.black.withValues(alpha: 0.06),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                isConverged
+                    ? AppThemeTokens.brandSuccess
+                    : AppThemeTokens.brandPrimary,
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            isConverged
+                ? 'Predictions are tailored to your metabolism.'
+                : 'Your predictions improve with more logged meals.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppThemeTokens.textSecondary,
+              fontSize: 11,
+            ),
           ),
         ],
       ),

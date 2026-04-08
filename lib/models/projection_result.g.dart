@@ -29,6 +29,17 @@ _ProjectionResult _$ProjectionResultFromJson(Map<String, dynamic> json) =>
       totalAvailableGlucose: (json['totalAvailableGlucose'] as num).toDouble(),
       riskLevel: json['riskLevel'] as String,
       summary: json['summary'] as String,
+      upperBand:
+          (json['upperBand'] as List<dynamic>?)
+              ?.map((e) => ProjectionPoint.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
+      lowerBand:
+          (json['lowerBand'] as List<dynamic>?)
+              ?.map((e) => ProjectionPoint.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
+      confidenceWidth: (json['confidenceWidth'] as num?)?.toDouble() ?? 25.0,
     );
 
 Map<String, dynamic> _$ProjectionResultToJson(_ProjectionResult instance) =>
@@ -40,4 +51,7 @@ Map<String, dynamic> _$ProjectionResultToJson(_ProjectionResult instance) =>
       'totalAvailableGlucose': instance.totalAvailableGlucose,
       'riskLevel': instance.riskLevel,
       'summary': instance.summary,
+      'upperBand': instance.upperBand,
+      'lowerBand': instance.lowerBand,
+      'confidenceWidth': instance.confidenceWidth,
     };

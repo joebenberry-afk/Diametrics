@@ -34,6 +34,7 @@ abstract class UserProfile with _$UserProfile {
     @Default(0.010) double metabolicClearanceRate,
     @Default(50.0) double insulinSensitivityFactor,
     @Default(40.0) double absorptionDelayBase,
+    @Default(0) int tuningMealCount, // Tracks meals used for adaptive tuning
 
     // Meta
     @Default(false) bool hasAgreedToDisclaimer,

@@ -56,3 +56,7 @@ app.*.map.json
 Food Database/FoodData_Central_sr_legacy_food_csv_2018-04/
 Food Database/FoodData_Central_sr_legacy_food_csv_2018-04.zip
 Food Database/N5K_google/
+
+# AI Agent related
+.claude/
+.agents/
