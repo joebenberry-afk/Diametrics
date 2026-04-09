@@ -1,3 +1,4 @@
+import 'dart:async' show unawaited;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../models/glucose_log.dart';
@@ -7,6 +8,7 @@ import '../models/projection_result.dart';
 import '../repositories/user_repository.dart';
 import '../services/ekf_tuning_service.dart';
 import '../services/glucose_projection_service.dart';
+import '../services/reminder_service.dart';
 import 'health_data_viewmodel.dart';
 
 // A state class to hold the temporary data during wizard entry
@@ -326,6 +328,9 @@ class LoggingWizardViewModel extends StateNotifier<LoggingWizardState> {
       );
       await repo.addMealLog(mealLog);
       ref.invalidate(mealLogsProvider);
+
+      // Schedule post-meal glucose check reminders (fire-and-forget, never blocks)
+      unawaited(ReminderService.schedulePostMealReminders(DateTime.now()));
 
       // 3. Calculate IOB and run the projection using personalized ML params.
       final iob = await _calculateIOB();

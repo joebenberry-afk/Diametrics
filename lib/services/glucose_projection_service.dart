@@ -143,6 +143,8 @@ class GlucoseProjectionService {
         upperBand: flatPoints,
         lowerBand: flatPoints,
         confidenceWidth: _confidenceWidth(mealCount),
+        regionalAdjustmentApplied: false,
+        regionalAdjustmentName: null,
       );
     }
 
@@ -184,6 +186,9 @@ class GlucoseProjectionService {
         CaribbeanFoodHeuristics.getRegionalTagMultiplier(mealName);
     tMax *= regionalAbsorption;
     tMax = tMax.clamp(15.0, 120.0); // Re-clamp after regional adjustment
+
+    // Track whether a regional heuristic actually fired (for UI transparency)
+    final bool regionalFired = regionalAbsorption != 1.0 || regionalTag != 1.0;
 
     // Protein kernel tMax (always slower than carb absorption)
     final double proteinTMax = _proteinTMaxDefault;
@@ -363,6 +368,88 @@ class GlucoseProjectionService {
       upperBand: upperBand,
       lowerBand: lowerBand,
       confidenceWidth: bandWidthMaxWidth,
+      regionalAdjustmentApplied: regionalFired,
+      regionalAdjustmentName: regionalFired ? mealName : null,
     );
+  }
+
+  /// Returns the cumulative glucose rise (mg/dL) from absorption only
+  /// at [atMinute] elapsed since the meal was consumed.
+  ///
+  /// Does NOT include clearance, IOB, dawn phenomenon, or alcohol correction —
+  /// these are baseline-dependent and must not be applied to isolated
+  /// meal contributions for superposition accounting in the EKF.
+  static double computeAbsorptionContribution({
+    required int atMinute,
+    required double carbsGrams,
+    required double fiberGrams,
+    required double proteinGrams,
+    required double fatGrams,
+    required bool containsAlcohol,
+    required bool containsCaffeine,
+    double weightKg = 70.0,
+    double tMaxBase = 40.0,
+    String foodFormFactor = 'standard',
+    String? mealName,
+  }) {
+    if (atMinute <= 0) return 0.0;
+    final netCarbs = max(0.0, carbsGrams - fiberGrams);
+    final fastTAG = netCarbs + 0.10 * fatGrams;
+    final proteinTAG = 0.58 * proteinGrams;
+    if (fastTAG + proteinTAG < 0.01) return 0.0;
+
+    const double aG = 0.8;
+    double tMax = tMaxBase;
+    if (fatGrams > 40 || proteinGrams > 25) tMax += 30.0;
+    if (containsAlcohol) tMax += 20.0;
+    switch (foodFormFactor) {
+      case 'liquid':
+        tMax -= 15.0;
+      case 'highFiber':
+        tMax += 10.0;
+      case 'processed':
+        tMax -= 10.0;
+      default:
+        break;
+    }
+    tMax = tMax.clamp(15.0, 120.0);
+
+    final regionalAbsorption =
+        CaribbeanFoodHeuristics.getRegionalAbsorptionMultiplier(mealName);
+    final regionalTag =
+        CaribbeanFoodHeuristics.getRegionalTagMultiplier(mealName);
+    tMax *= regionalAbsorption;
+    tMax = tMax.clamp(15.0, 120.0);
+
+    final double vG = 0.16 * weightKg;
+    final double fastBgEquiv = aG * (fastTAG * regionalTag) * 100.0 / vG;
+    final double proteinBgEquiv = aG * proteinTAG * 100.0 / vG;
+
+    double fastGammaSum = 0.0;
+    for (int t = 1; t <= _projectionMinutes; t++) {
+      fastGammaSum += t * exp(-t / tMax);
+    }
+    if (fastGammaSum < 1e-10) fastGammaSum = 1.0;
+
+    double proteinGammaSum = 0.0;
+    for (int t = 1; t <= _projectionMinutes; t++) {
+      final tOff = t - _proteinOnsetDelay;
+      if (tOff > 0) proteinGammaSum += tOff * exp(-tOff / _proteinTMaxDefault);
+    }
+    if (proteinGammaSum < 1e-10) proteinGammaSum = 1.0;
+
+    final int limit = atMinute.clamp(1, _projectionMinutes);
+    double total = 0.0;
+    for (int t = 1; t <= limit; t++) {
+      double riseRate = fastBgEquiv * t * exp(-t / tMax) / fastGammaSum;
+      final tOff = t - _proteinOnsetDelay;
+      if (tOff > 0) {
+        riseRate +=
+            proteinBgEquiv * tOff * exp(-tOff / _proteinTMaxDefault) / proteinGammaSum;
+      }
+      if (containsCaffeine) riseRate *= 1.10;
+      total += riseRate;
+    }
+    return total;
   }
 }

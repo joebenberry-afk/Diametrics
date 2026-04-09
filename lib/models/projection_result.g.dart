@@ -40,6 +40,9 @@ _ProjectionResult _$ProjectionResultFromJson(Map<String, dynamic> json) =>
               .toList() ??
           const [],
       confidenceWidth: (json['confidenceWidth'] as num?)?.toDouble() ?? 25.0,
+      regionalAdjustmentApplied:
+          json['regionalAdjustmentApplied'] as bool? ?? false,
+      regionalAdjustmentName: json['regionalAdjustmentName'] as String? ?? null,
     );
 
 Map<String, dynamic> _$ProjectionResultToJson(_ProjectionResult instance) =>
@@ -54,4 +57,6 @@ Map<String, dynamic> _$ProjectionResultToJson(_ProjectionResult instance) =>
       'upperBand': instance.upperBand,
       'lowerBand': instance.lowerBand,
       'confidenceWidth': instance.confidenceWidth,
+      'regionalAdjustmentApplied': instance.regionalAdjustmentApplied,
+      'regionalAdjustmentName': instance.regionalAdjustmentName,
     };

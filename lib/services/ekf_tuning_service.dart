@@ -257,10 +257,14 @@ class EkfTuningService {
 
       if (overlapMinutes <= 0) continue;
 
-      // Project the overlapping meal from a neutral baseline (0 offset)
-      // to isolate its contribution
-      final overlapProjection = GlucoseProjectionService.project(
-        baselineGlucose: 0.0, // Zero baseline to get pure contribution
+      // Compute the overlapping meal's pure absorption contribution at the
+      // reading time using direct kernel summation — no clearance or IOB.
+      // Clearance acts on the total glucose level, not on individual meal
+      // components, so using a zero-baseline projection was incorrect: starting
+      // from 0 suppresses clearance until glucose climbs past the fasting
+      // setpoint, producing a different (wrong) residual than the real scenario.
+      final contribution = GlucoseProjectionService.computeAbsorptionContribution(
+        atMinute: overlapMinutes,
         carbsGrams: overlapMeal.carbohydrates,
         fiberGrams: overlapMeal.dietaryFiber,
         proteinGrams: overlapMeal.proteins,
@@ -268,24 +272,11 @@ class EkfTuningService {
         containsAlcohol: overlapMeal.containsAlcohol,
         containsCaffeine: overlapMeal.containsCaffeine,
         weightKg: profile.weightKg,
-        p1: profile.metabolicClearanceRate,
-        isf: profile.insulinSensitivityFactor,
         tMaxBase: profile.absorptionDelayBase,
         foodFormFactor: overlapMeal.foodFormFactor,
-        mealCount: profile.tuningMealCount,
-        mealTimestamp: overlapMeal.timestamp,
         mealName: overlapMeal.name,
       );
 
-      // The residual is the projected value at the elapsed time
-      // minus the baseline (which is 0), giving us the pure glucose
-      // contribution from this overlapping meal.
-      final contribution = _interpolateAtMinute(
-        overlapProjection.points,
-        overlapMinutes,
-      );
-
-      // Clamp contribution to avoid negative residuals from the safety clamp
       totalResidual += max(0.0, contribution);
     }
 

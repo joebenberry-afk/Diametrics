@@ -190,6 +190,13 @@ class ProjectionResultView extends StatelessWidget {
 
               const SizedBox(height: AppThemeTokens.spaceMd),
 
+              // ── Caribbean Regional Adjustment Tag ──
+              if (result.regionalAdjustmentApplied)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppThemeTokens.spaceMd),
+                  child: _RegionalAdjustmentTag(mealName: result.regionalAdjustmentName),
+                ),
+
               // ── Convergence Progress Indicator ──
               _ConvergenceIndicator(mealCount: mealCount),
 
@@ -549,6 +556,54 @@ class _ConvergenceIndicator extends StatelessWidget {
             style: theme.textTheme.bodySmall?.copyWith(
               color: AppThemeTokens.textSecondary,
               fontSize: 11,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Shows a small chip when a Caribbean regional absorption adjustment was applied,
+/// surfacing a previously silent engine behaviour to the user for transparency.
+class _RegionalAdjustmentTag extends StatelessWidget {
+  final String? mealName;
+  const _RegionalAdjustmentTag({this.mealName});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppThemeTokens.spaceMd,
+        vertical: AppThemeTokens.spaceSm,
+      ),
+      decoration: BoxDecoration(
+        color: AppThemeTokens.brandSecondary.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
+        border: Border.all(
+          color: AppThemeTokens.brandSecondary.withValues(alpha: 0.30),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            LucideIcons.mapPin,
+            size: 16,
+            color: AppThemeTokens.brandSecondary,
+          ),
+          const SizedBox(width: AppThemeTokens.spaceSm),
+          Expanded(
+            child: Text(
+              'Regional absorption adjustment applied'
+              '${mealName != null ? " for $mealName" : ""}',
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: isDark
+                    ? AppThemeTokens.brandAccent
+                    : AppThemeTokens.brandSecondary,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],

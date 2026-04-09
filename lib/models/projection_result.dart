@@ -27,6 +27,8 @@ abstract class ProjectionResult with _$ProjectionResult {
     @Default([]) List<ProjectionPoint> upperBand, // +1 SD confidence bound
     @Default([]) List<ProjectionPoint> lowerBand, // -1 SD confidence bound
     @Default(25.0) double confidenceWidth, // mg/dL half-width of band
+    @Default(false) bool regionalAdjustmentApplied, // Caribbean heuristic fired
+    @Default(null) String? regionalAdjustmentName, // meal name that triggered it
   }) = _ProjectionResult;
 
   factory ProjectionResult.fromJson(Map<String, dynamic> json) =>
