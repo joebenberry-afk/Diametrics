@@ -75,6 +75,8 @@ class AccountCard extends StatelessWidget {
                   children: [
                     Text(
                       userName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.headlineMedium?.copyWith(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,

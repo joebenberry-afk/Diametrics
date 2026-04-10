@@ -75,6 +75,31 @@ class _EmergencyContactsViewState extends State<EmergencyContactsView> {
   }
 
   Future<void> _deleteContact() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Remove Emergency Contact?'),
+        content: const Text(
+          'The SOS button will not work without a configured contact.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(
+              foregroundColor: AppThemeTokens.error,
+            ),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
     setState(() => _isSaving = true);
     await EmergencyService.deleteContact();
     if (mounted) {

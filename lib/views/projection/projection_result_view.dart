@@ -1,15 +1,17 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../models/projection_result.dart';
+import '../../viewmodels/profile_viewmodel.dart';
 
 /// Displays the Phase 2 Hovorka glucose projection result after a meal is
 /// saved, including a 4-hour glucose curve with confidence band, key metrics,
 /// convergence indicator, and risk assessment.
-class ProjectionResultView extends StatelessWidget {
+class ProjectionResultView extends ConsumerWidget {
   final ProjectionResult result;
   final String unit;
   final int mealCount;
@@ -51,9 +53,14 @@ class ProjectionResultView extends StatelessWidget {
       };
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+
+    // Read user's actual glucose targets (stored in mg/dL)
+    final profile = ref.watch(userProfileProvider).valueOrNull;
+    final targetMin = profile?.targetGlucoseMin ?? 70.0;
+    final targetMax = profile?.targetGlucoseMax ?? 140.0;
 
     return Scaffold(
       appBar: AppBar(
@@ -69,7 +76,6 @@ class ProjectionResultView extends StatelessWidget {
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        automaticallyImplyLeading: false,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -89,10 +95,10 @@ class ProjectionResultView extends StatelessWidget {
                     color: AppThemeTokens.brandPrimary.withValues(alpha: 0.1),
                   ),
                 ),
-                child: result.points.isEmpty 
+                child: result.points.isEmpty
                     ? const Center(child: Text('No projection data available'))
                     : LineChart(
-                        _buildChartData(result.points, _riskColor()),
+                        _buildChartData(result.points, _riskColor(), targetMin, targetMax),
                       ),
               ),
 
@@ -280,7 +286,12 @@ class ProjectionResultView extends StatelessWidget {
     );
   }
 
-  LineChartData _buildChartData(List<ProjectionPoint> points, Color riskColor) {
+  LineChartData _buildChartData(
+    List<ProjectionPoint> points,
+    Color riskColor,
+    double targetMinMgdl,
+    double targetMaxMgdl,
+  ) {
     if (points.isEmpty) return LineChartData();
 
     final userPoints = points.map((p) => FlSpot(p.timeMinutes.toDouble(), _toUser(p.glucoseValue))).toList();
@@ -440,20 +451,23 @@ class ProjectionResultView extends StatelessWidget {
       betweenBarsData: betweenBarsData,
       extraLinesData: ExtraLinesData(
         horizontalLines: [
+          // Lower target line (user's targetGlucoseMin)
           HorizontalLine(
-            y: _toUser(70),
+            y: _toUser(targetMinMgdl),
             color: AppThemeTokens.brandSuccess.withValues(alpha: 0.3),
             strokeWidth: 1,
             dashArray: [5, 5],
           ),
+          // Upper target line (user's targetGlucoseMax)
           HorizontalLine(
-            y: _toUser(140),
+            y: _toUser(targetMaxMgdl),
             color: AppThemeTokens.brandSuccess.withValues(alpha: 0.3),
             strokeWidth: 1,
             dashArray: [5, 5],
           ),
+          // Warning threshold: 30 mg/dL above target max
           HorizontalLine(
-            y: _toUser(180),
+            y: _toUser(targetMaxMgdl + 30),
             color: AppThemeTokens.warning.withValues(alpha: 0.3),
             strokeWidth: 1,
             dashArray: [5, 5],

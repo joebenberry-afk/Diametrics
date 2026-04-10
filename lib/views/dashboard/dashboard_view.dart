@@ -188,13 +188,16 @@ class DashboardView extends ConsumerWidget {
                       context.push(Routes.medicationHistory);
                     },
                   ),
-                  MetricCard(
-                    title: 'Activity',
-                    value: stepsDisplay,
-                    unit: 'Steps',
-                    icon: Icons.directions_walk,
-                    accentColor: AppThemeTokens.brandSecondary,
-                    trendData: const [],
+                  Tooltip(
+                    message: 'Step tracking coming soon',
+                    child: MetricCard(
+                      title: 'Activity',
+                      value: stepsDisplay,
+                      unit: 'Steps',
+                      icon: Icons.directions_walk,
+                      accentColor: AppThemeTokens.brandSecondary,
+                      trendData: const [],
+                    ),
                   ),
                 ],
               ),
@@ -729,14 +732,51 @@ class _SOSButtonState extends State<_SOSButton> {
   bool _isCalling = false;
 
   void _handleEmergency() async {
+    // Fetch contact name for the confirmation dialog
+    final contact = await EmergencyService.getContact();
+
+    if (!mounted) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Call Emergency Contact?'),
+        content: Text(
+          contact != null
+              ? 'This will call ${contact.name}. Continue?'
+              : 'No emergency contact configured. Configure one first.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          if (contact != null)
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppThemeTokens.error,
+              ),
+              child: const Text('Call Now'),
+            )
+          else
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, false);
+                context.push(Routes.emergencyContacts);
+              },
+              child: const Text('Configure'),
+            ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
     setState(() => _isCalling = true);
-    
-    // First vibrate heavily to give feedback
-    // In a real app we might use HapticFeedback.heavyImpact();
-    // Then call emergency service
-    
+
     final bool success = await EmergencyService.callEmergencyContact();
-    
+
     if (!mounted) return;
     setState(() => _isCalling = false);
 

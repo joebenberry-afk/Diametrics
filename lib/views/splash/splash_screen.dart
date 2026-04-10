@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -29,6 +30,18 @@ class _SplashScreenState extends State<SplashScreen>
   // Pulsing dots loading indicator
   late final AnimationController _dotsCtrl;
 
+  // Timeout guard — shows retry UI if loading stalls beyond 10 seconds
+  late Timer _timeoutTimer;
+  bool _timedOut = false;
+
+  void _startTimeoutTimer() {
+    _timeoutTimer = Timer(const Duration(seconds: 10), () {
+      if (mounted) {
+        setState(() => _timedOut = true);
+      }
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -55,10 +68,14 @@ class _SplashScreenState extends State<SplashScreen>
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     )..repeat();
+
+    // --- 10-second timeout guard ---
+    _startTimeoutTimer();
   }
 
   @override
   void dispose() {
+    _timeoutTimer.cancel();
     _fadeCtrl.dispose();
     _floatCtrl.dispose();
     _dotsCtrl.dispose();
@@ -72,71 +89,112 @@ class _SplashScreenState extends State<SplashScreen>
       body: FadeTransition(
         opacity: _fadeAnim,
         child: SafeArea(
-          child: Column(
-            children: [
-              // ── Top spacer ──────────────────────────────────────────────
-              const Spacer(flex: 2),
+          child: _timedOut ? _buildTimeoutView() : _buildLoadingView(),
+        ),
+      ),
+    );
+  }
 
-              // ── Mascot ──────────────────────────────────────────────────
-              AnimatedBuilder(
-                animation: _floatAnim,
-                builder: (context, child) => Transform.translate(
-                  offset: Offset(0, _floatAnim.value),
-                  child: child,
-                ),
-                child: Image.asset(
-                  'assets/images/robot_mascot.png',
-                  width: 160,
-                  height: 160,
-                  fit: BoxFit.contain,
-                ),
-              ),
+  Widget _buildLoadingView() {
+    return Column(
+      children: [
+        // ── Top spacer ──────────────────────────────────────────────
+        const Spacer(flex: 2),
 
-              const SizedBox(height: 32),
-
-              // ── App name ────────────────────────────────────────────────
-              Text(
-                'DiaMetrics',
-                style: GoogleFonts.inter(
-                  fontSize: 36,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                  letterSpacing: -0.5,
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
-              // ── Tagline ─────────────────────────────────────────────────
-              Text(
-                'Smart Diabetes Management',
-                style: GoogleFonts.inter(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w400,
-                  color: AppThemeTokens.brandAccent,
-                  letterSpacing: 0.2,
-                ),
-              ),
-
-              // ── Middle spacer ───────────────────────────────────────────
-              const Spacer(flex: 3),
-
-              // ── Animated dots ───────────────────────────────────────────
-              _AnimatedDots(controller: _dotsCtrl),
-
-              const SizedBox(height: 8),
-
-              Text(
-                'Loading your health data…',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  color: Colors.white38,
-                ),
-              ),
-
-              const SizedBox(height: 48),
-            ],
+        // ── Mascot ──────────────────────────────────────────────────
+        AnimatedBuilder(
+          animation: _floatAnim,
+          builder: (context, child) => Transform.translate(
+            offset: Offset(0, _floatAnim.value),
+            child: child,
           ),
+          child: Image.asset(
+            'assets/images/robot_mascot.png',
+            width: 160,
+            height: 160,
+            fit: BoxFit.contain,
+          ),
+        ),
+
+        const SizedBox(height: 32),
+
+        // ── App name ────────────────────────────────────────────────
+        Text(
+          'DiaMetrics',
+          style: GoogleFonts.inter(
+            fontSize: 36,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+            letterSpacing: -0.5,
+          ),
+        ),
+
+        const SizedBox(height: 8),
+
+        // ── Tagline ─────────────────────────────────────────────────
+        Text(
+          'Smart Diabetes Management',
+          style: GoogleFonts.inter(
+            fontSize: 15,
+            fontWeight: FontWeight.w400,
+            color: AppThemeTokens.brandAccent,
+            letterSpacing: 0.2,
+          ),
+        ),
+
+        // ── Middle spacer ───────────────────────────────────────────
+        const Spacer(flex: 3),
+
+        // ── Animated dots ───────────────────────────────────────────
+        _AnimatedDots(controller: _dotsCtrl),
+
+        const SizedBox(height: 8),
+
+        Text(
+          'Loading your health data…',
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            color: Colors.white38,
+          ),
+        ),
+
+        const SizedBox(height: 48),
+      ],
+    );
+  }
+
+  Widget _buildTimeoutView() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.error_outline,
+              size: 48,
+              color: AppThemeTokens.error,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Taking longer than expected…',
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                color: Colors.white70,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  _timedOut = false;
+                  _startTimeoutTimer();
+                });
+              },
+              child: const Text('Retry'),
+            ),
+          ],
         ),
       ),
     );

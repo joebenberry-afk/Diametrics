@@ -37,9 +37,17 @@ final routerProvider = Provider<GoRouter>((ref) {
       final atSplash = state.matchedLocation == Routes.splash;
       final atOnboarding = state.matchedLocation.startsWith(Routes.onboarding);
 
-      // No profile (or DB error loading profile) — go to onboarding.
-      // Note: if hasError, user could create a duplicate profile. A dedicated
-      // error/retry route would be safer for production.
+      // If the profile failed to load due to a DB error, stay on the current
+      // route (or splash) rather than redirecting to onboarding — sending users
+      // to onboarding on an error risks creating a duplicate profile entry.
+      // A dedicated error/retry screen would be the ideal production solution.
+      if (profileAsync.hasError) {
+        // Keep the user on splash so the splash timeout UI can surface the
+        // retry button; avoid pushing them into onboarding unnecessarily.
+        return atSplash ? null : Routes.splash;
+      }
+
+      // No profile yet (genuine first run) — go to onboarding.
       if (!hasProfile) {
         return atOnboarding ? null : Routes.onboarding;
       }
@@ -101,7 +109,24 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) {
               final args = state.extra;
               if (args is! ProjectionRouteArgs) {
-                return const SizedBox.shrink();
+                return Scaffold(
+                  appBar: AppBar(title: const Text('Projection')),
+                  body: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error_outline, size: 48),
+                        const SizedBox(height: 16),
+                        const Text('Could not load projection data.'),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () => context.pop(),
+                          child: const Text('Go Back'),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
               }
               return ProjectionResultView(
                 result: args.result,
