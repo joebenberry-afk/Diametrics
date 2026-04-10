@@ -26,6 +26,11 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
   final _heightCtrl = TextEditingController();
   final _weightCtrl = TextEditingController();
 
+  // Imperial unit controllers
+  final _feetCtrl = TextEditingController();
+  final _inchesCtrl = TextEditingController();
+  bool _useImperial = false;
+
   // Diabetes controllers
   final _diagnosisYearCtrl = TextEditingController();
 
@@ -71,8 +76,18 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
   void _populateFromProfile(dynamic profile) {
     _nameCtrl.text = profile.name;
     _ageCtrl.text = profile.age.toString();
-    _heightCtrl.text = profile.heightCm.toStringAsFixed(1);
-    _weightCtrl.text = profile.weightKg.toStringAsFixed(1);
+    // Populate height/weight in the currently selected unit
+    if (_useImperial) {
+      final totalInches = (profile.heightCm as double) / 2.54;
+      final feet = totalInches ~/ 12;
+      final inches = totalInches % 12;
+      _feetCtrl.text = feet.toString();
+      _inchesCtrl.text = inches.toStringAsFixed(1);
+      _weightCtrl.text = ((profile.weightKg as double) * 2.20462).toStringAsFixed(1);
+    } else {
+      _heightCtrl.text = profile.heightCm.toStringAsFixed(1);
+      _weightCtrl.text = profile.weightKg.toStringAsFixed(1);
+    }
     // Only populate year if it's a plausible value
     if (profile.diagnosisYear > 1900) {
       _diagnosisYearCtrl.text = profile.diagnosisYear.toString();
@@ -130,6 +145,8 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
     _ageCtrl.dispose();
     _heightCtrl.dispose();
     _weightCtrl.dispose();
+    _feetCtrl.dispose();
+    _inchesCtrl.dispose();
     _diagnosisYearCtrl.dispose();
     _glucoseMinCtrl.dispose();
     _glucoseMaxCtrl.dispose();
@@ -140,6 +157,47 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
 
   void _markDirty() {
     if (!_isDirty) setState(() => _isDirty = true);
+  }
+
+  void _onHeightWeightUnitChanged(bool useImperial) {
+    if (_useImperial == useImperial) return;
+    // Convert current values to the new unit before switching
+    if (useImperial) {
+      // Metric → Imperial
+      final heightCm = double.tryParse(_heightCtrl.text);
+      final weightKg = double.tryParse(_weightCtrl.text);
+      if (heightCm != null) {
+        final totalInches = heightCm / 2.54;
+        final feet = totalInches ~/ 12;
+        final inches = totalInches % 12;
+        _feetCtrl.text = feet.toString();
+        _inchesCtrl.text = inches.toStringAsFixed(1);
+      } else {
+        _feetCtrl.clear();
+        _inchesCtrl.clear();
+      }
+      if (weightKg != null) {
+        _weightCtrl.text = (weightKg * 2.20462).toStringAsFixed(1);
+      }
+    } else {
+      // Imperial → Metric
+      final feet = double.tryParse(_feetCtrl.text) ?? 0;
+      final inches = double.tryParse(_inchesCtrl.text) ?? 0;
+      final totalInches = feet * 12 + inches;
+      if (totalInches > 0) {
+        _heightCtrl.text = (totalInches * 2.54).toStringAsFixed(1);
+      } else {
+        _heightCtrl.clear();
+      }
+      final weightLbs = double.tryParse(_weightCtrl.text);
+      if (weightLbs != null) {
+        _weightCtrl.text = (weightLbs / 2.20462).toStringAsFixed(1);
+      }
+    }
+    setState(() {
+      _useImperial = useImperial;
+      _isDirty = true;
+    });
   }
 
   void _onUnitChanged(String newUnit) {
@@ -227,12 +285,24 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
 
     setState(() => _isSaving = true);
     try {
+      double heightCm;
+      double weightKg;
+      if (_useImperial) {
+        final feet = double.tryParse(_feetCtrl.text) ?? 0;
+        final inches = double.tryParse(_inchesCtrl.text) ?? 0;
+        heightCm = (feet * 12 + inches) * 2.54;
+        weightKg = (double.tryParse(_weightCtrl.text) ?? 0) / 2.20462;
+      } else {
+        heightCm = double.parse(_heightCtrl.text);
+        weightKg = double.parse(_weightCtrl.text);
+      }
+
       final updated = current.copyWith(
         name: _nameCtrl.text.trim(),
         age: int.parse(_ageCtrl.text),
         gender: finalGender,
-        heightCm: double.parse(_heightCtrl.text),
-        weightKg: double.parse(_weightCtrl.text),
+        heightCm: heightCm,
+        weightKg: weightKg,
         diabetesType: finalDiabetesType,
         diagnosisYear: int.parse(_diagnosisYearCtrl.text),
         preferredGlucoseUnit: _glucoseUnit,
@@ -491,36 +561,104 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                 onOtherChanged: (_) => _markDirty(),
               ),
               const SizedBox(height: AppThemeTokens.spaceMd),
-              _SettingsTextField(
-                controller: _heightCtrl,
-                label: 'Height (cm)',
-                hint: 'e.g., 165.0',
-                inputType: const TextInputType.numberWithOptions(decimal: true),
-                formatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+              // Height/weight unit toggle
+              SegmentedButton<bool>(
+                segments: const [
+                  ButtonSegment<bool>(
+                    value: false,
+                    label: Text('Metric (cm / kg)'),
+                  ),
+                  ButtonSegment<bool>(
+                    value: true,
+                    label: Text('Imperial (ft·in / lbs)'),
+                  ),
                 ],
-                validator: (v) {
-                  final n = double.tryParse(v ?? '');
-                  if (n == null || n < 50 || n > 300) {
-                    return 'Enter a valid height in cm';
-                  }
-                  return null;
-                },
-                onChanged: (_) => _markDirty(),
+                selected: {_useImperial},
+                onSelectionChanged: (newSelection) =>
+                    _onHeightWeightUnitChanged(newSelection.first),
               ),
+              const SizedBox(height: AppThemeTokens.spaceMd),
+              if (_useImperial) ...[
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: _SettingsTextField(
+                        controller: _feetCtrl,
+                        label: 'Height (ft)',
+                        hint: 'e.g., 5',
+                        inputType: TextInputType.number,
+                        formatters: [FilteringTextInputFormatter.digitsOnly],
+                        validator: (v) {
+                          final n = int.tryParse(v ?? '');
+                          if (n == null || n < 1 || n > 8) {
+                            return '1–8 ft';
+                          }
+                          return null;
+                        },
+                        onChanged: (_) => _markDirty(),
+                      ),
+                    ),
+                    const SizedBox(width: AppThemeTokens.spaceMd),
+                    Expanded(
+                      child: _SettingsTextField(
+                        controller: _inchesCtrl,
+                        label: 'Height (in)',
+                        hint: 'e.g., 6.5',
+                        inputType: const TextInputType.numberWithOptions(decimal: true),
+                        formatters: [
+                          FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                        ],
+                        validator: (v) {
+                          final n = double.tryParse(v ?? '');
+                          if (n == null || n < 0 || n >= 12) {
+                            return '0–11.9 in';
+                          }
+                          return null;
+                        },
+                        onChanged: (_) => _markDirty(),
+                      ),
+                    ),
+                  ],
+                ),
+              ] else ...[
+                _SettingsTextField(
+                  controller: _heightCtrl,
+                  label: 'Height (cm)',
+                  hint: 'e.g., 165.0',
+                  inputType: const TextInputType.numberWithOptions(decimal: true),
+                  formatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                  ],
+                  validator: (v) {
+                    final n = double.tryParse(v ?? '');
+                    if (n == null || n < 50 || n > 300) {
+                      return 'Enter a valid height in cm';
+                    }
+                    return null;
+                  },
+                  onChanged: (_) => _markDirty(),
+                ),
+              ],
               const SizedBox(height: AppThemeTokens.spaceMd),
               _SettingsTextField(
                 controller: _weightCtrl,
-                label: 'Weight (kg)',
-                hint: 'e.g., 72.5',
+                label: _useImperial ? 'Weight (lbs)' : 'Weight (kg)',
+                hint: _useImperial ? 'e.g., 160.0' : 'e.g., 72.5',
                 inputType: const TextInputType.numberWithOptions(decimal: true),
                 formatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
                 ],
                 validator: (v) {
                   final n = double.tryParse(v ?? '');
-                  if (n == null || n < 20 || n > 300) {
-                    return 'Enter a valid weight in kg';
+                  if (_useImperial) {
+                    if (n == null || n < 44 || n > 660) {
+                      return 'Enter a valid weight in lbs';
+                    }
+                  } else {
+                    if (n == null || n < 20 || n > 300) {
+                      return 'Enter a valid weight in kg';
+                    }
                   }
                   return null;
                 },

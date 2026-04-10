@@ -22,6 +22,11 @@ class _DemographicsScreenState extends ConsumerState<DemographicsScreen> {
   final _weightController = TextEditingController();
   final _otherGenderController = TextEditingController();
 
+  // Imperial unit controllers
+  final _feetCtrl = TextEditingController();
+  final _inchesCtrl = TextEditingController();
+
+  bool _useImperial = false;
   String _selectedGender = '';
 
   @override
@@ -31,6 +36,8 @@ class _DemographicsScreenState extends ConsumerState<DemographicsScreen> {
     _heightController.dispose();
     _weightController.dispose();
     _otherGenderController.dispose();
+    _feetCtrl.dispose();
+    _inchesCtrl.dispose();
     super.dispose();
   }
 
@@ -55,12 +62,26 @@ class _DemographicsScreenState extends ConsumerState<DemographicsScreen> {
       final finalGender = _selectedGender == 'Other'
           ? _otherGenderController.text.trim()
           : _selectedGender;
+
+      double heightCm;
+      double weightKg;
+
+      if (_useImperial) {
+        final feet = double.tryParse(_feetCtrl.text) ?? 0;
+        final inches = double.tryParse(_inchesCtrl.text) ?? 0;
+        heightCm = (feet * 12 + inches) * 2.54;
+        weightKg = (double.tryParse(_weightController.text) ?? 0) / 2.20462;
+      } else {
+        heightCm = double.parse(_heightController.text);
+        weightKg = double.parse(_weightController.text);
+      }
+
       ref.read(onboardingViewModelProvider.notifier).updateDemographics(
             name: _nameController.text.trim(),
             age: int.parse(_ageController.text),
             gender: finalGender,
-            heightCm: double.parse(_heightController.text),
-            weightKg: double.parse(_weightController.text),
+            heightCm: heightCm,
+            weightKg: weightKg,
           );
       widget.onNext();
     }
@@ -170,40 +191,139 @@ class _DemographicsScreenState extends ConsumerState<DemographicsScreen> {
             ],
             SizedBox(height: 32.0),
 
-            // Height
-            TextFormField(
-              controller: _heightController,
-              decoration: const InputDecoration(
-                labelText: 'Height (cm)',
-                hintText: 'e.g., 170',
-                border: OutlineInputBorder(),
+            // Unit toggle for height/weight
+            Text(
+              'Height & Weight Units',
+              style: textTheme.titleMedium?.copyWith(
+                color: colorScheme.onSurface,
               ),
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+            ),
+            SizedBox(height: 12.0),
+            SegmentedButton<bool>(
+              segments: const [
+                ButtonSegment<bool>(
+                  value: false,
+                  label: Text('Metric (cm / kg)'),
+                ),
+                ButtonSegment<bool>(
+                  value: true,
+                  label: Text('Imperial (ft·in / lbs)'),
+                ),
               ],
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter your height';
-                }
-                final h = double.tryParse(value);
-                if (h == null || h < 50 || h > 300) {
-                  return 'Valid height in cm required';
-                }
-                return null;
+              selected: {_useImperial},
+              onSelectionChanged: (newSelection) {
+                setState(() {
+                  _useImperial = newSelection.first;
+                  // Clear fields when switching units to avoid confusion
+                  _heightController.clear();
+                  _weightController.clear();
+                  _feetCtrl.clear();
+                  _inchesCtrl.clear();
+                });
               },
             ),
-            SizedBox(height: 32.0),
+            SizedBox(height: 24.0),
 
-            // Weight
+            // Height fields
+            if (_useImperial) ...[
+              Text(
+                'Height',
+                style: textTheme.bodyLarge?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+              SizedBox(height: 8.0),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _feetCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'ft',
+                        hintText: 'e.g., 5',
+                        border: OutlineInputBorder(),
+                        suffixText: 'ft',
+                      ),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Required';
+                        }
+                        final ft = int.tryParse(value);
+                        if (ft == null || ft < 1 || ft > 8) {
+                          return '1–8 ft';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  SizedBox(width: 16.0),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _inchesCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'in',
+                        hintText: 'e.g., 6.5',
+                        border: OutlineInputBorder(),
+                        suffixText: 'in',
+                      ),
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                      ],
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Required';
+                        }
+                        final inches = double.tryParse(value);
+                        if (inches == null || inches < 0 || inches >= 12) {
+                          return '0–11.9 in';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ] else ...[
+              TextFormField(
+                controller: _heightController,
+                decoration: const InputDecoration(
+                  labelText: 'Height',
+                  hintText: 'e.g., 170',
+                  border: OutlineInputBorder(),
+                  suffixText: 'cm',
+                ),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                ],
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your height';
+                  }
+                  final h = double.tryParse(value);
+                  if (h == null || h < 50 || h > 300) {
+                    return 'Valid height in cm required';
+                  }
+                  return null;
+                },
+              ),
+            ],
+            SizedBox(height: 24.0),
+
+            // Weight field
             TextFormField(
               controller: _weightController,
-              decoration: const InputDecoration(
-                labelText: 'Weight (kg)',
-                hintText: 'e.g., 85.5',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: 'Weight',
+                hintText: _useImperial ? 'e.g., 185' : 'e.g., 85.5',
+                border: const OutlineInputBorder(),
+                suffixText: _useImperial ? 'lbs' : 'kg',
               ),
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
@@ -216,8 +336,14 @@ class _DemographicsScreenState extends ConsumerState<DemographicsScreen> {
                   return 'Please enter your weight';
                 }
                 final w = double.tryParse(value);
-                if (w == null || w < 20 || w > 300) {
-                  return 'Valid weight in kg required';
+                if (_useImperial) {
+                  if (w == null || w < 44 || w > 660) {
+                    return 'Valid weight in lbs required';
+                  }
+                } else {
+                  if (w == null || w < 20 || w > 300) {
+                    return 'Valid weight in kg required';
+                  }
                 }
                 return null;
               },
