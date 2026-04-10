@@ -142,6 +142,29 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
     if (!_isDirty) setState(() => _isDirty = true);
   }
 
+  void _onUnitChanged(String newUnit) {
+    final oldUnit = _glucoseUnit;
+    if (oldUnit == newUnit) return;
+
+    // Convert the displayed target values to the new unit before saving.
+    final factor = newUnit == 'mmol/L' ? 1 / 18.0182 : 18.0182;
+    final currentMin = double.tryParse(_glucoseMinCtrl.text);
+    final currentMax = double.tryParse(_glucoseMaxCtrl.text);
+    if (currentMin != null) {
+      _glucoseMinCtrl.text = (currentMin * factor)
+          .toStringAsFixed(newUnit == 'mmol/L' ? 1 : 0);
+    }
+    if (currentMax != null) {
+      _glucoseMaxCtrl.text = (currentMax * factor)
+          .toStringAsFixed(newUnit == 'mmol/L' ? 1 : 0);
+    }
+
+    setState(() {
+      _glucoseUnit = newUnit;
+      _isDirty = true;
+    });
+  }
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -546,10 +569,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
               const SizedBox(height: AppThemeTokens.spaceMd),
               _GlucoseUnitToggle(
                 selected: _glucoseUnit,
-                onChanged: (u) {
-                  setState(() => _glucoseUnit = u);
-                  _markDirty();
-                },
+                onChanged: _onUnitChanged,
               ),
             ],
           ),
@@ -755,23 +775,84 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
           const SizedBox(height: AppThemeTokens.spaceMd),
 
           // ── Advanced Model Parameters ──────────────────────────────────
-          _MetabolicParamsSection(
-            isDark: isDark,
-            theme: theme,
-            clearanceRate: _metabolicClearanceRate,
-            isf: _insulinSensitivityFactor,
-            tMax: _absorptionDelayBase,
-            onClearanceChanged: (v) { setState(() => _metabolicClearanceRate = v); _markDirty(); },
-            onIsfChanged: (v) { setState(() => _insulinSensitivityFactor = v); _markDirty(); },
-            onTMaxChanged: (v) { setState(() => _absorptionDelayBase = v); _markDirty(); },
-            onReset: () {
-              setState(() {
-                _metabolicClearanceRate = 0.010;
-                _insulinSensitivityFactor = 50.0;
-                _absorptionDelayBase = 40.0;
-              });
-              _markDirty();
-            },
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppThemeTokens.radiusLg),
+            child: Theme(
+              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+              child: ExpansionTile(
+                tilePadding: const EdgeInsets.symmetric(
+                  horizontal: AppThemeTokens.spaceLg,
+                  vertical: AppThemeTokens.spaceXs,
+                ),
+                childrenPadding: EdgeInsets.zero,
+                initiallyExpanded: false,
+                backgroundColor: isDark
+                    ? AppThemeTokens.bgSurfaceDark
+                    : Colors.white,
+                collapsedBackgroundColor: isDark
+                    ? AppThemeTokens.bgSurfaceDark
+                    : Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppThemeTokens.radiusLg),
+                  side: const BorderSide(
+                    color: Color(0xFFD97706),
+                    width: 1.5,
+                  ),
+                ),
+                collapsedShape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppThemeTokens.radiusLg),
+                  side: BorderSide(
+                    color: const Color(0xFFD97706).withValues(alpha: 0.5),
+                    width: 1.5,
+                  ),
+                ),
+                title: Row(
+                  children: [
+                    const Icon(
+                      Icons.warning_amber_rounded,
+                      color: Color(0xFFD97706),
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Advanced Model Parameters',
+                      style: TextStyle(
+                        color: isDark ? Colors.white : AppThemeTokens.textPrimary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ],
+                ),
+                subtitle: Text(
+                  'Only change these if advised by a healthcare professional.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark ? Colors.white60 : AppThemeTokens.textSecondary,
+                  ),
+                ),
+                children: [
+                  _MetabolicParamsSection(
+                    isDark: isDark,
+                    theme: theme,
+                    clearanceRate: _metabolicClearanceRate,
+                    isf: _insulinSensitivityFactor,
+                    tMax: _absorptionDelayBase,
+                    onClearanceChanged: (v) { setState(() => _metabolicClearanceRate = v); _markDirty(); },
+                    onIsfChanged: (v) { setState(() => _insulinSensitivityFactor = v); _markDirty(); },
+                    onTMaxChanged: (v) { setState(() => _absorptionDelayBase = v); _markDirty(); },
+                    onReset: () {
+                      setState(() {
+                        _metabolicClearanceRate = 0.010;
+                        _insulinSensitivityFactor = 50.0;
+                        _absorptionDelayBase = 40.0;
+                      });
+                      _markDirty();
+                    },
+                  ),
+                ],
+              ),
+            ),
           ),
 
           const SizedBox(height: AppThemeTokens.spaceMd),
@@ -1635,24 +1716,12 @@ class _MetabolicParamsSectionState extends State<_MetabolicParamsSection> {
         isDark ? Colors.white : AppThemeTokens.textPrimary;
     final textSecondary =
         isDark ? Colors.white60 : AppThemeTokens.textSecondary;
-    final cardColor = isDark
-        ? AppThemeTokens.bgSurfaceDark
-        : AppThemeTokens.bgSurface;
     const amber = Color(0xFFD97706);
     const amberLight = Color(0xFFFEF3C7);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(AppThemeTokens.radiusLg),
-        border: Border.all(
-          color: amber.withValues(alpha: 0.5),
-          width: 1.5,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
           // ── Header ──────────────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.fromLTRB(
@@ -1928,7 +1997,6 @@ class _MetabolicParamsSectionState extends State<_MetabolicParamsSection> {
             ),
           ),
         ],
-      ),
     );
   }
 }

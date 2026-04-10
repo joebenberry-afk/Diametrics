@@ -79,6 +79,7 @@ class _TrendsContent extends StatelessWidget {
               medicationLogs: data.medicationLogs,
               targetMin: targetMin,
               targetMax: targetMax,
+              preferredUnit: unit,
               selectedDays: selectedDays,
             ),
           ),
@@ -142,6 +143,7 @@ class _GlucoseChart extends StatelessWidget {
   final List<MedicationLog> medicationLogs;
   final double targetMin;
   final double targetMax;
+  final String preferredUnit;
   final int selectedDays;
 
   const _GlucoseChart({
@@ -150,6 +152,7 @@ class _GlucoseChart extends StatelessWidget {
     required this.medicationLogs,
     required this.targetMin,
     required this.targetMax,
+    required this.preferredUnit,
     required this.selectedDays,
   });
 
@@ -159,13 +162,24 @@ class _GlucoseChart extends StatelessWidget {
       return const Center(child: Text('No glucose readings in this period.'));
     }
 
+    // Normalize a log value to the user's preferred unit.
+    double toPreferred(double value, String logUnit) {
+      if (logUnit == preferredUnit) return value;
+      if (preferredUnit == 'mmol/L') return value / 18.0182;
+      return value * 18.0182;
+    }
+
+    // Convert targetMin/targetMax (stored in mg/dL) to the preferred unit.
+    final tMin = preferredUnit == 'mmol/L' ? targetMin / 18.0182 : targetMin;
+    final tMax = preferredUnit == 'mmol/L' ? targetMax / 18.0182 : targetMax;
+
     final rangeStart = glucoseLogs.first.timestamp;
 
     double toX(DateTime ts) =>
         ts.difference(rangeStart).inMinutes.toDouble();
 
     final spots = glucoseLogs
-        .map((g) => FlSpot(toX(g.timestamp), g.value))
+        .map((g) => FlSpot(toX(g.timestamp), toPreferred(g.value, g.unit)))
         .toList();
 
     final mealLines = mealLogs.map((m) => VerticalLine(
@@ -199,9 +213,11 @@ class _GlucoseChart extends StatelessWidget {
 
     final maxX = spots.last.x;
     final allY = spots.map((s) => s.y).toList()
-      ..addAll([targetMin, targetMax]);
-    final minY = (allY.reduce((a, b) => a < b ? a : b) - 20).clamp(0, 400).toDouble();
-    final maxY = (allY.reduce((a, b) => a > b ? a : b) + 20).clamp(0, 600).toDouble();
+      ..addAll([tMin, tMax]);
+    final padding = preferredUnit == 'mmol/L' ? 1.1 : 20.0;
+    final clampMax = preferredUnit == 'mmol/L' ? 33.3 : 600.0;
+    final minY = (allY.reduce((a, b) => a < b ? a : b) - padding).clamp(0, clampMax).toDouble();
+    final maxY = (allY.reduce((a, b) => a > b ? a : b) + padding).clamp(0, clampMax).toDouble();
 
     return LineChart(
       LineChartData(
@@ -230,13 +246,13 @@ class _GlucoseChart extends StatelessWidget {
         extraLinesData: ExtraLinesData(
           horizontalLines: [
             HorizontalLine(
-              y: targetMin,
+              y: tMin,
               color: AppThemeTokens.brandSuccess.withValues(alpha: 0.5),
               strokeWidth: 1,
               dashArray: [6, 4],
             ),
             HorizontalLine(
-              y: targetMax,
+              y: tMax,
               color: AppThemeTokens.error.withValues(alpha: 0.5),
               strokeWidth: 1,
               dashArray: [6, 4],
@@ -250,7 +266,9 @@ class _GlucoseChart extends StatelessWidget {
               showTitles: true,
               reservedSize: 40,
               getTitlesWidget: (value, _) => Text(
-                value.toInt().toString(),
+                preferredUnit == 'mmol/L'
+                    ? value.toStringAsFixed(1)
+                    : value.toInt().toString(),
                 style: const TextStyle(
                   fontSize: 10,
                   color: AppThemeTokens.textSecondary,
