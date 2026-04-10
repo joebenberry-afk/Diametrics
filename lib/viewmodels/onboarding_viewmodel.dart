@@ -1,5 +1,6 @@
 import 'package:diametrics/models/user_profile.dart';
 import 'package:diametrics/repositories/user_repository.dart';
+import 'package:diametrics/viewmodels/profile_viewmodel.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
@@ -93,5 +94,6 @@ class OnboardingViewModel extends Notifier<UserProfile> {
     );
     state = updated;
     await UserRepository().saveProfile(updated);
+    ref.invalidate(userProfileProvider);
   }
 }

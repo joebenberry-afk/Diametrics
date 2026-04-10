@@ -52,6 +52,7 @@ class _TargetsScreenState extends ConsumerState<TargetsScreen> {
       await ref
           .read(onboardingViewModelProvider.notifier)
           .updateTargetsAndFinish(minTarget: minVal, maxTarget: maxVal);
+      if (!mounted) return;
       widget.onComplete();
     }
   }
