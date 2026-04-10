@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -20,17 +22,17 @@ void main() async {
     debugPrint('Reminder initialization failed: $e');
   }
 
+  // Essential blocking init — open & migrate the encrypted DB
   try {
     await initDatabase();
     await LegacyMigrationService.runIfNeeded();
-    await db.populateLocalFoodsIfEmpty();
-    await db.populateN5kIfEmpty();
   } catch (e, st) {
     debugPrint('Database initialization failed: $e\n$st');
     runApp(DatabaseErrorScreen(error: e));
     return;
   }
 
+  // Start the app immediately — food seeding happens in the background
   runApp(
     const ProviderScope(
       child: AuthWrapper(
@@ -38,6 +40,14 @@ void main() async {
       ),
     ),
   );
+
+  // Seed food reference data after the UI is live (non-blocking)
+  unawaited(db.populateLocalFoodsIfEmpty().catchError(
+    (e) => debugPrint('Food DB seeding failed: $e'),
+  ));
+  unawaited(db.populateN5kIfEmpty().catchError(
+    (e) => debugPrint('N5K seeding failed: $e'),
+  ));
 }
 
 class DiametricsApp extends ConsumerWidget {

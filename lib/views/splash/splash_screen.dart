@@ -30,12 +30,12 @@ class _SplashScreenState extends State<SplashScreen>
   // Pulsing dots loading indicator
   late final AnimationController _dotsCtrl;
 
-  // Timeout guard — shows retry UI if loading stalls beyond 10 seconds
+  // Timeout guard — shows retry UI if loading stalls beyond 30 seconds
   late Timer _timeoutTimer;
   bool _timedOut = false;
 
   void _startTimeoutTimer() {
-    _timeoutTimer = Timer(const Duration(seconds: 10), () {
+    _timeoutTimer = Timer(const Duration(seconds: 30), () {
       if (mounted) {
         setState(() => _timedOut = true);
       }
@@ -69,7 +69,7 @@ class _SplashScreenState extends State<SplashScreen>
       duration: const Duration(milliseconds: 1200),
     )..repeat();
 
-    // --- 10-second timeout guard ---
+    // --- 30-second timeout guard ---
     _startTimeoutTimer();
   }
 
@@ -96,70 +96,78 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Widget _buildLoadingView() {
-    return Column(
-      children: [
-        // ── Top spacer ──────────────────────────────────────────────
-        const Spacer(flex: 2),
+    return SizedBox.expand(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // ── Top spacer ──────────────────────────────────────────────
+          const Spacer(flex: 2),
 
-        // ── Mascot ──────────────────────────────────────────────────
-        AnimatedBuilder(
-          animation: _floatAnim,
-          builder: (context, child) => Transform.translate(
-            offset: Offset(0, _floatAnim.value),
-            child: child,
+          // ── Mascot ──────────────────────────────────────────────────
+          Center(
+            child: AnimatedBuilder(
+              animation: _floatAnim,
+              builder: (context, child) => Transform.translate(
+                offset: Offset(0, _floatAnim.value),
+                child: child,
+              ),
+              child: Image.asset(
+                'assets/icons/app_icon.png',
+                width: 160,
+                height: 160,
+                fit: BoxFit.contain,
+              ),
+            ),
           ),
-          child: Image.asset(
-            'assets/images/robot_mascot.png',
-            width: 160,
-            height: 160,
-            fit: BoxFit.contain,
+
+          const SizedBox(height: 32),
+
+          // ── App name ────────────────────────────────────────────────
+          Text(
+            'DiaMetrics',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(
+              fontSize: 36,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+              letterSpacing: -0.5,
+            ),
           ),
-        ),
 
-        const SizedBox(height: 32),
+          const SizedBox(height: 8),
 
-        // ── App name ────────────────────────────────────────────────
-        Text(
-          'DiaMetrics',
-          style: GoogleFonts.inter(
-            fontSize: 36,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
-            letterSpacing: -0.5,
+          // ── Tagline ─────────────────────────────────────────────────
+          Text(
+            'Smart Diabetes Management',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              fontWeight: FontWeight.w400,
+              color: AppThemeTokens.brandAccent,
+              letterSpacing: 0.2,
+            ),
           ),
-        ),
 
-        const SizedBox(height: 8),
+          // ── Middle spacer ───────────────────────────────────────────
+          const Spacer(flex: 3),
 
-        // ── Tagline ─────────────────────────────────────────────────
-        Text(
-          'Smart Diabetes Management',
-          style: GoogleFonts.inter(
-            fontSize: 15,
-            fontWeight: FontWeight.w400,
-            color: AppThemeTokens.brandAccent,
-            letterSpacing: 0.2,
+          // ── Animated dots ───────────────────────────────────────────
+          _AnimatedDots(controller: _dotsCtrl),
+
+          const SizedBox(height: 8),
+
+          Text(
+            'Loading your health data…',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: Colors.white38,
+            ),
           ),
-        ),
 
-        // ── Middle spacer ───────────────────────────────────────────
-        const Spacer(flex: 3),
-
-        // ── Animated dots ───────────────────────────────────────────
-        _AnimatedDots(controller: _dotsCtrl),
-
-        const SizedBox(height: 8),
-
-        Text(
-          'Loading your health data…',
-          style: GoogleFonts.inter(
-            fontSize: 14,
-            color: Colors.white38,
-          ),
-        ),
-
-        const SizedBox(height: 48),
-      ],
+          const SizedBox(height: 48),
+        ],
+      ),
     );
   }
 
@@ -177,7 +185,7 @@ class _SplashScreenState extends State<SplashScreen>
             ),
             const SizedBox(height: 16),
             Text(
-              'Taking longer than expected…',
+              'Still loading… tap Retry or wait a moment.',
               style: GoogleFonts.inter(
                 fontSize: 16,
                 color: Colors.white70,
@@ -185,14 +193,17 @@ class _SplashScreenState extends State<SplashScreen>
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _timedOut = false;
-                  _startTimeoutTimer();
-                });
-              },
-              child: const Text('Retry'),
+            SizedBox(
+              width: 240,
+              child: ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    _timedOut = false;
+                    _startTimeoutTimer();
+                  });
+                },
+                child: const Text('Retry'),
+              ),
             ),
           ],
         ),
