@@ -345,7 +345,7 @@ class _QuickLogSheet extends StatelessWidget {
                 color: AppThemeTokens.brandPrimary,
                 onTap: () {
                   Navigator.pop(context);
-                  context.push(Routes.logGlucose);
+                  if (context.mounted) context.push(Routes.logGlucose);
                 },
               ),
               _QuickLogButton(
@@ -354,7 +354,7 @@ class _QuickLogSheet extends StatelessWidget {
                 color: AppThemeTokens.brandSuccess,
                 onTap: () {
                   Navigator.pop(context);
-                  context.push(Routes.logMeal);
+                  if (context.mounted) context.push(Routes.logMeal);
                 },
               ),
               _QuickLogButton(
@@ -363,7 +363,7 @@ class _QuickLogSheet extends StatelessWidget {
                 color: AppThemeTokens.brandAccent,
                 onTap: () {
                   Navigator.pop(context);
-                  context.push(Routes.logMedication);
+                  if (context.mounted) context.push(Routes.logMedication);
                 },
               ),
             ],

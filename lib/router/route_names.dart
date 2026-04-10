@@ -13,5 +13,6 @@ abstract final class Routes {
   static const logMealBarcode     = '/log/meal/barcode';
   static const logMealProjection  = '/log/meal/projection';
   static const logMedication      = '/log/medication';
-  static const settings           = '/settings';
+  static const settings                  = '/settings';
+  static const settingsEmergencyContacts = '/settings/emergency-contacts';
 }

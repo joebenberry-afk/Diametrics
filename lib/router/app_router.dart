@@ -21,9 +21,10 @@ import 'projection_route_args.dart';
 import 'route_names.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
-  return GoRouter(
+  final listenable = _ProfileListenable(ref);
+  final router = GoRouter(
     initialLocation: Routes.splash,
-    refreshListenable: _ProfileListenable(ref),
+    refreshListenable: listenable,
     redirect: (context, state) {
       final profileAsync = ref.read(userProfileProvider);
 
@@ -36,7 +37,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       final atSplash = state.matchedLocation == Routes.splash;
       final atOnboarding = state.matchedLocation.startsWith(Routes.onboarding);
 
-      // Error or no profile — go to onboarding.
+      // No profile (or DB error loading profile) — go to onboarding.
+      // Note: if hasError, user could create a duplicate profile. A dedicated
+      // error/retry route would be safer for production.
       if (!hasProfile) {
         return atOnboarding ? null : Routes.onboarding;
       }
@@ -96,7 +99,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'projection',
             builder: (context, state) {
-              final args = state.extra as ProjectionRouteArgs;
+              final args = state.extra;
+              if (args is! ProjectionRouteArgs) {
+                return const SizedBox.shrink();
+              }
               return ProjectionResultView(
                 result: args.result,
                 unit: args.unit,
@@ -122,6 +128,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
     ],
   );
+  ref.onDispose(() {
+    router.dispose();
+    listenable.dispose();
+  });
+  return router;
 });
 
 /// Makes GoRouter re-evaluate redirects whenever the profile AsyncValue changes.

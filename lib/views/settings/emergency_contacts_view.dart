@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../core/theme/app_tokens.dart';
@@ -69,7 +70,7 @@ class _EmergencyContactsViewState extends State<EmergencyContactsView> {
           behavior: SnackBarBehavior.floating,
         ),
       );
-      Navigator.pop(context);
+      context.pop();
     }
   }
 
@@ -113,7 +114,7 @@ class _EmergencyContactsViewState extends State<EmergencyContactsView> {
             Icons.arrow_back_ios_new_rounded,
             color: isDark ? Colors.white : AppThemeTokens.textPrimary,
           ),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.pop(),
         ),
       ),
       body: _isLoading

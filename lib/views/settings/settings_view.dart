@@ -794,7 +794,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                 ),
                 trailing: const Icon(Icons.chevron_right_rounded, color: AppThemeTokens.textSecondary),
                 onTap: () {
-                  context.push('${Routes.settings}/emergency-contacts');
+                  context.push(Routes.settingsEmergencyContacts);
                 },
               ),
             ],
