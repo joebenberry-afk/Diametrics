@@ -36,6 +36,12 @@ class GlucoseLogsViewModel extends AsyncNotifier<List<GlucoseLog>> {
       return _fetchLogs();
     });
   }
+
+  Future<void> deleteGlucoseLog(String id) async {
+    final repo = ref.read(healthDataRepositoryProvider);
+    await repo.deleteGlucoseLog(id);
+    ref.invalidate(glucoseLogsProvider);
+  }
 }
 
 final mealLogsProvider =
@@ -62,6 +68,12 @@ class MealLogsViewModel extends AsyncNotifier<List<MealLog>> {
       return _fetchLogs();
     });
   }
+
+  Future<void> deleteMealLog(String id) async {
+    final repo = ref.read(healthDataRepositoryProvider);
+    await repo.deleteMealLog(id);
+    ref.invalidate(mealLogsProvider);
+  }
 }
 
 final medicationLogsProvider =
@@ -87,6 +99,12 @@ class MedicationLogsViewModel extends AsyncNotifier<List<MedicationLog>> {
       await repo.addMedicationLog(log);
       return _fetchLogs();
     });
+  }
+
+  Future<void> deleteMedicationLog(String id) async {
+    final repo = ref.read(healthDataRepositoryProvider);
+    await repo.deleteMedicationLog(id);
+    ref.invalidate(medicationLogsProvider);
   }
 }
 

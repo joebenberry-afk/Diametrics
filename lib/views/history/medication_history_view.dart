@@ -58,7 +58,46 @@ class MedicationHistoryView extends ConsumerWidget {
             separatorBuilder: (_, _) => const Divider(height: 1),
             itemBuilder: (context, index) {
               final log = sortedLogs[index];
-              return _MedicationHistoryTile(log: log);
+              return Dismissible(
+                key: ValueKey(log.id),
+                direction: DismissDirection.endToStart,
+                background: Container(
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.only(right: AppThemeTokens.spaceLg),
+                  color: AppThemeTokens.error,
+                  child: const Icon(
+                    Icons.delete_outline,
+                    color: Colors.white,
+                  ),
+                ),
+                confirmDismiss: (_) async {
+                  return await showDialog<bool>(
+                    context: context,
+                    builder: (_) => AlertDialog(
+                      title: const Text('Delete medication log?'),
+                      content: const Text(
+                        'This medication log will be permanently deleted.',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text('Delete'),
+                        ),
+                      ],
+                    ),
+                  ) ?? false;
+                },
+                onDismissed: (_) {
+                  ref
+                      .read(medicationLogsProvider.notifier)
+                      .deleteMedicationLog(log.id);
+                },
+                child: _MedicationHistoryTile(log: log),
+              );
             },
           );
         },

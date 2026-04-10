@@ -95,6 +95,20 @@ class HealthDataRepository {
     ));
   }
 
+  // ── Deletes ────────────────────────────────────────────────────────────
+
+  Future<void> deleteGlucoseLog(String id) async {
+    await (db.delete(db.glucoseLogs)..where((t) => t.id.equals(id))).go();
+  }
+
+  Future<void> deleteMealLog(String id) async {
+    await (db.delete(db.mealMacroLogs)..where((t) => t.id.equals(id))).go();
+  }
+
+  Future<void> deleteMedicationLog(String id) async {
+    await (db.delete(db.medicationLogs)..where((t) => t.id.equals(id))).go();
+  }
+
   // ── Mappers ────────────────────────────────────────────────────────────
 
   GlucoseLog _glucoseFromRow(GlucoseLogRow row) => GlucoseLog(

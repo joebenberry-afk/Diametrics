@@ -60,7 +60,46 @@ class GlucoseHistoryView extends ConsumerWidget {
             separatorBuilder: (_, _) => const Divider(height: 1),
             itemBuilder: (context, index) {
               final log = sortedLogs[index];
-              return _GlucoseHistoryTile(log: log, profile: profile);
+              return Dismissible(
+                key: ValueKey(log.id),
+                direction: DismissDirection.endToStart,
+                background: Container(
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.only(right: AppThemeTokens.spaceLg),
+                  color: AppThemeTokens.error,
+                  child: const Icon(
+                    Icons.delete_outline,
+                    color: Colors.white,
+                  ),
+                ),
+                confirmDismiss: (_) async {
+                  return await showDialog<bool>(
+                    context: context,
+                    builder: (_) => AlertDialog(
+                      title: const Text('Delete reading?'),
+                      content: const Text(
+                        'This reading will be permanently deleted.',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text('Delete'),
+                        ),
+                      ],
+                    ),
+                  ) ?? false;
+                },
+                onDismissed: (_) {
+                  ref
+                      .read(glucoseLogsProvider.notifier)
+                      .deleteGlucoseLog(log.id);
+                },
+                child: _GlucoseHistoryTile(log: log, profile: profile),
+              );
             },
           );
         },
