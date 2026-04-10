@@ -559,4 +559,96 @@ void main() {
       });
     });
   });
+
+  group('CaribbeanFoodHeuristics integration', () {
+    test('dasheen slows absorption (later peak than unknown food)', () {
+      // dasheen: absorptionMultiplier=1.30 -> tMax*1.30 -> delayed peak
+      final unknown = GlucoseProjectionService.project(
+        baselineGlucose: 100.0,
+        carbsGrams: 50.0,
+        fiberGrams: 3.0,
+        proteinGrams: 5.0,
+        fatGrams: 2.0,
+        containsAlcohol: false,
+        containsCaffeine: false,
+        mealName: null,
+      );
+
+      final dasheen = GlucoseProjectionService.project(
+        baselineGlucose: 100.0,
+        carbsGrams: 50.0,
+        fiberGrams: 3.0,
+        proteinGrams: 5.0,
+        fatGrams: 2.0,
+        containsAlcohol: false,
+        containsCaffeine: false,
+        mealName: 'Dasheen provision',
+      );
+
+      expect(
+        dasheen.peakTimeMinutes,
+        greaterThanOrEqualTo(unknown.peakTimeMinutes),
+        reason: 'Dasheen has 1.30x absorption delay multiplier',
+      );
+    });
+
+    test('doubles accelerates absorption (earlier or same peak)', () {
+      // doubles: absorptionMultiplier=0.90 -> tMax*0.90 -> faster peak
+      final unknown = GlucoseProjectionService.project(
+        baselineGlucose: 100.0,
+        carbsGrams: 50.0,
+        fiberGrams: 2.0,
+        proteinGrams: 8.0,
+        fatGrams: 5.0,
+        containsAlcohol: false,
+        containsCaffeine: false,
+        mealName: null,
+      );
+
+      final doubles = GlucoseProjectionService.project(
+        baselineGlucose: 100.0,
+        carbsGrams: 50.0,
+        fiberGrams: 2.0,
+        proteinGrams: 8.0,
+        fatGrams: 5.0,
+        containsAlcohol: false,
+        containsCaffeine: false,
+        mealName: 'doubles with extra channa',
+      );
+
+      expect(
+        doubles.peakTimeMinutes,
+        lessThanOrEqualTo(unknown.peakTimeMinutes),
+        reason: 'Doubles has 0.90x absorption multiplier -- faster peak',
+      );
+    });
+
+    test('unknown food name returns neutral multipliers (1.0x)', () {
+      // Projecting with an unknown name should produce same result as null
+      final withNull = GlucoseProjectionService.project(
+        baselineGlucose: 100.0,
+        carbsGrams: 40.0,
+        fiberGrams: 0.0,
+        proteinGrams: 10.0,
+        fatGrams: 5.0,
+        containsAlcohol: false,
+        containsCaffeine: false,
+        mealName: null,
+      );
+
+      final withUnknown = GlucoseProjectionService.project(
+        baselineGlucose: 100.0,
+        carbsGrams: 40.0,
+        fiberGrams: 0.0,
+        proteinGrams: 10.0,
+        fatGrams: 5.0,
+        containsAlcohol: false,
+        containsCaffeine: false,
+        mealName: 'pasta bolognese',
+      );
+
+      expect(withUnknown.peakGlucose, closeTo(withNull.peakGlucose, 0.5));
+      expect(withUnknown.peakTimeMinutes, withNull.peakTimeMinutes);
+    });
+  });
 }
