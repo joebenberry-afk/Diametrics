@@ -113,11 +113,11 @@ class LoggingWizardState {
   }
 }
 
-class LoggingWizardViewModel extends StateNotifier<LoggingWizardState> {
-  final Ref ref;
+class LoggingWizardViewModel extends Notifier<LoggingWizardState> {
   final _uuid = const Uuid();
 
-  LoggingWizardViewModel(this.ref) : super(LoggingWizardState());
+  @override
+  LoggingWizardState build() => LoggingWizardState();
 
   // --- Glucose Adjustments ---
   void updateGlucoseValue(double value) =>
@@ -440,6 +440,6 @@ class LoggingWizardViewModel extends StateNotifier<LoggingWizardState> {
 }
 
 final loggingWizardProvider =
-    StateNotifierProvider<LoggingWizardViewModel, LoggingWizardState>((ref) {
-      return LoggingWizardViewModel(ref);
-    });
+    NotifierProvider<LoggingWizardViewModel, LoggingWizardState>(
+      LoggingWizardViewModel.new,
+    );

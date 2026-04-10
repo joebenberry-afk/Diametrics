@@ -5,28 +5,23 @@ import 'package:uuid/uuid.dart';
 
 // Provides a temporary state during the onboarding flow before saving to SQLite
 final onboardingViewModelProvider =
-    StateNotifierProvider<OnboardingViewModel, UserProfile>((ref) {
-      final userRepository = UserRepository();
-      return OnboardingViewModel(userRepository);
-    });
+    NotifierProvider<OnboardingViewModel, UserProfile>(OnboardingViewModel.new);
 
-class OnboardingViewModel extends StateNotifier<UserProfile> {
-  final UserRepository _userRepository;
-
-  OnboardingViewModel(this._userRepository)
-    : super(
-        UserProfile(
-          id: const Uuid().v4(),
-          age: 0,
-          gender: '',
-          heightCm: 0,
-          weightKg: 0,
-          diabetesType: '',
-          diagnosisYear: DateTime.now().year,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ),
-      );
+class OnboardingViewModel extends Notifier<UserProfile> {
+  @override
+  UserProfile build() {
+    return UserProfile(
+      id: const Uuid().v4(),
+      age: 0,
+      gender: '',
+      heightCm: 0,
+      weightKg: 0,
+      diabetesType: '',
+      diagnosisYear: DateTime.now().year,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+  }
 
   // Disclaimer
   void agreeToDisclaimer() {
@@ -92,7 +87,11 @@ class OnboardingViewModel extends StateNotifier<UserProfile> {
     required double minTarget,
     required double maxTarget,
   }) async {
-    updateTargets(min: minTarget, max: maxTarget);
-    await _userRepository.saveProfile(state);
+    final updated = state.copyWith(
+      targetGlucoseMin: minTarget,
+      targetGlucoseMax: maxTarget,
+    );
+    state = updated;
+    await UserRepository().saveProfile(updated);
   }
 }
