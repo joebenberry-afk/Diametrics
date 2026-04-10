@@ -1,107 +1,80 @@
-import '../core/database/database_helper.dart';
+import 'package:drift/drift.dart';
+import '../database/database.dart';
+import '../database/db_instance.dart';
 import '../models/user_profile.dart';
 
 class UserRepository {
-  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
-
   Future<void> saveProfile(UserProfile profile) async {
-    final db = await _dbHelper.database;
-
-    // Build the SQLite map manually — never rely on toJson() which may include
-    // types (Dart bool, DateTime) that SQLite cannot store natively.
-    final map = <String, dynamic>{
-      'id': profile.id,
-      'name': profile.name,
-      'age': profile.age,
-      'gender': profile.gender,
-      'heightCm': profile.heightCm,
-      'weightKg': profile.weightKg,
-      'targetWeightKg': profile.targetWeightKg,
-      'diabetesType': profile.diabetesType,
-      'diagnosisYear': profile.diagnosisYear,
-      'preferredGlucoseUnit': profile.preferredGlucoseUnit,
-      // Booleans MUST be stored as integers in SQLite
-      'usesInsulin': profile.usesInsulin ? 1 : 0,
-      'usesPills': profile.usesPills ? 1 : 0,
-      'usesCgm': profile.usesCgm ? 1 : 0,
-      'hasAgreedToDisclaimer': profile.hasAgreedToDisclaimer ? 1 : 0,
-      // Glucose targets
-      'targetGlucoseMin': profile.targetGlucoseMin,
-      'targetGlucoseMax': profile.targetGlucoseMax,
-      // ML Adaptive parameters
-      'metabolicClearanceRate': profile.metabolicClearanceRate,
-      'insulinSensitivityFactor': profile.insulinSensitivityFactor,
-      'absorptionDelayBase': profile.absorptionDelayBase,
-      'tuningMealCount': profile.tuningMealCount,
-      'fastingSetpoint': profile.fastingSetpoint,
-      'insulinCategory': profile.insulinCategory,
-      'insulinDiaMinutes': profile.insulinDiaMinutes,
-      // EKF covariance state
-      'ekfCovP1': profile.ekfCovP1,
-      'ekfCovISF': profile.ekfCovISF,
-      'ekfCovTMax': profile.ekfCovTMax,
-      // Dates as ISO8601 strings
-      'createdAt': profile.createdAt.toIso8601String(),
-      'updatedAt': profile.updatedAt.toIso8601String(),
-    };
-
-    await db.transaction((txn) async {
-      // Ensure we only ever have ONE profile on the device.
-      // This wipes any phantom profiles created if Onboarding was aborted.
-      await txn.delete('user_profiles');
-      await txn.insert('user_profiles', map);
-    });
+    await db.into(db.userProfiles).insertOnConflictUpdate(
+      UserProfilesCompanion(
+        id: Value(profile.id),
+        name: Value(profile.name),
+        age: Value(profile.age),
+        gender: Value(profile.gender),
+        heightCm: Value(profile.heightCm),
+        weightKg: Value(profile.weightKg),
+        targetWeightKg: Value(profile.targetWeightKg),
+        diabetesType: Value(profile.diabetesType),
+        diagnosisYear: Value(profile.diagnosisYear),
+        preferredGlucoseUnit: Value(profile.preferredGlucoseUnit),
+        usesInsulin: Value(profile.usesInsulin),
+        usesPills: Value(profile.usesPills),
+        usesCgm: Value(profile.usesCgm),
+        targetGlucoseMin: Value(profile.targetGlucoseMin),
+        targetGlucoseMax: Value(profile.targetGlucoseMax),
+        metabolicClearanceRate: Value(profile.metabolicClearanceRate),
+        insulinSensitivityFactor: Value(profile.insulinSensitivityFactor),
+        absorptionDelayBase: Value(profile.absorptionDelayBase),
+        tuningMealCount: Value(profile.tuningMealCount),
+        fastingSetpoint: Value(profile.fastingSetpoint),
+        insulinCategory: Value(profile.insulinCategory),
+        insulinDiaMinutes: Value(profile.insulinDiaMinutes),
+        ekfCovP1: Value(profile.ekfCovP1),
+        ekfCovISF: Value(profile.ekfCovISF),
+        ekfCovTMax: Value(profile.ekfCovTMax),
+        hasAgreedToDisclaimer: Value(profile.hasAgreedToDisclaimer),
+        createdAt: Value(profile.createdAt),
+        updatedAt: Value(profile.updatedAt),
+      ),
+    );
   }
 
   Future<UserProfile?> getProfile() async {
-    final db = await _dbHelper.database;
-    // Force fetch the MOST RECENT profile if multiple somehow exist
-    final maps = await db.query(
-      'user_profiles',
-      orderBy: 'updatedAt DESC',
-      limit: 1,
-    );
-
-    if (maps.isEmpty) return null;
-
-    final raw = Map<String, dynamic>.from(maps.first);
-
-    // Re-map SQLite column types back to Dart types for fromJson
-    final map = <String, dynamic>{
-      'id': raw['id'],
-      'name': raw['name'] ?? '',
-      'age': raw['age'],
-      'gender': raw['gender'],
-      'heightCm': raw['heightCm'],
-      'weightKg': raw['weightKg'],
-      'targetWeightKg': raw['targetWeightKg'],
-      'diabetesType': raw['diabetesType'],
-      'diagnosisYear': raw['diagnosisYear'],
-      'preferredGlucoseUnit': raw['preferredGlucoseUnit'] ?? 'mg/dL',
-      // Convert SQLite integers back to booleans
-      'usesInsulin': raw['usesInsulin'] == 1,
-      'usesPills': raw['usesPills'] == 1,
-      'usesCgm': raw['usesCgm'] == 1,
-      'hasAgreedToDisclaimer': raw['hasAgreedToDisclaimer'] == 1,
-      'targetGlucoseMin': raw['targetGlucoseMin'] ?? 70.0,
-      'targetGlucoseMax': raw['targetGlucoseMax'] ?? 180.0,
-      // ML parameters with safe fallbacks if column missing from old installs
-      'metabolicClearanceRate': raw['metabolicClearanceRate'] ?? 0.010,
-      'insulinSensitivityFactor': raw['insulinSensitivityFactor'] ?? 50.0,
-      'absorptionDelayBase': raw['absorptionDelayBase'] ?? 40.0,
-      'tuningMealCount': raw['tuningMealCount'] ?? 0,
-      'fastingSetpoint': raw['fastingSetpoint'] ?? 90.0,
-      'insulinCategory': raw['insulinCategory'] ?? 'standard_rapid',
-      'insulinDiaMinutes': raw['insulinDiaMinutes'] ?? 240.0,
-      // EKF covariance state
-      'ekfCovP1': raw['ekfCovP1'] ?? 1.0,
-      'ekfCovISF': raw['ekfCovISF'] ?? 1.0,
-      'ekfCovTMax': raw['ekfCovTMax'] ?? 1.0,
-      // Dates are already ISO8601 strings — fromJson parses them
-      'createdAt': raw['createdAt'],
-      'updatedAt': raw['updatedAt'],
-    };
-
-    return UserProfile.fromJson(map);
+    final row = await (db.select(db.userProfiles)
+          ..orderBy([(t) => OrderingTerm.desc(t.updatedAt)])
+          ..limit(1))
+        .getSingleOrNull();
+    return row == null ? null : _fromRow(row);
   }
+
+  UserProfile _fromRow(UserProfileRow row) => UserProfile(
+    id: row.id,
+    name: row.name,
+    age: row.age,
+    gender: row.gender,
+    heightCm: row.heightCm,
+    weightKg: row.weightKg,
+    targetWeightKg: row.targetWeightKg,
+    diabetesType: row.diabetesType,
+    diagnosisYear: row.diagnosisYear,
+    preferredGlucoseUnit: row.preferredGlucoseUnit,
+    usesInsulin: row.usesInsulin,
+    usesPills: row.usesPills,
+    usesCgm: row.usesCgm,
+    targetGlucoseMin: row.targetGlucoseMin,
+    targetGlucoseMax: row.targetGlucoseMax,
+    metabolicClearanceRate: row.metabolicClearanceRate,
+    insulinSensitivityFactor: row.insulinSensitivityFactor,
+    absorptionDelayBase: row.absorptionDelayBase,
+    tuningMealCount: row.tuningMealCount,
+    fastingSetpoint: row.fastingSetpoint,
+    insulinCategory: row.insulinCategory,
+    insulinDiaMinutes: row.insulinDiaMinutes,
+    ekfCovP1: row.ekfCovP1,
+    ekfCovISF: row.ekfCovISF,
+    ekfCovTMax: row.ekfCovTMax,
+    hasAgreedToDisclaimer: row.hasAgreedToDisclaimer,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  );
 }
