@@ -18,10 +18,20 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper>
   bool _locked = false;
   bool _authInProgress = false;
 
+  // True until the first genuine background/resume cycle after launch.
+  // Prevents spurious locks from lifecycle events fired during startup
+  // (e.g., initial 'resumed' delivery, notification plugin init, etc.)
+  bool _startupGuard = true;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // Clear the startup guard after the first frame so normal lock logic
+    // applies from the second lifecycle event onwards.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startupGuard = false;
+    });
   }
 
   @override
@@ -33,13 +43,19 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused) {
-      AppLockConfig.lastBackgroundedTime = DateTime.now();
+      // Don't record background time during startup or while auth is showing —
+      // the biometric dialog on Samsung One UI triggers paused/resumed itself.
+      if (!_startupGuard && !_authInProgress) {
+        AppLockConfig.lastBackgroundedTime = DateTime.now();
+      }
     }
     if (state == AppLifecycleState.resumed) {
+      if (_startupGuard) return; // ignore events during startup
       if (AppLockConfig.ignoreNextResume) {
         AppLockConfig.ignoreNextResume = false;
         return;
       }
+      if (_authInProgress) return; // already authenticating
       final bg = AppLockConfig.lastBackgroundedTime;
       if (bg != null &&
           DateTime.now().difference(bg) >= AppLockConfig.lockTimeout) {
@@ -54,6 +70,10 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper>
       _locked = true;
       _authInProgress = true;
     });
+    // Tell the wrapper to ignore lifecycle events caused by the biometric
+    // dialog itself (Samsung One UI and some other OEMs trigger paused/resumed
+    // when the fingerprint overlay appears).
+    AppLockConfig.ignoreNextResume = true;
     await _attemptAuth();
   }
 
@@ -63,6 +83,12 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper>
       reason: 'Authenticate to access DiaMetrics',
     );
     if (!mounted) return;
+    if (success) {
+      // Clear the background timestamp so any subsequent resumed event
+      // (e.g., a second lifecycle callback from the OEM after the dialog
+      // closes) doesn't immediately re-lock.
+      AppLockConfig.lastBackgroundedTime = null;
+    }
     setState(() {
       _authInProgress = false;
       _locked = !success;
