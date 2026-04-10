@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../models/glucose_log.dart';
@@ -255,11 +257,8 @@ class LoggingWizardViewModel extends Notifier<LoggingWizardState> {
 
       // Fire adaptive tuning (EKF) in the background for post-meal readings.
       // Never awaited so it never blocks or disrupts the user flow.
-      EkfTuningService.tuneFromGlucoseLog(
-        glucoseLog: log,
-        dataRepo: dataRepo,
-        userRepo: UserRepository(),
-      );
+      // unawaited() makes the fire-and-forget intent explicit.
+      unawaited(_runEkfTuning(log));
 
       state = LoggingWizardState(); // Reset wizard
       return true;
@@ -371,6 +370,23 @@ class LoggingWizardViewModel extends Notifier<LoggingWizardState> {
       state = state.copyWith(isSubmitting: false, error: e.toString());
       return null;
     }
+  }
+
+  // --- EKF Background Tuning ---
+
+  /// Runs EKF adaptive tuning for a just-saved glucose log.
+  ///
+  /// Extracted from [saveGlucoseLog] so that the caller can mark it as
+  /// fire-and-forget with [unawaited], making the deliberate intent clear.
+  /// Uses [UserRepository.updateEkfParameters] to write ONLY the EKF-specific
+  /// columns, preventing a race with concurrent user edits in Settings.
+  Future<void> _runEkfTuning(GlucoseLog glucoseLog) async {
+    final dataRepo = ref.read(healthDataRepositoryProvider);
+    await EkfTuningService.tuneFromGlucoseLog(
+      glucoseLog: glucoseLog,
+      dataRepo: dataRepo,
+      userRepo: UserRepository(),
+    );
   }
 
   /// Legacy save without projection (kept for backwards compatibility).

@@ -39,6 +39,37 @@ class UserRepository {
     );
   }
 
+  /// Updates only the EKF-specific columns for a given profile id.
+  ///
+  /// This is a targeted write that leaves all other columns (name, weight,
+  /// targets, insulin settings, etc.) untouched, preventing the background
+  /// EKF tuning task from overwriting concurrent user edits in Settings.
+  Future<void> updateEkfParameters({
+    required String profileId,
+    required double metabolicClearanceRate,
+    required double insulinSensitivityFactor,
+    required double absorptionDelayBase,
+    required int tuningMealCount,
+    required double fastingSetpoint,
+    required double ekfCovP1,
+    required double ekfCovISF,
+    required double ekfCovTMax,
+  }) async {
+    await (db.update(db.userProfiles)
+          ..where((t) => t.id.equals(profileId)))
+        .write(UserProfilesCompanion(
+      metabolicClearanceRate: Value(metabolicClearanceRate),
+      insulinSensitivityFactor: Value(insulinSensitivityFactor),
+      absorptionDelayBase: Value(absorptionDelayBase),
+      tuningMealCount: Value(tuningMealCount),
+      fastingSetpoint: Value(fastingSetpoint),
+      ekfCovP1: Value(ekfCovP1),
+      ekfCovISF: Value(ekfCovISF),
+      ekfCovTMax: Value(ekfCovTMax),
+      updatedAt: Value(DateTime.now()),
+    ));
+  }
+
   Future<UserProfile?> getProfile() async {
     final row = await (db.select(db.userProfiles)
           ..orderBy([(t) => OrderingTerm.desc(t.updatedAt)])

@@ -213,17 +213,17 @@ class EkfTuningService {
 
       if (!p1Changed && !isfChanged && !tMaxChanged && !covChanged) return;
 
-      final updated = profile.copyWith(
+      await userRepo.updateEkfParameters(
+        profileId: profile.id,
         metabolicClearanceRate: newP1,
         insulinSensitivityFactor: newISF,
         absorptionDelayBase: newTMax,
+        tuningMealCount: profile.tuningMealCount + 1,
+        fastingSetpoint: profile.fastingSetpoint,
         ekfCovP1: newCovP1,
         ekfCovISF: newCovISF,
         ekfCovTMax: newCovTMax,
-        tuningMealCount: profile.tuningMealCount + 1,
-        updatedAt: DateTime.now(),
       );
-      await userRepo.saveProfile(updated);
     } catch (_) {
       // Silent failure: never crash the app for a background tuning event
     }
