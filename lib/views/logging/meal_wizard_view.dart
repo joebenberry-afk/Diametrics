@@ -18,6 +18,19 @@ import '../../models/projection_result.dart';
 import '../../router/projection_route_args.dart';
 import '../../router/route_names.dart';
 
+/// Maps a FoodItem.source label to a badge colour.
+Color _sourceColor(String source) {
+  return switch (source) {
+    'USDA+N5K'        => const Color(0xFF1565C0),
+    'USDA API'        => const Color(0xFF1976D2),
+    'N5K'             => const Color(0xFF4527A0),
+    'Local DB'        => const Color(0xFF00695C),
+    'Custom Food DB'  => AppThemeTokens.brandPrimary,
+    'Open Food Facts' => const Color(0xFFE65100),
+    _                 => const Color(0xFF546E7A),
+  };
+}
+
 class MealWizardView extends ConsumerStatefulWidget {
   const MealWizardView({super.key});
 
@@ -795,13 +808,48 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
-                                  Text(
-                                    item.portion,
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: isDark
-                                          ? Colors.white54
-                                          : AppThemeTokens.textSecondary,
-                                    ),
+                                  const SizedBox(height: 2),
+                                  Row(
+                                    children: [
+                                      if (item.weightG > 0)
+                                        Text(
+                                          '${item.weightG.toStringAsFixed(0)}g',
+                                          style: theme.textTheme.bodySmall?.copyWith(
+                                            color: isDark
+                                                ? Colors.white54
+                                                : AppThemeTokens.textSecondary,
+                                          ),
+                                        )
+                                      else
+                                        Text(
+                                          item.portion,
+                                          style: theme.textTheme.bodySmall?.copyWith(
+                                            color: isDark
+                                                ? Colors.white54
+                                                : AppThemeTokens.textSecondary,
+                                          ),
+                                        ),
+                                      const SizedBox(width: 6),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                        decoration: BoxDecoration(
+                                          color: _sourceColor(item.source).withValues(alpha: 0.15),
+                                          borderRadius: BorderRadius.circular(4),
+                                          border: Border.all(
+                                            color: _sourceColor(item.source).withValues(alpha: 0.5),
+                                            width: 0.8,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          item.source,
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w600,
+                                            color: _sourceColor(item.source),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
