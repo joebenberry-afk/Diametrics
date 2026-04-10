@@ -13,6 +13,7 @@ _FoodItem _$FoodItemFromJson(Map<String, dynamic> json) => _FoodItem(
   calories: (json['calories'] as num?)?.toDouble() ?? 0.0,
   proteinGrams: (json['protein_g'] as num?)?.toDouble() ?? 0.0,
   fatGrams: (json['fat_g'] as num?)?.toDouble() ?? 0.0,
+  weightG: (json['weight_g'] as num?)?.toDouble() ?? 0.0,
   source: json['source'] as String? ?? 'AI Estimate',
 );
 
@@ -23,5 +24,6 @@ Map<String, dynamic> _$FoodItemToJson(_FoodItem instance) => <String, dynamic>{
   'calories': instance.calories,
   'protein_g': instance.proteinGrams,
   'fat_g': instance.fatGrams,
+  'weight_g': instance.weightG,
   'source': instance.source,
 };

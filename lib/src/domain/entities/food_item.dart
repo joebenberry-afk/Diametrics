@@ -14,6 +14,7 @@ abstract class FoodItem with _$FoodItem {
     @Default(0.0) double calories,
     @JsonKey(name: 'protein_g') @Default(0.0) double proteinGrams,
     @JsonKey(name: 'fat_g') @Default(0.0) double fatGrams,
+    @JsonKey(name: 'weight_g') @Default(0.0) double weightG,
     @Default('AI Estimate') String source,
   }) = _FoodItem;
 
@@ -25,8 +26,7 @@ abstract class FoodItem with _$FoodItem {
     return copyWith(carbsGrams: carbsPer100g, source: 'USDA');
   }
 
-  /// Returns a copy with full macro data from any verified source
-  /// (USDA API, N5K, Open Food Facts, etc.).
+  /// Returns a copy with full macro data from any verified source.
   FoodItem withFullNutrition({
     required double carbsGrams,
     required double proteinGrams,

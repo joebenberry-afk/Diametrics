@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$FoodItem {
 
- String get name; String get portion;@JsonKey(name: 'carbs_g') double get carbsGrams; double get calories;@JsonKey(name: 'protein_g') double get proteinGrams;@JsonKey(name: 'fat_g') double get fatGrams; String get source;
+ String get name; String get portion;@JsonKey(name: 'carbs_g') double get carbsGrams; double get calories;@JsonKey(name: 'protein_g') double get proteinGrams;@JsonKey(name: 'fat_g') double get fatGrams;@JsonKey(name: 'weight_g') double get weightG; String get source;
 /// Create a copy of FoodItem
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $FoodItemCopyWith<FoodItem> get copyWith => _$FoodItemCopyWithImpl<FoodItem>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FoodItem&&(identical(other.name, name) || other.name == name)&&(identical(other.portion, portion) || other.portion == portion)&&(identical(other.carbsGrams, carbsGrams) || other.carbsGrams == carbsGrams)&&(identical(other.calories, calories) || other.calories == calories)&&(identical(other.proteinGrams, proteinGrams) || other.proteinGrams == proteinGrams)&&(identical(other.fatGrams, fatGrams) || other.fatGrams == fatGrams)&&(identical(other.source, source) || other.source == source));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FoodItem&&(identical(other.name, name) || other.name == name)&&(identical(other.portion, portion) || other.portion == portion)&&(identical(other.carbsGrams, carbsGrams) || other.carbsGrams == carbsGrams)&&(identical(other.calories, calories) || other.calories == calories)&&(identical(other.proteinGrams, proteinGrams) || other.proteinGrams == proteinGrams)&&(identical(other.fatGrams, fatGrams) || other.fatGrams == fatGrams)&&(identical(other.weightG, weightG) || other.weightG == weightG)&&(identical(other.source, source) || other.source == source));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,name,portion,carbsGrams,calories,proteinGrams,fatGrams,source);
+int get hashCode => Object.hash(runtimeType,name,portion,carbsGrams,calories,proteinGrams,fatGrams,weightG,source);
 
 @override
 String toString() {
-  return 'FoodItem(name: $name, portion: $portion, carbsGrams: $carbsGrams, calories: $calories, proteinGrams: $proteinGrams, fatGrams: $fatGrams, source: $source)';
+  return 'FoodItem(name: $name, portion: $portion, carbsGrams: $carbsGrams, calories: $calories, proteinGrams: $proteinGrams, fatGrams: $fatGrams, weightG: $weightG, source: $source)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $FoodItemCopyWith<$Res>  {
   factory $FoodItemCopyWith(FoodItem value, $Res Function(FoodItem) _then) = _$FoodItemCopyWithImpl;
 @useResult
 $Res call({
- String name, String portion,@JsonKey(name: 'carbs_g') double carbsGrams, double calories,@JsonKey(name: 'protein_g') double proteinGrams,@JsonKey(name: 'fat_g') double fatGrams, String source
+ String name, String portion,@JsonKey(name: 'carbs_g') double carbsGrams, double calories,@JsonKey(name: 'protein_g') double proteinGrams,@JsonKey(name: 'fat_g') double fatGrams,@JsonKey(name: 'weight_g') double weightG, String source
 });
 
 
@@ -65,7 +65,7 @@ class _$FoodItemCopyWithImpl<$Res>
 
 /// Create a copy of FoodItem
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? portion = null,Object? carbsGrams = null,Object? calories = null,Object? proteinGrams = null,Object? fatGrams = null,Object? source = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? portion = null,Object? carbsGrams = null,Object? calories = null,Object? proteinGrams = null,Object? fatGrams = null,Object? weightG = null,Object? source = null,}) {
   return _then(_self.copyWith(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,portion: null == portion ? _self.portion : portion // ignore: cast_nullable_to_non_nullable
@@ -73,6 +73,7 @@ as String,carbsGrams: null == carbsGrams ? _self.carbsGrams : carbsGrams // igno
 as double,calories: null == calories ? _self.calories : calories // ignore: cast_nullable_to_non_nullable
 as double,proteinGrams: null == proteinGrams ? _self.proteinGrams : proteinGrams // ignore: cast_nullable_to_non_nullable
 as double,fatGrams: null == fatGrams ? _self.fatGrams : fatGrams // ignore: cast_nullable_to_non_nullable
+as double,weightG: null == weightG ? _self.weightG : weightG // ignore: cast_nullable_to_non_nullable
 as double,source: null == source ? _self.source : source // ignore: cast_nullable_to_non_nullable
 as String,
   ));
@@ -159,10 +160,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  String portion, @JsonKey(name: 'carbs_g')  double carbsGrams,  double calories, @JsonKey(name: 'protein_g')  double proteinGrams, @JsonKey(name: 'fat_g')  double fatGrams,  String source)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  String portion, @JsonKey(name: 'carbs_g')  double carbsGrams,  double calories, @JsonKey(name: 'protein_g')  double proteinGrams, @JsonKey(name: 'fat_g')  double fatGrams, @JsonKey(name: 'weight_g')  double weightG,  String source)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _FoodItem() when $default != null:
-return $default(_that.name,_that.portion,_that.carbsGrams,_that.calories,_that.proteinGrams,_that.fatGrams,_that.source);case _:
+return $default(_that.name,_that.portion,_that.carbsGrams,_that.calories,_that.proteinGrams,_that.fatGrams,_that.weightG,_that.source);case _:
   return orElse();
 
 }
@@ -180,10 +181,10 @@ return $default(_that.name,_that.portion,_that.carbsGrams,_that.calories,_that.p
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  String portion, @JsonKey(name: 'carbs_g')  double carbsGrams,  double calories, @JsonKey(name: 'protein_g')  double proteinGrams, @JsonKey(name: 'fat_g')  double fatGrams,  String source)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  String portion, @JsonKey(name: 'carbs_g')  double carbsGrams,  double calories, @JsonKey(name: 'protein_g')  double proteinGrams, @JsonKey(name: 'fat_g')  double fatGrams, @JsonKey(name: 'weight_g')  double weightG,  String source)  $default,) {final _that = this;
 switch (_that) {
 case _FoodItem():
-return $default(_that.name,_that.portion,_that.carbsGrams,_that.calories,_that.proteinGrams,_that.fatGrams,_that.source);case _:
+return $default(_that.name,_that.portion,_that.carbsGrams,_that.calories,_that.proteinGrams,_that.fatGrams,_that.weightG,_that.source);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -200,10 +201,10 @@ return $default(_that.name,_that.portion,_that.carbsGrams,_that.calories,_that.p
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  String portion, @JsonKey(name: 'carbs_g')  double carbsGrams,  double calories, @JsonKey(name: 'protein_g')  double proteinGrams, @JsonKey(name: 'fat_g')  double fatGrams,  String source)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  String portion, @JsonKey(name: 'carbs_g')  double carbsGrams,  double calories, @JsonKey(name: 'protein_g')  double proteinGrams, @JsonKey(name: 'fat_g')  double fatGrams, @JsonKey(name: 'weight_g')  double weightG,  String source)?  $default,) {final _that = this;
 switch (_that) {
 case _FoodItem() when $default != null:
-return $default(_that.name,_that.portion,_that.carbsGrams,_that.calories,_that.proteinGrams,_that.fatGrams,_that.source);case _:
+return $default(_that.name,_that.portion,_that.carbsGrams,_that.calories,_that.proteinGrams,_that.fatGrams,_that.weightG,_that.source);case _:
   return null;
 
 }
@@ -215,7 +216,7 @@ return $default(_that.name,_that.portion,_that.carbsGrams,_that.calories,_that.p
 @JsonSerializable()
 
 class _FoodItem extends FoodItem {
-  const _FoodItem({this.name = 'Unknown', this.portion = '1 serving', @JsonKey(name: 'carbs_g') this.carbsGrams = 0.0, this.calories = 0.0, @JsonKey(name: 'protein_g') this.proteinGrams = 0.0, @JsonKey(name: 'fat_g') this.fatGrams = 0.0, this.source = 'AI Estimate'}): super._();
+  const _FoodItem({this.name = 'Unknown', this.portion = '1 serving', @JsonKey(name: 'carbs_g') this.carbsGrams = 0.0, this.calories = 0.0, @JsonKey(name: 'protein_g') this.proteinGrams = 0.0, @JsonKey(name: 'fat_g') this.fatGrams = 0.0, @JsonKey(name: 'weight_g') this.weightG = 0.0, this.source = 'AI Estimate'}): super._();
   factory _FoodItem.fromJson(Map<String, dynamic> json) => _$FoodItemFromJson(json);
 
 @override@JsonKey() final  String name;
@@ -224,6 +225,7 @@ class _FoodItem extends FoodItem {
 @override@JsonKey() final  double calories;
 @override@JsonKey(name: 'protein_g') final  double proteinGrams;
 @override@JsonKey(name: 'fat_g') final  double fatGrams;
+@override@JsonKey(name: 'weight_g') final  double weightG;
 @override@JsonKey() final  String source;
 
 /// Create a copy of FoodItem
@@ -239,16 +241,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FoodItem&&(identical(other.name, name) || other.name == name)&&(identical(other.portion, portion) || other.portion == portion)&&(identical(other.carbsGrams, carbsGrams) || other.carbsGrams == carbsGrams)&&(identical(other.calories, calories) || other.calories == calories)&&(identical(other.proteinGrams, proteinGrams) || other.proteinGrams == proteinGrams)&&(identical(other.fatGrams, fatGrams) || other.fatGrams == fatGrams)&&(identical(other.source, source) || other.source == source));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FoodItem&&(identical(other.name, name) || other.name == name)&&(identical(other.portion, portion) || other.portion == portion)&&(identical(other.carbsGrams, carbsGrams) || other.carbsGrams == carbsGrams)&&(identical(other.calories, calories) || other.calories == calories)&&(identical(other.proteinGrams, proteinGrams) || other.proteinGrams == proteinGrams)&&(identical(other.fatGrams, fatGrams) || other.fatGrams == fatGrams)&&(identical(other.weightG, weightG) || other.weightG == weightG)&&(identical(other.source, source) || other.source == source));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,name,portion,carbsGrams,calories,proteinGrams,fatGrams,source);
+int get hashCode => Object.hash(runtimeType,name,portion,carbsGrams,calories,proteinGrams,fatGrams,weightG,source);
 
 @override
 String toString() {
-  return 'FoodItem(name: $name, portion: $portion, carbsGrams: $carbsGrams, calories: $calories, proteinGrams: $proteinGrams, fatGrams: $fatGrams, source: $source)';
+  return 'FoodItem(name: $name, portion: $portion, carbsGrams: $carbsGrams, calories: $calories, proteinGrams: $proteinGrams, fatGrams: $fatGrams, weightG: $weightG, source: $source)';
 }
 
 
@@ -259,7 +261,7 @@ abstract mixin class _$FoodItemCopyWith<$Res> implements $FoodItemCopyWith<$Res>
   factory _$FoodItemCopyWith(_FoodItem value, $Res Function(_FoodItem) _then) = __$FoodItemCopyWithImpl;
 @override @useResult
 $Res call({
- String name, String portion,@JsonKey(name: 'carbs_g') double carbsGrams, double calories,@JsonKey(name: 'protein_g') double proteinGrams,@JsonKey(name: 'fat_g') double fatGrams, String source
+ String name, String portion,@JsonKey(name: 'carbs_g') double carbsGrams, double calories,@JsonKey(name: 'protein_g') double proteinGrams,@JsonKey(name: 'fat_g') double fatGrams,@JsonKey(name: 'weight_g') double weightG, String source
 });
 
 
@@ -276,7 +278,7 @@ class __$FoodItemCopyWithImpl<$Res>
 
 /// Create a copy of FoodItem
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? portion = null,Object? carbsGrams = null,Object? calories = null,Object? proteinGrams = null,Object? fatGrams = null,Object? source = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? portion = null,Object? carbsGrams = null,Object? calories = null,Object? proteinGrams = null,Object? fatGrams = null,Object? weightG = null,Object? source = null,}) {
   return _then(_FoodItem(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,portion: null == portion ? _self.portion : portion // ignore: cast_nullable_to_non_nullable
@@ -284,6 +286,7 @@ as String,carbsGrams: null == carbsGrams ? _self.carbsGrams : carbsGrams // igno
 as double,calories: null == calories ? _self.calories : calories // ignore: cast_nullable_to_non_nullable
 as double,proteinGrams: null == proteinGrams ? _self.proteinGrams : proteinGrams // ignore: cast_nullable_to_non_nullable
 as double,fatGrams: null == fatGrams ? _self.fatGrams : fatGrams // ignore: cast_nullable_to_non_nullable
+as double,weightG: null == weightG ? _self.weightG : weightG // ignore: cast_nullable_to_non_nullable
 as double,source: null == source ? _self.source : source // ignore: cast_nullable_to_non_nullable
 as String,
   ));
