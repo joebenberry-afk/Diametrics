@@ -39,8 +39,11 @@ class LegacyMigrationService {
       await _migrateMealLogs(oldDb);
       await _migrateMedicationLogs(oldDb);
       await _migrateUserProfile(oldDb);
-    } finally {
       await oldDb.close();
+    } catch (e, st) {
+      await oldDb.close();
+      debugPrint('LegacyMigration: failed — will retry on next start. Error: $e\n$st');
+      return; // Do NOT set the flag — migration retries next launch.
     }
 
     await File(dbPath).delete();
@@ -111,7 +114,8 @@ class LegacyMigrationService {
             id: Value(row['id'] as String),
             timestamp: Value(DateTime.parse(row['timestamp'] as String)),
             medicationType: Value(row['medicationType'] as String),
-            insulinType: const Value('Humalog / NovoLog'),
+            // No insulinType column in v1 schema — use DB column default.
+            insulinType: const Value.absent(),
             name: Value(row['name'] as String?),
             units: Value((row['units'] as num).toDouble()),
             notes: Value(row['notes'] as String?),
