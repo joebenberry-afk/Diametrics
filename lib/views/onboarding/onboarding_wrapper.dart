@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'screens/welcome_screen.dart';
 import 'screens/demographics_screen.dart';
 import 'screens/diabetes_info_screen.dart';
 import 'screens/medication_info_screen.dart';
 import 'screens/targets_screen.dart';
-import '../dashboard/dashboard_view.dart';
+import '../../router/route_names.dart';
 
 class OnboardingWrapper extends ConsumerStatefulWidget {
   const OnboardingWrapper({super.key});
@@ -115,11 +116,7 @@ class _OnboardingWrapperState extends ConsumerState<OnboardingWrapper> {
                   ),
                   TargetsScreen(
                     onComplete: () {
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(
-                          builder: (_) => const DashboardView(),
-                        ),
-                      );
+                      context.go(Routes.dashboard);
                     },
                     onBack: _previousPage,
                   ),
