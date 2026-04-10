@@ -150,6 +150,12 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
     AppLockConfig.ignoreNextResume = true;
     final FoodItem? result = await context.push<FoodItem>(Routes.logMealBarcode);
     if (result != null && mounted) {
+      setState(() {
+        _imageFile = null;
+        _awaitingConfirm = false;
+        _analysisResult = null;
+        _analysisError = null;
+      });
       // Populate viewmodel state
       ref.read(loggingWizardProvider.notifier).setFromBarcodeResult(
         carbs: result.carbsGrams,
