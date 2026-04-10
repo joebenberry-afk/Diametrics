@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../models/glucose_log.dart';
+import '../../router/route_names.dart';
 import '../../viewmodels/health_data_viewmodel.dart';
 import '../../viewmodels/profile_viewmodel.dart';
-import '../logging/glucose_wizard_view.dart';
 
 class GlucoseHistoryView extends ConsumerWidget {
   const GlucoseHistoryView({super.key});
@@ -65,12 +66,7 @@ class GlucoseHistoryView extends ConsumerWidget {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const GlucoseWizardView()),
-          );
-        },
+        onPressed: () => context.push(Routes.logGlucose),
         backgroundColor: AppThemeTokens.brandPrimary,
         foregroundColor: AppThemeTokens.textPrimaryInverse,
         child: const Icon(Icons.add),

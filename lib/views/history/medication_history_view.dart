@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../models/medication_log.dart';
+import '../../router/route_names.dart';
 import '../../viewmodels/health_data_viewmodel.dart';
-import '../logging/medication_wizard_view.dart';
 
 class MedicationHistoryView extends ConsumerWidget {
   const MedicationHistoryView({super.key});
@@ -63,12 +64,7 @@ class MedicationHistoryView extends ConsumerWidget {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const MedicationWizardView()),
-          );
-        },
+        onPressed: () => context.push(Routes.logMedication),
         backgroundColor: AppThemeTokens.brandAccent,
         foregroundColor: Colors.white,
         child: const Icon(Icons.add),

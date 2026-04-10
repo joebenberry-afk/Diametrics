@@ -1,11 +1,12 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../models/glucose_log.dart';
+import '../../router/route_names.dart';
 import '../../viewmodels/health_data_viewmodel.dart';
 import '../../viewmodels/profile_viewmodel.dart';
-import 'glucose_history_view.dart';
 
 class GlucoseTrendView extends ConsumerStatefulWidget {
   const GlucoseTrendView({super.key});
@@ -43,10 +44,7 @@ class _GlucoseTrendViewState extends ConsumerState<GlucoseTrendView> {
         surfaceTintColor: Colors.transparent,
         actions: [
           TextButton(
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const GlucoseHistoryView()),
-            ),
+            onPressed: () => context.push(Routes.glucoseHistory),
             child: const Text('View All'),
           ),
         ],

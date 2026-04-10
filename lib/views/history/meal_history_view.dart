@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../models/meal_log.dart';
+import '../../router/route_names.dart';
 import '../../viewmodels/health_data_viewmodel.dart';
-import '../logging/meal_wizard_view.dart';
 
 class MealHistoryView extends ConsumerWidget {
   const MealHistoryView({super.key});
@@ -63,12 +64,7 @@ class MealHistoryView extends ConsumerWidget {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const MealWizardView()),
-          );
-        },
+        onPressed: () => context.push(Routes.logMeal),
         backgroundColor: AppThemeTokens.brandSuccess,
         foregroundColor: Colors.white,
         child: const Icon(Icons.add),
