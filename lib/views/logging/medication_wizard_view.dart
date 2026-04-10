@@ -4,11 +4,27 @@ import '../../core/theme/app_tokens.dart';
 import '../../viewmodels/logging_wizard_viewmodel.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
-class MedicationWizardView extends ConsumerWidget {
+class MedicationWizardView extends ConsumerStatefulWidget {
   const MedicationWizardView({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MedicationWizardView> createState() =>
+      _MedicationWizardViewState();
+}
+
+class _MedicationWizardViewState extends ConsumerState<MedicationWizardView> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      // Reset any stale state from a previously opened (but cancelled) wizard.
+      ref.read(loggingWizardProvider.notifier).reset();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(loggingWizardProvider);
     final viewModel = ref.read(loggingWizardProvider.notifier);
     final theme = Theme.of(context);

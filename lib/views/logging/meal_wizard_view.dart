@@ -46,6 +46,9 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      // Reset any stale state from a previously opened (but cancelled) wizard.
+      ref.read(loggingWizardProvider.notifier).reset();
       ref.read(loggingWizardProvider.notifier).checkRecentPreMealGlucose();
       _loadUserWeight();
     });

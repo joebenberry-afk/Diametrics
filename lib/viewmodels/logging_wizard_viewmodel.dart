@@ -126,6 +126,8 @@ class LoggingWizardViewModel extends Notifier<LoggingWizardState> {
       state = state.copyWith(pendingGlucoseValue: value);
   void updateGlucoseContext(String context) =>
       state = state.copyWith(glucoseContext: context);
+  void initGlucoseUnit(String unit) =>
+      state = state.copyWith(glucoseUnit: unit);
 
   // --- Pre-meal Glucose Gate ---
 
@@ -286,6 +288,11 @@ class LoggingWizardViewModel extends Notifier<LoggingWizardState> {
     try {
       final repo = ref.read(healthDataRepositoryProvider);
 
+      // Fetch profile once so the preferred unit is used consistently for
+      // the pre-meal glucose log AND for the projection normalisation below.
+      final profile = await UserRepository().getProfile();
+      final preMealUnit = profile?.preferredGlucoseUnit ?? 'mg/dL';
+
       // 1. Save the pre-meal glucose reading if user entered it manually
       //    (auto-detected readings are already in the DB)
       if (!state.hasAutoDetectedGlucose) {
@@ -293,7 +300,7 @@ class LoggingWizardViewModel extends Notifier<LoggingWizardState> {
           id: _uuid.v4(),
           timestamp: DateTime.now(),
           value: state.preMealGlucose!,
-          unit: state.glucoseUnit,
+          unit: preMealUnit,
           context: 'pre_meal',
         );
         await repo.addGlucoseLog(glucoseLog);
@@ -328,8 +335,7 @@ class LoggingWizardViewModel extends Notifier<LoggingWizardState> {
 
       // 3. Calculate IOB and run the projection using personalized ML params.
       final iob = await _calculateIOB();
-      final profile = await UserRepository().getProfile();
-      final unit = profile?.preferredGlucoseUnit ?? 'mg/dL';
+      final unit = preMealUnit;
       final mealCount = profile?.tuningMealCount ?? 0;
       
       // Normalize baseline to mg/dL for the projection service math
@@ -370,6 +376,13 @@ class LoggingWizardViewModel extends Notifier<LoggingWizardState> {
       state = state.copyWith(isSubmitting: false, error: e.toString());
       return null;
     }
+  }
+
+  // --- Reset ---
+  /// Resets wizard state to defaults. Call from each wizard's initState so
+  /// stale values from a previously opened (but cancelled) wizard are cleared.
+  void reset() {
+    state = LoggingWizardState();
   }
 
   // --- EKF Background Tuning ---

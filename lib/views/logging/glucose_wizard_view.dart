@@ -2,13 +2,34 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../viewmodels/logging_wizard_viewmodel.dart';
+import '../../viewmodels/profile_viewmodel.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
-class GlucoseWizardView extends ConsumerWidget {
+class GlucoseWizardView extends ConsumerStatefulWidget {
   const GlucoseWizardView({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<GlucoseWizardView> createState() => _GlucoseWizardViewState();
+}
+
+class _GlucoseWizardViewState extends ConsumerState<GlucoseWizardView> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      // Reset any stale state from a previously opened wizard.
+      ref.read(loggingWizardProvider.notifier).reset();
+      // Load the user's preferred glucose unit so logged readings use the
+      // correct unit tag rather than always defaulting to 'mg/dL'.
+      final profile = ref.read(userProfileProvider).valueOrNull;
+      final unit = profile?.preferredGlucoseUnit ?? 'mg/dL';
+      ref.read(loggingWizardProvider.notifier).initGlucoseUnit(unit);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(loggingWizardProvider);
     final viewModel = ref.read(loggingWizardProvider.notifier);
     final theme = Theme.of(context);
