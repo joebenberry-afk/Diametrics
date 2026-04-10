@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../viewmodels/profile_viewmodel.dart';
 import '../views/dashboard/dashboard_view.dart';
 import '../views/history/glucose_history_view.dart';
-import '../views/history/glucose_trend_view.dart';
+import '../views/trends/trends_view.dart';
 import '../views/history/meal_history_view.dart';
 import '../views/history/medication_history_view.dart';
 import '../views/logging/barcode_scanner_view.dart';
@@ -64,7 +64,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: 'glucose-trend',
-            builder: (_, _) => const GlucoseTrendView(),
+            builder: (_, _) => const TrendsView(),
           ),
           GoRoute(
             path: 'glucose-history',
