@@ -28,6 +28,7 @@ class MealWizardView extends ConsumerStatefulWidget {
 class _MealWizardViewState extends ConsumerState<MealWizardView> {
   // Camera / AI state
   File? _imageFile;
+  bool _awaitingConfirm = false;   // image picked but not yet sent to AI
   bool _isAnalyzing = false;
   String? _analysisError;
   FoodAnalysisResult? _analysisResult;
@@ -88,21 +89,34 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
 
     setState(() {
       _imageFile = File(picked.path);
+      _awaitingConfirm = true;
+      _isAnalyzing = false;
+      _analysisError = null;
+      _analysisResult = null;
+    });
+    // Analysis is NOT triggered here — user confirms via button.
+  }
+
+  /// Called when the user taps "Analyse this photo" after reviewing the preview.
+  Future<void> _runAnalysis() async {
+    final path = _imageFile?.path;
+    if (path == null) return;
+
+    setState(() {
+      _awaitingConfirm = false;
       _isAnalyzing = true;
       _analysisError = null;
       _analysisResult = null;
     });
 
     try {
-      final result =
-          await getIt<FoodAnalyzerRepository>().analyzeImage(picked.path);
+      final result = await getIt<FoodAnalyzerRepository>().analyzeImage(path);
 
       final totalProtein =
           result.items.fold(0.0, (sum, item) => sum + item.proteinGrams);
       final totalFat =
           result.items.fold(0.0, (sum, item) => sum + item.fatGrams);
 
-      // Update the viewmodel state (drives canSave logic)
       ref.read(loggingWizardProvider.notifier).updateMealMacros(
         carbs: result.totalCarbs,
         fiber: null,
@@ -111,7 +125,6 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
         calories: result.totalCalories,
       );
 
-      // Update text controllers so the input fields visually reflect the AI values
       _carbsCtrl.text = result.totalCarbs.toStringAsFixed(1);
       _proteinCtrl.text = totalProtein.toStringAsFixed(1);
       _fatsCtrl.text = totalFat.toStringAsFixed(1);
@@ -488,6 +501,65 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
       borderRadius: BorderRadius.circular(AppThemeTokens.radiusLg),
       border: Border.all(color: borderColor, width: 2),
     );
+
+    // Confirm before analysis — user reviews the photo first
+    if (_awaitingConfirm && _imageFile != null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
+            child: Image.file(
+              _imageFile!,
+              height: 200,
+              fit: BoxFit.cover,
+            ),
+          ),
+          const SizedBox(height: AppThemeTokens.spaceSm),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => setState(() {
+                    _imageFile = null;
+                    _awaitingConfirm = false;
+                  }),
+                  icon: const Icon(Icons.close, size: 18),
+                  label: const Text('Discard'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppThemeTokens.error,
+                    side: BorderSide(
+                      color: AppThemeTokens.error.withValues(alpha: 0.6),
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
+                    ),
+                    minimumSize: const Size.fromHeight(AppThemeTokens.minTapTarget),
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppThemeTokens.spaceSm),
+              Expanded(
+                flex: 2,
+                child: ElevatedButton.icon(
+                  onPressed: _runAnalysis,
+                  icon: const Icon(Icons.auto_awesome, size: 18),
+                  label: const Text('Analyse this photo'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppThemeTokens.brandPrimary,
+                    foregroundColor: AppThemeTokens.textPrimaryInverse,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
+                    ),
+                    minimumSize: const Size.fromHeight(AppThemeTokens.minTapTarget),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    }
 
     // Analyzing
     if (_isAnalyzing) {
