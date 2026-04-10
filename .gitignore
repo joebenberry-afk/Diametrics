@@ -60,3 +60,4 @@ Food Database/N5K_google/
 # AI Agent related
 .claude/
 .agents/
+.worktrees/
