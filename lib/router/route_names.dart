@@ -7,7 +7,7 @@ abstract final class Routes {
   static const glucoseHistory     = '/dashboard/glucose-history';
   static const mealHistory        = '/dashboard/meal-history';
   static const medicationHistory  = '/dashboard/medication-history';
-  static const emergencyContacts  = '/dashboard/emergency-contacts';
+  static const emergencyContacts  = '/settings/emergency-contacts';
   static const logGlucose         = '/log/glucose';
   static const logMeal            = '/log/meal';
   static const logMealBarcode     = '/log/meal/barcode';

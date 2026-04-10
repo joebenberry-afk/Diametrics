@@ -358,20 +358,34 @@ class _StatsRow extends StatelessWidget {
         ? '${fromMgdL(avg).toStringAsFixed(1)} mmol/L'
         : '${avg.toStringAsFixed(0)} mg/dL';
 
-    // Only show HbA1c for 90-day range (ADAG formula requires ~90 days of data)
-    final hba1cStr = selectedDays >= 90
-        ? '${hba1c.toStringAsFixed(1)}%'
-        : '—';
-    final hba1cSub = selectedDays >= 90 ? 'Est. HbA1c' : 'Est. HbA1c (90D)';
+    final hba1cStr = mgValues.isEmpty ? '—' : '${hba1c.toStringAsFixed(1)}%';
+    final hba1cSub = selectedDays >= 90 ? 'Est. HbA1c' : 'Est. HbA1c*';
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppThemeTokens.spaceMd),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      child: Column(
         children: [
-          _StatCell(label: 'Avg', value: displayAvg),
-          _StatCell(label: 'In Range', value: '${tir.toStringAsFixed(0)}%'),
-          _StatCell(label: hba1cSub, value: hba1cStr),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _StatCell(label: 'Avg', value: displayAvg),
+              _StatCell(label: 'In Range', value: '${tir.toStringAsFixed(0)}%'),
+              _StatCell(label: hba1cSub, value: hba1cStr),
+            ],
+          ),
+          if (selectedDays < 90 && mgValues.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                '* Estimate requires 90 days of data for full accuracy.',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppThemeTokens.textSecondary,
+                  fontStyle: FontStyle.italic,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
         ],
       ),
     );

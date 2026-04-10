@@ -11,7 +11,7 @@ This project adheres to [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 - Manual glucose logging with context tags: Morning Fasting, Before Meal, 30 / 60 / 120 / 180 min After Meal, Bedtime, and General
 - Glucose history view showing all readings newest-first, with swipe-to-delete and an undo snackbar
 - Real-time dashboard alerts for high, low, and critical glucose readings based on the user's configured target range
-- Time-in-Range percentage and estimated HbA1c (ADAG formula) displayed in the Trends view; HbA1c requires approximately 90 days of data and is shown as "—" for shorter ranges by design
+- Time-in-Range percentage and estimated HbA1c (ADAG formula) displayed in the Trends view; HbA1c is shown for all ranges but marked with a caveat asterisk when fewer than 90 days of data are available
 
 #### Meal Logging
 - Macro logging wizard capturing carbohydrates, protein, fat, and calories
@@ -46,7 +46,7 @@ This project adheres to [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 - Preferred glucose unit (mg/dL or mmol/L) applied consistently across all views, charts, and alerts
 - Configurable low and high glucose target range used for dashboard alerts, chart reference bands, and Time-in-Range calculation
 - Treatment flags: insulin pump use, continuous glucose monitor (CGM) use, and Duration of Insulin Action
-- Emergency contact configuration accessible from both the dashboard and settings
+- Emergency contact configuration accessible from the Settings screen
 
 #### Security and Privacy
 - All health data (glucose readings, meals, medications, user profile) is stored entirely on-device using AES-256 SQLCipher-encrypted SQLite
@@ -63,14 +63,12 @@ This project adheres to [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 The following issues are known at the time of the 1.0.0 release and are scheduled for resolution in 1.0.1.
 
-1. **Duplicate emergency contacts route** — The emergency contacts screen is registered at two separate routes (`/dashboard/emergency-contacts` and `/settings/emergency-contacts`). Both routes function correctly; consolidation to a single canonical route is pending.
+1. **Height and weight input is metric only** — The onboarding and settings screens accept height in centimetres and weight in kilograms with no option for imperial units. Imperial unit support (feet/inches, pounds/stones) is planned for a future release.
 
-2. **`sqflite` listed as unused dependency** — `sqflite` is declared in `pubspec.yaml` as a remnant of a previous database architecture. It is not used at runtime and has no functional impact. It will be removed from `pubspec.yaml` in 1.0.1.
+2. **Activity card shows placeholder step data** — The Activity card on the dashboard displays static step count data. Live pedometer integration via the `pedometer` package is partially wired but not yet active. Real-time step tracking will be enabled in a future release.
 
-3. **Height and weight input is metric only** — The onboarding and settings screens accept height in centimetres and weight in kilograms with no option for imperial units. Imperial unit support (feet/inches, pounds/stones) is planned for a future release.
+3. **Swipe-to-delete is the only delete gesture in history views** — There is no visible delete button on log entries. Users must swipe left to reveal the delete action. A long-press context menu providing an explicit delete option will be added in 1.0.1 to improve discoverability.
 
-4. **Activity card shows placeholder step data** — The Activity card on the dashboard displays static step count data. Live pedometer integration via the `pedometer` package is partially wired but not yet active. Real-time step tracking will be enabled in a future release.
+### Notes
 
-5. **Swipe-to-delete is the only delete gesture in history views** — There is no visible delete button on log entries. Users must swipe left to reveal the delete action. A long-press context menu providing an explicit delete option will be added in 1.0.1 to improve discoverability.
-
-6. **HbA1c estimate shown only for the 90-day range** — The ADAG formula used to estimate HbA1c is only meaningful when approximately 90 days of glucose data are available. The value is intentionally shown as "—" for the 7-day and 30-day range selections.
+- **Legacy migration runs on first launch only** — On first launch after upgrading from a previous version, `LegacyMigrationService` automatically migrates existing glucose, meal, and medication data to the new encrypted Drift database. Subsequent launches skip migration entirely. If migration fails (e.g. storage error), it retries on the next launch.

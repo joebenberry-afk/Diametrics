@@ -86,10 +86,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: 'medication-history',
             builder: (_, _) => const MedicationHistoryView(),
           ),
-          GoRoute(
-            path: 'emergency-contacts',
-            builder: (_, _) => const EmergencyContactsView(),
-          ),
         ],
       ),
       GoRoute(
