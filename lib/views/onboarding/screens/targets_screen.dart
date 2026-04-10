@@ -23,6 +23,20 @@ class _TargetsScreenState extends ConsumerState<TargetsScreen> {
   final _maxTargetController = TextEditingController(text: '180');
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final unit = ref.read(onboardingViewModelProvider).preferredGlucoseUnit;
+      if (unit == 'mmol/L') {
+        _minTargetController.text = '3.9';
+        _maxTargetController.text = '10.0';
+      }
+      // else: keep the mg/dL defaults '70' and '180'
+    });
+  }
+
+  @override
   void dispose() {
     _minTargetController.dispose();
     _maxTargetController.dispose();
@@ -100,7 +114,7 @@ class _TargetsScreenState extends ConsumerState<TargetsScreen> {
               controller: _maxTargetController,
               decoration: InputDecoration(
                 labelText: 'High Target ($unitString)',
-                hintText: 'e.g., 180',
+                hintText: unitString == 'mmol/L' ? 'e.g., 10.0' : 'e.g., 180',
                 border: const OutlineInputBorder(),
                 helperText: 'Typical safe maximum (varies by doctor)',
               ),
@@ -128,7 +142,7 @@ class _TargetsScreenState extends ConsumerState<TargetsScreen> {
               controller: _minTargetController,
               decoration: InputDecoration(
                 labelText: 'Low Target ($unitString)',
-                hintText: 'e.g., 70',
+                hintText: unitString == 'mmol/L' ? 'e.g., 3.9' : 'e.g., 70',
                 border: const OutlineInputBorder(),
                 helperText: 'Typical safe minimum (varies by doctor)',
               ),

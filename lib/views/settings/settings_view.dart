@@ -1386,9 +1386,20 @@ class _GlucoseTargetVisual extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final min = double.tryParse(minCtrl.text) ?? 70.0;
-    final max = double.tryParse(maxCtrl.text) ?? 180.0;
-    final isValid = min < max;
+    final isMmol = unit == 'mmol/L';
+    // Controllers hold display-unit values (mmol/L or mg/dL).
+    // Convert to mg/dL for position calculation so the internal scale is always 0–400.
+    final displayMin = double.tryParse(minCtrl.text) ?? (isMmol ? 3.9 : 70.0);
+    final displayMax = double.tryParse(maxCtrl.text) ?? (isMmol ? 10.0 : 180.0);
+    final minMgdl = isMmol ? displayMin * 18.0182 : displayMin;
+    final maxMgdl = isMmol ? displayMax * 18.0182 : displayMax;
+    const maxScale = 400.0; // internal mg/dL scale
+    final isValid = displayMin < displayMax;
+
+    // Axis label for the right end of the scale.
+    final axisMaxLabel = isMmol ? '22 mmol/L' : '400 mg/dL';
+    // Decimal places for the label in the header.
+    final dp = isMmol ? 1 : 0;
 
     return Container(
       padding: const EdgeInsets.all(AppThemeTokens.spaceMd),
@@ -1415,7 +1426,7 @@ class _GlucoseTargetVisual extends StatelessWidget {
               ),
               if (isValid)
                 Text(
-                  '${min.toStringAsFixed(0)}–${max.toStringAsFixed(0)} $unit',
+                  '${displayMin.toStringAsFixed(dp)}–${displayMax.toStringAsFixed(dp)} $unit',
                   style: const TextStyle(
                     fontSize: 13,
                     color: AppThemeTokens.brandPrimary,
@@ -1434,16 +1445,16 @@ class _GlucoseTargetVisual extends StatelessWidget {
                   height: 16,
                   color: AppThemeTokens.error.withValues(alpha: 0.25),
                 ),
-                // Green target zone
+                // Green target zone — positions always calculated in mg/dL against 0–400 scale
                 if (isValid)
                   FractionallySizedBox(
-                    widthFactor: ((max - min) / 400.0).clamp(0.05, 1.0),
+                    widthFactor: ((maxMgdl - minMgdl) / maxScale).clamp(0.05, 1.0),
                     child: Container(
                       height: 16,
                       margin: EdgeInsets.only(
                         left:
                             MediaQuery.of(context).size.width *
-                            (min / 400.0).clamp(0.0, 1.0) *
+                            (minMgdl / maxScale).clamp(0.0, 1.0) *
                             0.6,
                       ),
                       color: AppThemeTokens.brandSuccess.withValues(alpha: 0.7),
@@ -1455,8 +1466,8 @@ class _GlucoseTargetVisual extends StatelessWidget {
           const SizedBox(height: 6),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
-              Text(
+            children: [
+              const Text(
                 '0',
                 style: TextStyle(
                   fontSize: 11,
@@ -1464,8 +1475,8 @@ class _GlucoseTargetVisual extends StatelessWidget {
                 ),
               ),
               Text(
-                '400',
-                style: TextStyle(
+                axisMaxLabel,
+                style: const TextStyle(
                   fontSize: 11,
                   color: AppThemeTokens.textSecondary,
                 ),
