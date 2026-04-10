@@ -26,6 +26,56 @@ String _friendlyContext(String context) =>
         .map((w) => w.isEmpty ? w : '${w[0].toUpperCase()}${w.substring(1)}')
         .join(' ');
 
+void _showGlucoseDeleteSheet(
+  BuildContext context,
+  WidgetRef ref,
+  GlucoseLog log,
+) {
+  showModalBottomSheet(
+    context: context,
+    builder: (_) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.delete_outline, color: AppThemeTokens.error),
+            title: const Text(
+              'Delete this reading',
+              style: TextStyle(color: AppThemeTokens.error),
+            ),
+            onTap: () {
+              Navigator.pop(context);
+              ref
+                  .read(glucoseLogsProvider.notifier)
+                  .deleteGlucoseLog(log.id);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Text('Reading deleted'),
+                  duration: const Duration(seconds: 4),
+                  action: SnackBarAction(
+                    label: 'Undo',
+                    onPressed: () {
+                      ref
+                          .read(healthDataRepositoryProvider)
+                          .addGlucoseLog(log);
+                      ref.invalidate(glucoseLogsProvider);
+                    },
+                  ),
+                ),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.close),
+            title: const Text('Cancel'),
+            onTap: () => Navigator.pop(context),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
 class GlucoseHistoryView extends ConsumerWidget {
   const GlucoseHistoryView({super.key});
 
@@ -102,61 +152,46 @@ class GlucoseHistoryView extends ConsumerWidget {
             separatorBuilder: (_, _) => const Divider(height: 1),
             itemBuilder: (context, index) {
               final log = sortedLogs[index];
-              return Dismissible(
-                key: ValueKey(log.id),
-                direction: DismissDirection.endToStart,
-                background: Container(
-                  alignment: Alignment.centerRight,
-                  padding: const EdgeInsets.only(right: AppThemeTokens.spaceLg),
-                  color: AppThemeTokens.error,
-                  child: const Icon(
-                    Icons.delete_outline,
-                    color: Colors.white,
+              return GestureDetector(
+                onLongPress: () =>
+                    _showGlucoseDeleteSheet(context, ref, log),
+                child: Dismissible(
+                  key: ValueKey(log.id),
+                  direction: DismissDirection.endToStart,
+                  background: Container(
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.only(
+                      right: AppThemeTokens.spaceLg,
+                    ),
+                    color: AppThemeTokens.error,
+                    child: const Icon(
+                      Icons.delete_outline,
+                      color: Colors.white,
+                    ),
                   ),
+                  onDismissed: (_) {
+                    final deleted = log;
+                    ref
+                        .read(glucoseLogsProvider.notifier)
+                        .deleteGlucoseLog(deleted.id);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text('Reading deleted'),
+                        duration: const Duration(seconds: 4),
+                        action: SnackBarAction(
+                          label: 'Undo',
+                          onPressed: () {
+                            ref
+                                .read(healthDataRepositoryProvider)
+                                .addGlucoseLog(deleted);
+                            ref.invalidate(glucoseLogsProvider);
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                  child: _GlucoseHistoryTile(log: log, profile: profile),
                 ),
-                confirmDismiss: (_) async {
-                  return await showDialog<bool>(
-                    context: context,
-                    builder: (_) => AlertDialog(
-                      title: const Text('Delete reading?'),
-                      content: const Text(
-                        'This reading will be permanently deleted.',
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: const Text('Cancel'),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          child: const Text('Delete'),
-                        ),
-                      ],
-                    ),
-                  ) ?? false;
-                },
-                onDismissed: (_) {
-                  final deleted = log;
-                  ref
-                      .read(glucoseLogsProvider.notifier)
-                      .deleteGlucoseLog(deleted.id);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text('Reading deleted'),
-                      duration: const Duration(seconds: 4),
-                      action: SnackBarAction(
-                        label: 'Undo',
-                        onPressed: () {
-                          ref
-                              .read(healthDataRepositoryProvider)
-                              .addGlucoseLog(deleted);
-                          ref.invalidate(glucoseLogsProvider);
-                        },
-                      ),
-                    ),
-                  );
-                },
-                child: _GlucoseHistoryTile(log: log, profile: profile),
               );
             },
           );

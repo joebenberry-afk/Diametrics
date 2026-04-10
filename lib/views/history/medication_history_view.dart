@@ -7,6 +7,56 @@ import '../../models/medication_log.dart';
 import '../../router/route_names.dart';
 import '../../viewmodels/health_data_viewmodel.dart';
 
+void _showMedicationDeleteSheet(
+  BuildContext context,
+  WidgetRef ref,
+  MedicationLog log,
+) {
+  showModalBottomSheet(
+    context: context,
+    builder: (_) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.delete_outline, color: AppThemeTokens.error),
+            title: const Text(
+              'Delete this medication log',
+              style: TextStyle(color: AppThemeTokens.error),
+            ),
+            onTap: () {
+              Navigator.pop(context);
+              ref
+                  .read(medicationLogsProvider.notifier)
+                  .deleteMedicationLog(log.id);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Text('Medication deleted'),
+                  duration: const Duration(seconds: 4),
+                  action: SnackBarAction(
+                    label: 'Undo',
+                    onPressed: () {
+                      ref
+                          .read(healthDataRepositoryProvider)
+                          .addMedicationLog(log);
+                      ref.invalidate(medicationLogsProvider);
+                    },
+                  ),
+                ),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.close),
+            title: const Text('Cancel'),
+            onTap: () => Navigator.pop(context),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
 class MedicationHistoryView extends ConsumerWidget {
   const MedicationHistoryView({super.key});
 
@@ -82,61 +132,46 @@ class MedicationHistoryView extends ConsumerWidget {
             separatorBuilder: (_, _) => const Divider(height: 1),
             itemBuilder: (context, index) {
               final log = sortedLogs[index];
-              return Dismissible(
-                key: ValueKey(log.id),
-                direction: DismissDirection.endToStart,
-                background: Container(
-                  alignment: Alignment.centerRight,
-                  padding: const EdgeInsets.only(right: AppThemeTokens.spaceLg),
-                  color: AppThemeTokens.error,
-                  child: const Icon(
-                    Icons.delete_outline,
-                    color: Colors.white,
+              return GestureDetector(
+                onLongPress: () =>
+                    _showMedicationDeleteSheet(context, ref, log),
+                child: Dismissible(
+                  key: ValueKey(log.id),
+                  direction: DismissDirection.endToStart,
+                  background: Container(
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.only(
+                      right: AppThemeTokens.spaceLg,
+                    ),
+                    color: AppThemeTokens.error,
+                    child: const Icon(
+                      Icons.delete_outline,
+                      color: Colors.white,
+                    ),
                   ),
+                  onDismissed: (_) {
+                    final deleted = log;
+                    ref
+                        .read(medicationLogsProvider.notifier)
+                        .deleteMedicationLog(deleted.id);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text('Medication deleted'),
+                        duration: const Duration(seconds: 4),
+                        action: SnackBarAction(
+                          label: 'Undo',
+                          onPressed: () {
+                            ref
+                                .read(healthDataRepositoryProvider)
+                                .addMedicationLog(deleted);
+                            ref.invalidate(medicationLogsProvider);
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                  child: _MedicationHistoryTile(log: log),
                 ),
-                confirmDismiss: (_) async {
-                  return await showDialog<bool>(
-                    context: context,
-                    builder: (_) => AlertDialog(
-                      title: const Text('Delete medication log?'),
-                      content: const Text(
-                        'This medication log will be permanently deleted.',
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: const Text('Cancel'),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          child: const Text('Delete'),
-                        ),
-                      ],
-                    ),
-                  ) ?? false;
-                },
-                onDismissed: (_) {
-                  final deleted = log;
-                  ref
-                      .read(medicationLogsProvider.notifier)
-                      .deleteMedicationLog(deleted.id);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text('Medication deleted'),
-                      duration: const Duration(seconds: 4),
-                      action: SnackBarAction(
-                        label: 'Undo',
-                        onPressed: () {
-                          ref
-                              .read(healthDataRepositoryProvider)
-                              .addMedicationLog(deleted);
-                          ref.invalidate(medicationLogsProvider);
-                        },
-                      ),
-                    ),
-                  );
-                },
-                child: _MedicationHistoryTile(log: log),
               );
             },
           );
