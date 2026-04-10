@@ -9,7 +9,16 @@
       "Bash(python \"C:\\\\Users\\\\assas\\\\AppData\\\\Roaming\\\\Claude\\\\local-agent-mode-sessions\\\\skills-plugin\\\\d7b1e9ae-bb27-4139-8e51-d9d3f01e3231\\\\bee208ce-0f45-45fa-aeec-d4a5fa640d09\\\\skills\\\\docx\\\\scripts\\\\office\\\\validate.py\" \"C:\\\\Users\\\\assas\\\\Desktop\\\\DiaMetrics_Budget_Proposal.docx\")",
       "Bash(pip install defusedxml -q)",
       "Bash(python -c \":*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(flutter pub:*)",
+      "Bash(dart run:*)",
+      "Bash(flutter analyze:*)",
+      "Bash(flutter test:*)",
+      "Read(//c/Users/assas/Documents/UWI/Year 2/Sem 2/ECNG2005  Laboratory and Project Design III/CSL/Diametrics/**)",
+      "Bash(git -C 'C:\\\\Users\\\\assas\\\\Documents\\\\UWI\\\\Year 2\\\\Sem 2\\\\ECNG2005  Laboratory and Project Design III\\\\CSL\\\\Diametrics' check-ignore -q .worktrees)",
+      "Bash(git -C 'C:\\\\Users\\\\assas\\\\Documents\\\\UWI\\\\Year 2\\\\Sem 2\\\\ECNG2005  Laboratory and Project Design III\\\\CSL\\\\Diametrics' add .gitignore)",
+      "Bash(git -C 'C:\\\\Users\\\\assas\\\\Documents\\\\UWI\\\\Year 2\\\\Sem 2\\\\ECNG2005  Laboratory and Project Design III\\\\CSL\\\\Diametrics' commit -m 'chore: add .worktrees/ to gitignore')",
+      "Bash(git -C 'C:\\\\Users\\\\assas\\\\Documents\\\\UWI\\\\Year 2\\\\Sem 2\\\\ECNG2005  Laboratory and Project Design III\\\\CSL\\\\Diametrics' worktree add .worktrees/refactor-gorouter -b refactor/go-router)"
     ]
   }
 }

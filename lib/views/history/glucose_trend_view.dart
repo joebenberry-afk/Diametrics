@@ -5,6 +5,7 @@ import '../../core/theme/app_tokens.dart';
 import '../../models/glucose_log.dart';
 import '../../viewmodels/health_data_viewmodel.dart';
 import '../../viewmodels/profile_viewmodel.dart';
+import 'glucose_history_view.dart';
 
 class GlucoseTrendView extends ConsumerStatefulWidget {
   const GlucoseTrendView({super.key});
@@ -34,11 +35,21 @@ class _GlucoseTrendViewState extends ConsumerState<GlucoseTrendView> {
     final profile = ref.watch(userProfileProvider).valueOrNull;
     final targetMin = profile?.targetGlucoseMin ?? 70.0;
     final targetMax = profile?.targetGlucoseMax ?? 180.0;
+    final preferredUnit = profile?.preferredGlucoseUnit ?? 'mg/dL';
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Glucose Trends'),
         surfaceTintColor: Colors.transparent,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const GlucoseHistoryView()),
+            ),
+            child: const Text('View All'),
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -100,6 +111,7 @@ class _GlucoseTrendViewState extends ConsumerState<GlucoseTrendView> {
                           logs: filtered,
                           targetMin: targetMin,
                           targetMax: targetMax,
+                          preferredUnit: preferredUnit,
                         ),
                       ),
                       const SizedBox(height: AppThemeTokens.spaceXl),
@@ -185,37 +197,56 @@ class _SummaryRow extends StatelessWidget {
   final List<GlucoseLog> logs;
   final double targetMin;
   final double targetMax;
+  final String preferredUnit;
 
   const _SummaryRow({
     required this.logs,
     required this.targetMin,
     required this.targetMax,
+    required this.preferredUnit,
   });
+
+  // Converts a log's stored value to the preferred display unit.
+  double _toPreferred(GlucoseLog log) {
+    if (log.unit == preferredUnit) return log.value;
+    return preferredUnit == 'mmol/L'
+        ? log.value / 18.0182
+        : log.value * 18.0182;
+  }
+
+  // Converts a mg/dL threshold (from profile) to the preferred unit.
+  double _thresholdToPreferred(double mgdl) {
+    return preferredUnit == 'mmol/L' ? mgdl / 18.0182 : mgdl;
+  }
 
   @override
   Widget build(BuildContext context) {
-    final avg = logs.isEmpty
+    final converted = logs.map(_toPreferred).toList();
+    final avg = converted.isEmpty
         ? 0.0
-        : logs.map((l) => l.value).reduce((a, b) => a + b) / logs.length;
-    final minVal = logs.isEmpty
+        : converted.reduce((a, b) => a + b) / converted.length;
+    final minVal = converted.isEmpty
         ? 0.0
-        : logs.map((l) => l.value).reduce((a, b) => a < b ? a : b);
-    final maxVal = logs.isEmpty
+        : converted.reduce((a, b) => a < b ? a : b);
+    final maxVal = converted.isEmpty
         ? 0.0
-        : logs.map((l) => l.value).reduce((a, b) => a > b ? a : b);
+        : converted.reduce((a, b) => a > b ? a : b);
 
-    final inRangeCount = logs
-        .where((l) => l.value >= targetMin && l.value <= targetMax)
-        .length;
-    final tir = logs.isEmpty ? 0.0 : (inRangeCount / logs.length) * 100;
+    final tMin = _thresholdToPreferred(targetMin);
+    final tMax = _thresholdToPreferred(targetMax);
+    final inRangeCount = converted.where((v) => v >= tMin && v <= tMax).length;
+    final tir = converted.isEmpty ? 0.0 : (inRangeCount / converted.length) * 100;
+
+    final isMmol = preferredUnit == 'mmol/L';
+    final decimals = isMmol ? 1 : 0;
 
     return Row(
       children: [
-        _StatBox(label: 'Avg', value: avg.toStringAsFixed(0), unit: 'mg/dL'),
+        _StatBox(label: 'Avg', value: avg.toStringAsFixed(decimals), unit: preferredUnit),
         const SizedBox(width: AppThemeTokens.spaceSm),
-        _StatBox(label: 'Min', value: minVal.toStringAsFixed(0), unit: 'mg/dL'),
+        _StatBox(label: 'Min', value: minVal.toStringAsFixed(decimals), unit: preferredUnit),
         const SizedBox(width: AppThemeTokens.spaceSm),
-        _StatBox(label: 'Max', value: maxVal.toStringAsFixed(0), unit: 'mg/dL'),
+        _StatBox(label: 'Max', value: maxVal.toStringAsFixed(decimals), unit: preferredUnit),
         const SizedBox(width: AppThemeTokens.spaceSm),
         Expanded(
           child: Container(
@@ -305,9 +336,9 @@ class _StatBox extends StatelessWidget {
             ),
             const SizedBox(height: 2),
             Text(
-              label,
+              '$label · $unit',
               style: const TextStyle(
-                fontSize: 11,
+                fontSize: 10,
                 color: AppThemeTokens.textSecondary,
               ),
             ),

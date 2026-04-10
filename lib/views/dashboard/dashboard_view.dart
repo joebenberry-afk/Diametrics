@@ -201,7 +201,6 @@ class DashboardView extends ConsumerWidget {
                     icon: Icons.directions_walk,
                     accentColor: AppThemeTokens.brandSecondary,
                     trendData: const [],
-                    onTap: () {},
                   ),
                 ],
               ),
