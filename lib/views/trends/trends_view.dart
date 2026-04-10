@@ -45,7 +45,7 @@ class TrendsView extends ConsumerWidget {
   }
 }
 
-class _TrendsContent extends ConsumerWidget {
+class _TrendsContent extends StatelessWidget {
   final TrendsData data;
   final int selectedDays;
   final double targetMin;
@@ -61,7 +61,7 @@ class _TrendsContent extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Column(
       children: [
         const SizedBox(height: AppThemeTokens.spaceMd),
@@ -89,6 +89,7 @@ class _TrendsContent extends ConsumerWidget {
           targetMin: targetMin,
           targetMax: targetMax,
           unit: unit,
+          selectedDays: selectedDays,
         ),
         const Divider(height: AppThemeTokens.spaceLg),
         Expanded(
@@ -261,7 +262,7 @@ class _GlucoseChart extends StatelessWidget {
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 22,
-              interval: maxX / 4,
+              interval: maxX > 0 ? maxX / 4 : 1,
               getTitlesWidget: (value, _) {
                 final dt =
                     rangeStart.add(Duration(minutes: value.toInt()));
@@ -304,12 +305,14 @@ class _StatsRow extends StatelessWidget {
   final double targetMin;
   final double targetMax;
   final String unit;
+  final int selectedDays;
 
   const _StatsRow({
     required this.glucoseLogs,
     required this.targetMin,
     required this.targetMax,
     required this.unit,
+    required this.selectedDays,
   });
 
   @override
@@ -318,19 +321,18 @@ class _StatsRow extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    // All math done in mg/dL; convert for display if user prefers mmol/L
-    double toMgdL(double v) =>
-        unit == 'mmol/L' ? v * 18.0182 : v;
-    double fromMgdL(double v) =>
-        unit == 'mmol/L' ? v / 18.0182 : v;
+    // Convert each log's value to mg/dL using that log's own unit field
+    double fromMgdL(double v) => unit == 'mmol/L' ? v / 18.0182 : v;
 
-    final mgValues = glucoseLogs.map((g) => toMgdL(g.value)).toList();
+    final mgValues = glucoseLogs.map((g) {
+      return g.unit == 'mmol/L' ? g.value * 18.0182 : g.value;
+    }).toList();
     final avg = mgValues.reduce((a, b) => a + b) / mgValues.length;
-    final tMinMg = toMgdL(targetMin);
-    final tMaxMg = toMgdL(targetMax);
-    final inRange =
-        mgValues.where((v) => v >= tMinMg && v <= tMaxMg).length;
-    final tirPct = (inRange / mgValues.length * 100);
+
+    // targetMin/targetMax are stored in mg/dL — compare against mg/dL values directly
+    final inRange = mgValues.where((v) => v >= targetMin && v <= targetMax).length;
+    final tir = mgValues.isEmpty ? 0.0 : (inRange / mgValues.length) * 100;
+
     // ADAG formula: eA1c = (avgGlucose_mgdL + 46.7) / 28.7
     final hba1c = (avg + 46.7) / 28.7;
 
@@ -338,14 +340,20 @@ class _StatsRow extends StatelessWidget {
         ? '${fromMgdL(avg).toStringAsFixed(1)} mmol/L'
         : '${avg.toStringAsFixed(0)} mg/dL';
 
+    // Only show HbA1c for 90-day range (ADAG formula requires ~90 days of data)
+    final hba1cStr = selectedDays >= 90
+        ? '${hba1c.toStringAsFixed(1)}%'
+        : '—';
+    final hba1cSub = selectedDays >= 90 ? 'Est. HbA1c' : 'Est. HbA1c (90D)';
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppThemeTokens.spaceMd),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           _StatCell(label: 'Avg', value: displayAvg),
-          _StatCell(label: 'In Range', value: '${tirPct.toStringAsFixed(0)}%'),
-          _StatCell(label: 'Est. HbA1c', value: '${hba1c.toStringAsFixed(1)}%'),
+          _StatCell(label: 'In Range', value: '${tir.toStringAsFixed(0)}%'),
+          _StatCell(label: hba1cSub, value: hba1cStr),
         ],
       ),
     );
@@ -391,8 +399,7 @@ class _GlucoseLogList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sorted = List<GlucoseLog>.from(logs)
-      ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    final sorted = logs.reversed.toList();
 
     if (sorted.isEmpty) {
       return const Center(
