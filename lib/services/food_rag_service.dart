@@ -27,7 +27,9 @@ class FoodRagService {
         continue;
       }
 
-      final qty = _extractQuantity(item.portion);
+      // When Gemini provides a direct weight estimate, quantity multiplier is 1.0
+      // (the weight already represents the full portion shown)
+      final qty = item.weightG > 0 ? 1.0 : _extractQuantity(item.portion);
       final searchName = _extractFoodName(item.portion, item.name);
 
       debugPrint('RAG: enriching "${item.name}" qty=$qty search="$searchName"');
@@ -44,6 +46,7 @@ class FoodRagService {
           fatGrams: (item.fatGrams * qty).clamp(0.0, 300.0),
           calories: (item.calories * qty).clamp(0.0, 3000.0),
           source: 'Custom Food DB',
+          weightG: item.weightG,
         ));
         continue;
       }
@@ -54,7 +57,10 @@ class FoodRagService {
         debugPrint('RAG: Tier2 LocalFood -> ${localMatch.name}');
         final n5k = await db.searchN5kIngredient(searchName);
         if (n5k != null && n5k.carbPerG > 0) {
-          final servingG = (localMatch.carbsPerServing / n5k.carbPerG).clamp(10.0, 600.0);
+          // Prefer AI-reported weight_g; fall back to inferring from carbs per gram
+          final servingG = item.weightG > 0
+              ? item.weightG.clamp(10.0, 600.0)
+              : (localMatch.carbsPerServing / n5k.carbPerG).clamp(10.0, 600.0);
           enrichedItems.add(FoodItem(
             name: item.name,
             portion: item.portion,
@@ -63,6 +69,7 @@ class FoodRagService {
             fatGrams: (n5k.fatPerG * servingG * qty).clamp(0.0, 300.0),
             calories: (n5k.calPerG * servingG * qty).clamp(0.0, 3000.0),
             source: 'USDA+N5K',
+            weightG: item.weightG,
           ));
           continue;
         }
@@ -74,6 +81,7 @@ class FoodRagService {
           fatGrams: (item.fatGrams * qty).clamp(0.0, 300.0),
           calories: (item.calories * qty).clamp(0.0, 3000.0),
           source: 'Local DB',
+          weightG: item.weightG,
         ));
         continue;
       }
@@ -82,9 +90,11 @@ class FoodRagService {
       final n5kOnly = await db.searchN5kIngredient(searchName);
       if (n5kOnly != null) {
         debugPrint('RAG: Tier2.5 N5K -> ${n5kOnly.name}');
-        final servingG = (item.carbsGrams > 0 && n5kOnly.carbPerG > 0)
-            ? (item.carbsGrams / n5kOnly.carbPerG).clamp(10.0, 600.0)
-            : 100.0;
+        final servingG = item.weightG > 0
+            ? item.weightG.clamp(10.0, 600.0)
+            : (item.carbsGrams > 0 && n5kOnly.carbPerG > 0)
+                ? (item.carbsGrams / n5kOnly.carbPerG).clamp(10.0, 600.0)
+                : 100.0;
         enrichedItems.add(FoodItem(
           name: item.name,
           portion: item.portion,
@@ -93,6 +103,7 @@ class FoodRagService {
           fatGrams: (n5kOnly.fatPerG * servingG * qty).clamp(0.0, 300.0),
           calories: (n5kOnly.calPerG * servingG * qty).clamp(0.0, 3000.0),
           source: 'N5K',
+          weightG: item.weightG,
         ));
         continue;
       }
@@ -113,18 +124,19 @@ class FoodRagService {
           fatGrams: (usdaData['fat']! * scale * qty).clamp(0.0, 300.0),
           calories: (usdaData['calories']! * scale * qty).clamp(0.0, 3000.0),
           source: 'USDA API',
+          weightG: item.weightG,
         ));
         continue;
       }
 
       // Tier 4: AI Estimate (quantity-scaled fallback)
       debugPrint('RAG: Tier4 AI fallback for "${item.name}"');
-      enrichedItems.add(item.withFullNutrition(
+      enrichedItems.add(item.copyWith(
         carbsGrams: (item.carbsGrams * qty).clamp(0.0, 500.0),
         proteinGrams: (item.proteinGrams * qty).clamp(0.0, 300.0),
         fatGrams: (item.fatGrams * qty).clamp(0.0, 300.0),
         calories: (item.calories * qty).clamp(0.0, 3000.0),
-        sourceName: item.source,
+        // weightG is preserved by copyWith automatically (not in the excluded fields)
       ));
     }
 
