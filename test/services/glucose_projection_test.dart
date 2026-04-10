@@ -304,5 +304,194 @@ void main() {
         expect(minGlucose, greaterThanOrEqualTo(40.0));
       });
     });
+
+    group('tMax modifiers', () {
+      test('high fat meal delays peak compared to low fat', () {
+        // fat > 40g triggers tMax + 30 min -> peak shifts later
+        final lowFat = GlucoseProjectionService.project(
+          baselineGlucose: 100.0,
+          carbsGrams: 60.0,
+          fiberGrams: 0.0,
+          proteinGrams: 10.0,
+          fatGrams: 5.0,
+          containsAlcohol: false,
+          containsCaffeine: false,
+          weightKg: 70.0,
+        );
+
+        final highFat = GlucoseProjectionService.project(
+          baselineGlucose: 100.0,
+          carbsGrams: 60.0,
+          fiberGrams: 0.0,
+          proteinGrams: 10.0,
+          fatGrams: 50.0, // > 40g triggers +30 min delay
+          containsAlcohol: false,
+          containsCaffeine: false,
+          weightKg: 70.0,
+        );
+
+        expect(
+          highFat.peakTimeMinutes,
+          greaterThanOrEqualTo(lowFat.peakTimeMinutes),
+          reason: 'High fat meal should peak at same time or later than low fat',
+        );
+      });
+
+      test('alcohol delays absorption (tMax + 20 min)', () {
+        final noAlcohol = GlucoseProjectionService.project(
+          baselineGlucose: 100.0,
+          carbsGrams: 40.0,
+          fiberGrams: 0.0,
+          proteinGrams: 5.0,
+          fatGrams: 5.0,
+          containsAlcohol: false,
+          containsCaffeine: false,
+          weightKg: 70.0,
+        );
+
+        final withAlcohol = GlucoseProjectionService.project(
+          baselineGlucose: 100.0,
+          carbsGrams: 40.0,
+          fiberGrams: 0.0,
+          proteinGrams: 5.0,
+          fatGrams: 5.0,
+          containsAlcohol: true,
+          containsCaffeine: false,
+          weightKg: 70.0,
+        );
+
+        expect(
+          withAlcohol.peakTimeMinutes,
+          greaterThanOrEqualTo(noAlcohol.peakTimeMinutes),
+          reason: 'Alcohol should delay or maintain peak time',
+        );
+      });
+
+      test('liquid food form accelerates absorption (earlier peak)', () {
+        final standard = GlucoseProjectionService.project(
+          baselineGlucose: 100.0,
+          carbsGrams: 50.0,
+          fiberGrams: 0.0,
+          proteinGrams: 5.0,
+          fatGrams: 2.0,
+          containsAlcohol: false,
+          containsCaffeine: false,
+          foodFormFactor: 'standard',
+          weightKg: 70.0,
+        );
+
+        final liquid = GlucoseProjectionService.project(
+          baselineGlucose: 100.0,
+          carbsGrams: 50.0,
+          fiberGrams: 0.0,
+          proteinGrams: 5.0,
+          fatGrams: 2.0,
+          containsAlcohol: false,
+          containsCaffeine: false,
+          foodFormFactor: 'liquid', // tMax - 15
+          weightKg: 70.0,
+        );
+
+        expect(
+          liquid.peakTimeMinutes,
+          lessThanOrEqualTo(standard.peakTimeMinutes),
+          reason: 'Liquid meal should peak at same time or earlier than standard',
+        );
+      });
+
+      test('highFiber food form delays absorption (later peak)', () {
+        final standard = GlucoseProjectionService.project(
+          baselineGlucose: 100.0,
+          carbsGrams: 50.0,
+          fiberGrams: 0.0,
+          proteinGrams: 5.0,
+          fatGrams: 2.0,
+          containsAlcohol: false,
+          containsCaffeine: false,
+          foodFormFactor: 'standard',
+          weightKg: 70.0,
+        );
+
+        final highFiber = GlucoseProjectionService.project(
+          baselineGlucose: 100.0,
+          carbsGrams: 50.0,
+          fiberGrams: 0.0,
+          proteinGrams: 5.0,
+          fatGrams: 2.0,
+          containsAlcohol: false,
+          containsCaffeine: false,
+          foodFormFactor: 'highFiber', // tMax + 10
+          weightKg: 70.0,
+        );
+
+        expect(
+          highFiber.peakTimeMinutes,
+          greaterThanOrEqualTo(standard.peakTimeMinutes),
+          reason: 'High fiber meal should peak at same time or later than standard',
+        );
+      });
+
+      test('caffeine boosts peak glucose height', () {
+        final noCaffeine = GlucoseProjectionService.project(
+          baselineGlucose: 100.0,
+          carbsGrams: 50.0,
+          fiberGrams: 0.0,
+          proteinGrams: 10.0,
+          fatGrams: 5.0,
+          containsAlcohol: false,
+          containsCaffeine: false,
+          weightKg: 70.0,
+          p1: 0.003, // low clearance to amplify the effect
+        );
+
+        final withCaffeine = GlucoseProjectionService.project(
+          baselineGlucose: 100.0,
+          carbsGrams: 50.0,
+          fiberGrams: 0.0,
+          proteinGrams: 10.0,
+          fatGrams: 5.0,
+          containsAlcohol: false,
+          containsCaffeine: true,
+          weightKg: 70.0,
+          p1: 0.003,
+        );
+
+        expect(
+          withCaffeine.peakGlucose,
+          greaterThan(noCaffeine.peakGlucose),
+          reason: 'Caffeine multiplies rise rate by 1.10, raising peak glucose',
+        );
+      });
+
+      test('post-exercise boosts clearance (lower peak)', () {
+        final normal = GlucoseProjectionService.project(
+          baselineGlucose: 120.0,
+          carbsGrams: 60.0,
+          fiberGrams: 0.0,
+          proteinGrams: 15.0,
+          fatGrams: 10.0,
+          containsAlcohol: false,
+          containsCaffeine: false,
+          postExercise: false,
+        );
+
+        final postExercise = GlucoseProjectionService.project(
+          baselineGlucose: 120.0,
+          carbsGrams: 60.0,
+          fiberGrams: 0.0,
+          proteinGrams: 15.0,
+          fatGrams: 10.0,
+          containsAlcohol: false,
+          containsCaffeine: false,
+          postExercise: true,
+        );
+
+        expect(
+          postExercise.peakGlucose,
+          lessThan(normal.peakGlucose),
+          reason: 'Post-exercise increases p1 by 35%, reducing glucose peak',
+        );
+      });
+    });
   });
 }
