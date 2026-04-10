@@ -231,4 +231,119 @@ void main() {
       verifyNever(() => mockUserRepo.saveProfile(any()));
     });
   });
+
+  group('EkfTuningService post_meal_30 updates', () {
+    late DateTime mealTime;
+
+    setUp(() {
+      mealTime = DateTime(2024, 6, 1, 12, 0);
+
+      when(() => mockUserRepo.getProfile())
+          .thenAnswer((_) async => _testProfile());
+      when(() => mockDataRepo.getMealLogs())
+          .thenAnswer((_) async => [_testMeal(timestamp: mealTime)]);
+      when(() => mockDataRepo.getGlucoseLogs()).thenAnswer((_) async => [
+        _preMealGlucose(mealTime: mealTime),
+      ]);
+    });
+
+    test('saveProfile is called once after a post_meal_30 reading', () async {
+      final glucoseLog = _postMealGlucose(
+        mealTime: mealTime,
+        minutesAfter: 30,
+        ctx: 'post_meal_30',
+        value: 170.0,
+      );
+
+      await EkfTuningService.tuneFromGlucoseLog(
+        glucoseLog: glucoseLog,
+        dataRepo: mockDataRepo,
+        userRepo: mockUserRepo,
+      );
+
+      verify(() => mockUserRepo.saveProfile(any())).called(1);
+    });
+
+    test('post_meal_30: only tMax changes, p1 and ISF remain the same', () async {
+      final profile = _testProfile();
+      final glucoseLog = _postMealGlucose(
+        mealTime: mealTime,
+        minutesAfter: 30,
+        ctx: 'post_meal_30',
+        value: 170.0,
+      );
+
+      await EkfTuningService.tuneFromGlucoseLog(
+        glucoseLog: glucoseLog,
+        dataRepo: mockDataRepo,
+        userRepo: mockUserRepo,
+      );
+
+      final captured =
+          verify(() => mockUserRepo.saveProfile(captureAny())).captured;
+      final saved = captured.last as UserProfile;
+
+      // p1 and ISF must remain exactly as in original profile
+      expect(saved.metabolicClearanceRate,
+          closeTo(profile.metabolicClearanceRate, 1e-9));
+      expect(saved.insulinSensitivityFactor,
+          closeTo(profile.insulinSensitivityFactor, 1e-9));
+      // tMax must have changed
+      expect(saved.absorptionDelayBase,
+          isNot(closeTo(profile.absorptionDelayBase, 1e-9)));
+    });
+
+    test('post_meal_30 positive innovation decreases tMax', () async {
+      // actual=250 is well above any 30-min projection from baseline=100, 45g carbs
+      // positive innovation -> tMaxSensitivity=-0.3 -> tMax decreases
+      final glucoseLog = _postMealGlucose(
+        mealTime: mealTime,
+        minutesAfter: 30,
+        ctx: 'post_meal_30',
+        value: 250.0,
+      );
+
+      await EkfTuningService.tuneFromGlucoseLog(
+        glucoseLog: glucoseLog,
+        dataRepo: mockDataRepo,
+        userRepo: mockUserRepo,
+      );
+
+      final captured =
+          verify(() => mockUserRepo.saveProfile(captureAny())).captured;
+      final saved = captured.last as UserProfile;
+
+      expect(saved.absorptionDelayBase,
+          lessThan(_testProfile().absorptionDelayBase),
+          reason: 'Positive innovation should decrease tMax '
+              '(food absorbed faster than model predicted)');
+    });
+
+    test('post_meal_30: tMax covariance shrinks after EKF update', () async {
+      final glucoseLog = _postMealGlucose(
+        mealTime: mealTime,
+        minutesAfter: 30,
+        ctx: 'post_meal_30',
+        value: 200.0,
+      );
+
+      await EkfTuningService.tuneFromGlucoseLog(
+        glucoseLog: glucoseLog,
+        dataRepo: mockDataRepo,
+        userRepo: mockUserRepo,
+      );
+
+      final captured =
+          verify(() => mockUserRepo.saveProfile(captureAny())).captured;
+      final saved = captured.last as UserProfile;
+
+      // After update: covTMax grows by processNoise (0.1), then shrinks by Kalman gain.
+      // Net: new_cov < initial_cov + processNoise
+      const processNoise = 0.1;
+      expect(saved.ekfCovTMax,
+          lessThan(_testProfile().ekfCovTMax + processNoise),
+          reason: 'EKF update should consume some covariance');
+    });
+  });
+
 }
