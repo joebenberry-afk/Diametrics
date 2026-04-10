@@ -178,7 +178,7 @@ class _MedicationHistoryTile extends StatelessWidget {
         '${log.units.toStringAsFixed(1)} units • ${DateFormatter.formatDateTime(log.timestamp)}',
         style: const TextStyle(
           color: AppThemeTokens.textSecondary,
-          fontSize: 13,
+          fontSize: 14,
         ),
       ),
       trailing: log.notes?.isNotEmpty == true

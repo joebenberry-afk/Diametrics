@@ -186,7 +186,7 @@ class _EmergencyContactsViewState extends State<EmergencyContactsView> {
                                 Text(
                                   'This contact will be dialed immediately when you activate the SOS button on your dashboard.',
                                   style: TextStyle(
-                                    fontSize: 13,
+                                    fontSize: 14,
                                     color: isDark ? Colors.white70 : AppThemeTokens.textSecondary,
                                   ),
                                 ),

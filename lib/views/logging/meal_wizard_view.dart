@@ -220,7 +220,7 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                     'Point camera at your meal',
                     style: TextStyle(
                       color: isDark ? Colors.white54 : AppThemeTokens.textSecondary,
-                      fontSize: 13,
+                      fontSize: 14,
                     ),
                   ),
                   onTap: () {
@@ -242,7 +242,7 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                     'Select a food photo you already have',
                     style: TextStyle(
                       color: isDark ? Colors.white54 : AppThemeTokens.textSecondary,
-                      fontSize: 13,
+                      fontSize: 14,
                     ),
                   ),
                   onTap: () {
@@ -270,7 +270,7 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                     'Scan a packaged food label for exact nutrition',
                     style: TextStyle(
                       color: isDark ? Colors.white54 : AppThemeTokens.textSecondary,
-                      fontSize: 13,
+                      fontSize: 14,
                     ),
                   ),
                   onTap: () {
@@ -390,7 +390,8 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                       ),
                     ),
                   ),
-                  GestureDetector(
+                  InkWell(
+                    borderRadius: BorderRadius.circular(AppThemeTokens.radiusSm),
                     onTap: () {
                       ref.read(loggingWizardProvider.notifier)
                           .setPreMealGlucose(0);
@@ -402,7 +403,7 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                       'Edit',
                       style: TextStyle(
                         color: AppThemeTokens.brandAccent,
-                        fontSize: 13,
+                        fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -521,7 +522,8 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
 
     // Error
     if (_analysisError != null) {
-      return GestureDetector(
+      return InkWell(
+        borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
         onTap: _showSourceSheet,
         child: Container(
           padding: const EdgeInsets.all(AppThemeTokens.spaceMd),
@@ -630,7 +632,7 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                       Text(
                         'Values filled in below — review and adjust if needed',
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: 14,
                           color: isDark ? Colors.white38 : AppThemeTokens.textSecondary,
                           fontStyle: FontStyle.italic,
                         ),
@@ -649,7 +651,7 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                     children: [
                       Icon(LucideIcons.refreshCw, size: 14),
                       SizedBox(height: 2),
-                      Text('Redo', style: TextStyle(fontSize: 11)),
+                      Text('Redo', style: TextStyle(fontSize: 14)),
                     ],
                   ),
                 ),
@@ -729,7 +731,7 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                                   style: TextStyle(
                                     color: AppThemeTokens.brandAccent,
                                     fontWeight: FontWeight.w700,
-                                    fontSize: 13,
+                                    fontSize: 14,
                                   ),
                                 ),
                                 Text(
@@ -737,7 +739,7 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                                   '${item.fatGrams.toStringAsFixed(1)}g F',
                                   style: TextStyle(
                                     color: isDark ? Colors.white38 : AppThemeTokens.textSecondary,
-                                    fontSize: 11,
+                                    fontSize: 14,
                                   ),
                                 ),
                               ],
@@ -763,7 +765,8 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
     }
 
     // Default: tap to analyze
-    return GestureDetector(
+    return InkWell(
+      borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
       onTap: _showSourceSheet,
       child: Container(
         height: 130,
@@ -996,7 +999,7 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                       'Alcohol, caffeine, and food form affect glucose',
                       style: TextStyle(
                         color: isDark ? Colors.white54 : AppThemeTokens.textSecondary,
-                        fontSize: 12,
+                        fontSize: 14,
                       ),
                     ),
                     children: [
@@ -1016,7 +1019,7 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                             color: isDark
                                 ? Colors.white54
                                 : AppThemeTokens.textSecondary,
-                            fontSize: 12,
+                            fontSize: 14,
                           ),
                         ),
                         value: state.containsAlcohol,
@@ -1039,7 +1042,7 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                             color: isDark
                                 ? Colors.white54
                                 : AppThemeTokens.textSecondary,
-                            fontSize: 12,
+                            fontSize: 14,
                           ),
                         ),
                         value: state.containsCaffeine,
@@ -1071,7 +1074,7 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                                 color: isDark
                                     ? Colors.white54
                                     : AppThemeTokens.textSecondary,
-                                fontSize: 12,
+                                fontSize: 14,
                               ),
                             ),
                             const SizedBox(height: AppThemeTokens.spaceSm),
@@ -1223,7 +1226,7 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                         : 'Enter carbs, protein and fat values to continue',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 14,
                       color: isDark ? Colors.white38 : AppThemeTokens.textSecondary,
                     ),
                   ),
@@ -1277,7 +1280,7 @@ class _SectionHeader extends StatelessWidget {
               Text(
                 subtitle!,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 14,
                   color: isDark ? Colors.white38 : AppThemeTokens.textSecondary,
                 ),
               ),
@@ -1346,7 +1349,7 @@ class _MacroInputRow extends StatelessWidget {
                   Text(
                     'Optional',
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: 14,
                       color: isDark ? Colors.white38 : AppThemeTokens.textSecondary,
                     ),
                   ),
@@ -1399,7 +1402,7 @@ class _MacroInputRow extends StatelessWidget {
                 suffixText: unit,
                 suffixStyle: TextStyle(
                   color: isDark ? Colors.white54 : AppThemeTokens.textSecondary,
-                  fontSize: 12,
+                  fontSize: 14,
                 ),
               ),
               onChanged: onChanged,
@@ -1429,7 +1432,8 @@ class _FoodFormChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return InkWell(
+      borderRadius: BorderRadius.circular(AppThemeTokens.radiusFull),
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
@@ -1466,7 +1470,7 @@ class _FoodFormChip extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 14,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                 color: isSelected
                     ? AppThemeTokens.brandPrimary

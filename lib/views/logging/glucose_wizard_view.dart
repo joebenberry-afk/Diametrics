@@ -91,7 +91,7 @@ class _GlucoseWizardViewState extends ConsumerState<GlucoseWizardView> {
                         hintStyle: TextStyle(
                           color: AppThemeTokens.textSecondary,
                         ),
-                        errorStyle: TextStyle(fontSize: 11),
+                        errorStyle: TextStyle(fontSize: 14),
                       ),
                       onChanged: (val) {
                         final parsed = double.tryParse(val);

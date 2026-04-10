@@ -274,7 +274,7 @@ class DashboardView extends ConsumerWidget {
                                   subtitle: Text(
                                     '${_timeAgo(entry['timestamp'] as DateTime)} • ${entry['subtitle']}',
                                     style: const TextStyle(
-                                      fontSize: 13,
+                                      fontSize: 14,
                                       color: AppThemeTokens.textSecondary,
                                     ),
                                   ),
@@ -435,7 +435,7 @@ class _QuickLogButton extends StatelessWidget {
                 label,
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
-                  fontSize: 13,
+                  fontSize: 14,
                   color: isDark ? Colors.white : AppThemeTokens.textPrimary,
                 ),
               ),
@@ -526,19 +526,19 @@ class _DailySummaryCard extends ConsumerWidget {
                             const Text(
                               'Time in Range',
                               style: TextStyle(
-                                fontSize: 13,
+                                fontSize: 14,
                                 color: AppThemeTokens.textSecondary,
                               ),
                             ),
                             Text(
                               '${s.timeInRangePct.toStringAsFixed(0)}%',
                               style: TextStyle(
-                                fontSize: 13,
+                                fontSize: 14,
                                 fontWeight: FontWeight.w700,
                                 color: s.timeInRangePct >= 70
                                     ? AppThemeTokens.brandSuccess
                                     : s.timeInRangePct >= 50
-                                    ? AppThemeTokens.warning
+                                    ? AppThemeTokens.warningText
                                     : AppThemeTokens.error,
                               ),
                             ),
@@ -629,7 +629,7 @@ class _SummaryStatTile extends StatelessWidget {
           Text(
             unit,
             style: TextStyle(
-              fontSize: 10,
+              fontSize: 12,
               color: isDark ? Colors.white54 : AppThemeTokens.textSecondary,
             ),
           ),
@@ -637,7 +637,7 @@ class _SummaryStatTile extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 12,
               color: isDark ? Colors.white54 : AppThemeTokens.textSecondary,
             ),
           ),
@@ -709,7 +709,7 @@ class _AlertBanner extends StatelessWidget {
                 message,
                 style: TextStyle(
                   color: text,
-                  fontSize: 13,
+                  fontSize: 14,
                   fontWeight: FontWeight.w600,
                 ),
               ),

@@ -190,7 +190,7 @@ class _GlucoseChart extends StatelessWidget {
       label: VerticalLineLabel(
         show: true,
         labelResolver: (_) => '🍽',
-        style: const TextStyle(fontSize: 10),
+        style: const TextStyle(fontSize: 12),
         alignment: Alignment.topCenter,
       ),
     )).toList();
@@ -205,7 +205,7 @@ class _GlucoseChart extends StatelessWidget {
           label: VerticalLineLabel(
             show: true,
             labelResolver: (_) => '💉',
-            style: const TextStyle(fontSize: 10),
+            style: const TextStyle(fontSize: 12),
             alignment: Alignment.topCenter,
           ),
         ))
@@ -270,7 +270,7 @@ class _GlucoseChart extends StatelessWidget {
                     ? value.toStringAsFixed(1)
                     : value.toInt().toString(),
                 style: const TextStyle(
-                  fontSize: 10,
+                  fontSize: 12,
                   color: AppThemeTokens.textSecondary,
                 ),
               ),
@@ -288,7 +288,7 @@ class _GlucoseChart extends StatelessWidget {
                 return Text(
                   label,
                   style: const TextStyle(
-                    fontSize: 9,
+                    fontSize: 12,
                     color: AppThemeTokens.textSecondary,
                   ),
                 );
@@ -398,7 +398,7 @@ class _StatCell extends StatelessWidget {
         Text(
           label,
           style: const TextStyle(
-            fontSize: 11,
+            fontSize: 14,
             color: AppThemeTokens.textSecondary,
           ),
         ),
@@ -444,7 +444,7 @@ class _GlucoseLogList extends StatelessWidget {
           ),
           subtitle: Text(
             '${g.context.replaceAll('_', ' ')} · $dateStr',
-            style: const TextStyle(fontSize: 11),
+            style: const TextStyle(fontSize: 14),
           ),
         );
       },

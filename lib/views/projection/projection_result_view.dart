@@ -30,7 +30,7 @@ class ProjectionResultView extends ConsumerWidget {
 
   Color _riskColor() => switch (result.riskLevel) {
         'normal' => AppThemeTokens.brandSuccess,
-        'elevated' => AppThemeTokens.warning,
+        'elevated' => AppThemeTokens.warningText,
         'high' => AppThemeTokens.error,
         'hypo_risk' => const Color(0xFF7B2D8B),
         _ => AppThemeTokens.brandPrimary,
@@ -128,7 +128,7 @@ class ProjectionResultView extends ConsumerWidget {
                         '+/- ${_isMmol ? _toUser(result.confidenceWidth).toStringAsFixed(1) : result.confidenceWidth.toStringAsFixed(0)} $unit confidence band',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: AppThemeTokens.textSecondary,
-                          fontSize: 11,
+                          fontSize: 14,
                         ),
                       ),
                     ],
@@ -422,7 +422,7 @@ class ProjectionResultView extends ConsumerWidget {
             getTitlesWidget: (value, meta) {
               return Text(
                 _isMmol ? value.toStringAsFixed(1) : value.toInt().toString(),
-                style: const TextStyle(color: Colors.grey, fontSize: 10),
+                style: const TextStyle(color: Colors.grey, fontSize: 12),
                 textAlign: TextAlign.right,
               );
             },
@@ -434,12 +434,12 @@ class ProjectionResultView extends ConsumerWidget {
             interval: 60,
             reservedSize: 30,
             getTitlesWidget: (value, meta) {
-              if (value == 0) return const Text('0', style: TextStyle(color: Colors.grey, fontSize: 10));
+              if (value == 0) return const Text('0', style: TextStyle(color: Colors.grey, fontSize: 12));
               return Padding(
                 padding: const EdgeInsets.only(top: 8.0),
                 child: Text(
                   '${(value / 60).toInt()}hr',
-                  style: const TextStyle(color: Colors.grey, fontSize: 10),
+                  style: const TextStyle(color: Colors.grey, fontSize: 12),
                 ),
               );
             },
@@ -563,7 +563,7 @@ class _ConvergenceIndicator extends StatelessWidget {
                 : 'Your predictions improve with more logged meals.',
             style: theme.textTheme.bodySmall?.copyWith(
               color: AppThemeTokens.textSecondary,
-              fontSize: 11,
+              fontSize: 14,
             ),
           ),
         ],

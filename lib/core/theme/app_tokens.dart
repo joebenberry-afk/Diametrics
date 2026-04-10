@@ -23,6 +23,7 @@ class AppThemeTokens {
   static const Color error = Color(0xFF780000); // Deep Accessible Red
   static const Color success = Color(0xFF2D6A4F);
   static const Color warning = Color(0xFFFFB703);
+  static const Color warningText = Color(0xFF9C6E00); // dark amber, ~4.8:1 on white
 
   // Typography
   static const String fontFamily = 'Inter';

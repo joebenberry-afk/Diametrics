@@ -1,9 +1,9 @@
 # DiaMetrics Glucose Prediction System
 ## Technical Architecture Document
 
-**Version:** 4.0  
+**Version:** 4.1  
 **Date:** April 2026  
-**Status:** Clinical Roadmap (Phase 4)
+**Status:** Clinical Implementation (Phase 4)
 
 ---
 
@@ -109,12 +109,14 @@ Since local food databases lack reliable Glycemic Index (GI) data, we use **Food
 | **Processed** | -10 minutes | Refined starches absorb significantly faster |
 | **High Fiber** | +10 minutes | Fiber matrix slows starch hydrolysis |
 | **High Fat/Protein** | +30 minutes | "Pizza effect" — delays gastric emptying |
+| **Caribbean** | Regional Scaling | Applied via `CaribbeanFoodHeuristics` |
+| **Alcohol** | +20 minutes | Inhibits gastric emptying and glucose release |
 
-#### STEP 3: Post-Exercise Disposal Boost
+#### STEP 3: Metabolic Modifiers
 
-If the `postExercise` flag is active:
-- **Disposal Boost:** $p_1$ (clearance rate) is multiplied by **1.35x** (+35%).
-- **Absorption Lead:** $tMax$ is reduced by **10 minutes** to reflect faster systemic circulation.
+1. **Post-Exercise Disposal Boost:** If the `postExercise` flag is active, $p_1$ is multiplied by **1.35x** (+35%) and $tMax$ is reduced by **10 minutes**.
+2. **Caffeine Spike:** If `containsCaffeine` is true, the overall glucose rise rate is multiplied by **1.10x** (+10%) to reflect transient adrenaline-driven resistance.
+3. **Alcohol Suppression:** If `containsAlcohol` is true, a linear drop of **3.0 mg/dL/hr** is applied starting at $t=60$, modelling the liver's inhibition of gluconeogenesis.
 
 #### STEP 4: Dual-Kernel Gamma Distribution
 
@@ -180,8 +182,13 @@ Innovation:    y = actual_glucose - projected_glucose
 Kalman Gain:   K = P / (P + R)
 State Update:  x_new = x + K * y * sensitivity
 Cov Update:    P_new = (1 - K) * P
-Process Noise: P += Q  (injected each cycle to prevent starvation)
+Process Noise: P += Q  (injected each cycle to prevent covariance collapse)
 ```
+
+**Empirical Jacobians (Sensitivities):**
+- **tMax Sensitivity:** -0.3 (higher delay = lower early glucose)
+- **p1 Sensitivity:** -0.001 (higher clearance = lower late glucose)
+- **ISF Sensitivity:** 0.1 (higher sensitivity = lower resulting glucose)
 
 ### 4.4 Decoupled Context (Preserved from Phase 2)
 
@@ -201,14 +208,17 @@ Additionally, `tuningMealCount` is still incremented for backward-compatible con
 
 ### 4.6 Meal Superposition (Replaces Overlap Guard)
 
-Instead of aborting tuning when overlapping meals are detected, the Phase 4 engine calculates the **residual glucose contribution** from each overlapping meal's deterministic kernel tail.
+Instead of aborting tuning when overlapping meals are detected, the Phase 4 engine calculates the **residual glucose contribution** from each overlapping meal to isolate the metabolic signal.
 
 **Algorithm:**
 1. Detect meals logged between the primary meal and the glucose reading.
-2. If <= 2 overlapping meals: calculate each meal's decaying tail contribution at the reading time.
-3. Subtract the combined residual from the actual reading to isolate the primary meal's signal.
-4. Continue with the EKF update using the adjusted innovation.
-5. If > 2 overlapping meals: abort (triple-stacking introduces too much uncertainty).
+2. If <= 2 overlapping meals:
+   - Re-project each overlapping meal from a **zero baseline** ($G_0 = 0$).
+   - Calculate its contribution at the reading time.
+   - Sum these contributions to get the `residualContribution`.
+3. Subtract the `residualContribution` from the actual reading to isolate the primary meal's signal.
+4. Continue with the EKF update using the adjusted innovation ($y = (Actual - Residual) - Predicted$).
+5. If > 2 overlapping meals: abort (signal-to-noise ratio too low).
 
 ### 4.7 Safety & Convergence
 
@@ -239,11 +249,11 @@ The onboarding flow uses a tiered approach to minimize cognitive load:
 
 ### 5.2 Basal-Only Guard
 
-If `insulinCategory` is `basal_only` or `none`, the IOB calculation returns **0.0 immediately**. This prevents a user who only takes Lantus or Tresiba from having phantom mealtime IOB incorrectly suppress their projected glucose curve.
+If `insulinCategory` is `basal_only` or `none`, the IOB calculation returns **0.0 units immediately**. This prevents a user who only takes long-acting basal insulin (e.g., Lantus, Tresiba) from having "phantom insulin" incorrectly suppress their projected glucose curve. The system assumes basal insulin reaches a steady-state equilibrium which is captured by the user's `fastingSetpoint` rather than dynamic IOB.
 
 ### 5.3 The Walsh Curve
 
-The Walsh model uses a sigmoid (S-curve) approximation where $t$ is the fraction of the user's configured `insulinDiaMinutes`:
+The Walsh model uses a sigmoid (S-curve) approximation where $t$ is the fraction of the user's configured `insulinDiaMinutes` from their **UserProfile**:
 
 ```
 t = elapsedMinutes / profile.insulinDiaMinutes
@@ -374,19 +384,20 @@ The `ProjectionResultView` renders:
 
 For comparing this system against alternative approaches:
 
-| Dimension | DiaMetrics Phase 3 Approach |
+| Dimension | DiaMetrics Phase 4 Approach |
 |---|---|
 | **Model type** | Deterministic Dual-Kernel (Hovorka based) |
 | **Training data required** | Zero-start (population defaults) |
 | **Personalisation method** | **Extended Kalman Filter (EKF)** |
 | **Prediction horizon** | 4 hours (240 minutes) |
 | **Macronutrient handling** | **Decoupled TAG** (Separate Carb/Protein kernels) |
-| **GI weighting** | **Food-Form Heuristics + Caribbean Regional Multipliers** |
-| **Insulin modeling** | **Dynamic Walsh Bilinear** (drug-specific DIA) |
+| **GI weighting** | **Food-Form Heuristics + Regional Multipliers** |
+| **Caffeine/Alcohol** | **Mechanistic model (Inhibition/Resistance)** |
+| **Insulin modeling** | **Profile-Level Walsh Bilinear** |
 | **Circadian modeling** | **Dawn Phenomenon** (sine-wave 4-8 AM) |
-| **Overlapping meals** | **Superposition Engine** (residual tail calculation) |
-| **Confidence tracking** | **Time-Varying Sine Envelope + EKF Covariance** |
-| **Explainability** | Full (deterministic differential equations) |
+| **Overlapping meals** | **Superposition Engine** (Residual subtraction) |
+| **Confidence tracking** | **Sine Envelope + EKF Covariance** |
+| **Explainability** | Full (deterministic metabolic kernels) |
 | **Known limitations** | No stress/illness modeling |
 
 ---

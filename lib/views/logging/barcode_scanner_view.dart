@@ -293,7 +293,7 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView>
           const SizedBox(height: 8),
           const Text(
             'Supported: EAN-13, UPC-A, QR codes',
-            style: TextStyle(color: Colors.white60, fontSize: 12),
+            style: TextStyle(color: Colors.white60, fontSize: 14),
           ),
         ],
       ),
@@ -606,7 +606,7 @@ class _TutorialBarcodePainter extends CustomPainter {
     final tp = TextPainter(
       text: TextSpan(
         text: numText,
-        style: const TextStyle(color: Colors.white54, fontSize: 11, letterSpacing: 1.5),
+        style: const TextStyle(color: Colors.white54, fontSize: 12, letterSpacing: 1.5),
       ),
       textDirection: TextDirection.ltr,
     )..layout();

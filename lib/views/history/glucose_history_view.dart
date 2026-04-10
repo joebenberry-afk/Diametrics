@@ -185,7 +185,7 @@ class _GlucoseHistoryTile extends StatelessWidget {
 
     Color statusColor = AppThemeTokens.brandSuccess;
     if (log.value < targetMin) {
-      statusColor = AppThemeTokens.warning;
+      statusColor = AppThemeTokens.warningText;
     } else if (log.value > targetMax) {
       statusColor = AppThemeTokens.error;
     }
@@ -220,7 +220,7 @@ class _GlucoseHistoryTile extends StatelessWidget {
         '${_friendlyContext(log.context)} • ${DateFormatter.formatDateTime(log.timestamp)}',
         style: const TextStyle(
           color: AppThemeTokens.textSecondary,
-          fontSize: 13,
+          fontSize: 14,
         ),
       ),
       trailing: log.notes?.isNotEmpty == true

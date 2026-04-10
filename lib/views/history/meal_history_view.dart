@@ -182,7 +182,7 @@ class _MealHistoryTile extends StatelessWidget {
             '${log.carbohydrates.toStringAsFixed(0)}g carbs • ${log.proteins.toStringAsFixed(0)}g protein • ${log.fats.toStringAsFixed(0)}g fat',
             style: TextStyle(
               color: isDark ? Colors.white70 : AppThemeTokens.textPrimary,
-              fontSize: 13,
+              fontSize: 14,
             ),
           ),
           const SizedBox(height: 2),
@@ -190,7 +190,7 @@ class _MealHistoryTile extends StatelessWidget {
             DateFormatter.formatDateTime(log.timestamp),
             style: const TextStyle(
               color: AppThemeTokens.textSecondary,
-              fontSize: 12,
+              fontSize: 14,
             ),
           ),
           if (log.containsAlcohol || log.containsCaffeine)
@@ -208,7 +208,7 @@ class _MealHistoryTile extends StatelessWidget {
                   if (log.containsCaffeine)
                     _MiniChip(
                       label: 'Caffeine',
-                      color: AppThemeTokens.warning,
+                      color: AppThemeTokens.warningText,
                       icon: Icons.coffee,
                     ),
                 ],
@@ -254,7 +254,7 @@ class _MiniChip extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              fontSize: 10,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
               color: color,
             ),

@@ -646,7 +646,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                         'Readings outside your target range will be flagged. '
                         'Consult your doctor before changing these values.',
                         style: TextStyle(
-                          fontSize: 13,
+                          fontSize: 14,
                           color: AppThemeTokens.textSecondary,
                         ),
                       ),
@@ -749,7 +749,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                       color: isDark
                           ? Colors.white60
                           : AppThemeTokens.textSecondary,
-                      fontSize: 13,
+                      fontSize: 14,
                     ),
                   ),
                   trailing: const Icon(
@@ -827,7 +827,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                 subtitle: Text(
                   'Only change these if advised by a healthcare professional.',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 14,
                     color: isDark ? Colors.white60 : AppThemeTokens.textSecondary,
                   ),
                 ),
@@ -877,7 +877,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                   'Manage who to call in an emergency',
                   style: TextStyle(
                     color: isDark ? Colors.white60 : AppThemeTokens.textSecondary,
-                    fontSize: 13,
+                    fontSize: 14,
                   ),
                 ),
                 trailing: const Icon(Icons.chevron_right_rounded, color: AppThemeTokens.textSecondary),
@@ -950,7 +950,7 @@ class _ProfileHeader extends StatelessWidget {
                   'Tap a field below to edit your profile',
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.75),
-                    fontSize: 13,
+                    fontSize: 14,
                   ),
                 ),
               ],
@@ -1111,7 +1111,7 @@ class _GenderSelector extends StatelessWidget {
         Text(
           'Gender Identity',
           style: TextStyle(
-            fontSize: 13,
+            fontSize: 14,
             color: isDark ? Colors.white60 : AppThemeTokens.textSecondary,
             fontWeight: FontWeight.w500,
           ),
@@ -1123,7 +1123,8 @@ class _GenderSelector extends StatelessWidget {
             return Expanded(
               child: Padding(
                 padding: EdgeInsets.only(right: g != options.last ? 8 : 0),
-                child: GestureDetector(
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
                   onTap: () => onChanged(g),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 150),
@@ -1242,7 +1243,7 @@ class _DiabetesTypeSelector extends StatelessWidget {
         Text(
           'Diabetes Type',
           style: TextStyle(
-            fontSize: 13,
+            fontSize: 14,
             color: isDark ? Colors.white60 : AppThemeTokens.textSecondary,
             fontWeight: FontWeight.w500,
           ),
@@ -1258,7 +1259,8 @@ class _DiabetesTypeSelector extends StatelessWidget {
           physics: const NeverScrollableScrollPhysics(),
           children: _types.map((t) {
             final isSelected = selected == t;
-            return GestureDetector(
+            return InkWell(
+              borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
               onTap: () => onChanged(t),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 150),
@@ -1283,7 +1285,7 @@ class _DiabetesTypeSelector extends StatelessWidget {
                     style: TextStyle(
                       color: isSelected ? Colors.white : inactiveText,
                       fontWeight: FontWeight.w600,
-                      fontSize: 13,
+                      fontSize: 14,
                     ),
                   ),
                 ),
@@ -1358,7 +1360,7 @@ class _GlucoseUnitToggle extends StatelessWidget {
         Text(
           'Preferred Glucose Unit',
           style: TextStyle(
-            fontSize: 13,
+            fontSize: 14,
             color: isDark ? Colors.white60 : AppThemeTokens.textSecondary,
             fontWeight: FontWeight.w500,
           ),
@@ -1370,7 +1372,8 @@ class _GlucoseUnitToggle extends StatelessWidget {
             return Expanded(
               child: Padding(
                 padding: EdgeInsets.only(right: unit == 'mg/dL' ? 8 : 0),
-                child: GestureDetector(
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
                   onTap: () => onChanged(unit),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 150),
@@ -1442,7 +1445,7 @@ class _SettingsSwitch extends StatelessWidget {
         subtitle,
         style: TextStyle(
           color: isDark ? Colors.white60 : AppThemeTokens.textSecondary,
-          fontSize: 13,
+          fontSize: 14,
         ),
       ),
       value: value,
@@ -1500,7 +1503,7 @@ class _GlucoseTargetVisual extends StatelessWidget {
               Text(
                 'Target Range Preview',
                 style: const TextStyle(
-                  fontSize: 13,
+                  fontSize: 14,
                   color: AppThemeTokens.textSecondary,
                   fontWeight: FontWeight.w500,
                 ),
@@ -1509,7 +1512,7 @@ class _GlucoseTargetVisual extends StatelessWidget {
                 Text(
                   '${displayMin.toStringAsFixed(dp)}–${displayMax.toStringAsFixed(dp)} $unit',
                   style: const TextStyle(
-                    fontSize: 13,
+                    fontSize: 14,
                     color: AppThemeTokens.brandPrimary,
                     fontWeight: FontWeight.w700,
                   ),
@@ -1551,14 +1554,14 @@ class _GlucoseTargetVisual extends StatelessWidget {
               const Text(
                 '0',
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: 14,
                   color: AppThemeTokens.textSecondary,
                 ),
               ),
               Text(
                 axisMaxLabel,
                 style: const TextStyle(
-                  fontSize: 11,
+                  fontSize: 14,
                   color: AppThemeTokens.textSecondary,
                 ),
               ),
@@ -1763,7 +1766,7 @@ class _MetabolicParamsSectionState extends State<_MetabolicParamsSection> {
                         'Auto-tuned by AI · Expert use only',
                         style: TextStyle(
                           color: amber,
-                          fontSize: 12,
+                          fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -1771,7 +1774,8 @@ class _MetabolicParamsSectionState extends State<_MetabolicParamsSection> {
                   ),
                 ),
                 // Lock / Unlock toggle chip
-                GestureDetector(
+                InkWell(
+                  borderRadius: BorderRadius.circular(AppThemeTokens.radiusFull),
                   onTap: _unlocked
                       ? () => setState(() => _unlocked = false)
                       : _requestUnlock,
@@ -1802,7 +1806,7 @@ class _MetabolicParamsSectionState extends State<_MetabolicParamsSection> {
                         Text(
                           _unlocked ? 'Unlocked' : 'Locked',
                           style: TextStyle(
-                            fontSize: 11,
+                            fontSize: 14,
                             fontWeight: FontWeight.w700,
                             color: _unlocked
                                 ? const Color(0xFF059669)
@@ -1839,7 +1843,7 @@ class _MetabolicParamsSectionState extends State<_MetabolicParamsSection> {
                           ? 'You are editing clinical parameters. Changes affect glucose predictions.'
                           : 'These values are automatically learned from your logs. No action needed.',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 14,
                         color: isDark ? Colors.amber.shade200 : amber,
                         fontWeight: FontWeight.w500,
                         height: 1.4,
@@ -2062,7 +2066,7 @@ class _ParamSlider extends StatelessWidget {
               child: Text(
                 '${value.toStringAsFixed(displayDecimals)} $unit',
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 14,
                   fontWeight: FontWeight.w700,
                   color: atDefault ? const Color(0xFF059669) : accent,
                 ),
@@ -2074,7 +2078,7 @@ class _ParamSlider extends StatelessWidget {
         Text(
           description,
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 14,
             color: textSecondary,
             height: 1.4,
           ),
@@ -2100,7 +2104,7 @@ class _ParamSlider extends StatelessWidget {
           children: [
             Text(
               min.toStringAsFixed(displayDecimals),
-              style: TextStyle(fontSize: 10, color: textSecondary),
+              style: TextStyle(fontSize: 12, color: textSecondary),
             ),
             Row(
               children: [
@@ -2108,13 +2112,13 @@ class _ParamSlider extends StatelessWidget {
                     size: 14, color: textSecondary),
                 Text(
                   'Default: ${defaultValue.toStringAsFixed(displayDecimals)}',
-                  style: TextStyle(fontSize: 10, color: textSecondary),
+                  style: TextStyle(fontSize: 12, color: textSecondary),
                 ),
               ],
             ),
             Text(
               max.toStringAsFixed(displayDecimals),
-              style: TextStyle(fontSize: 10, color: textSecondary),
+              style: TextStyle(fontSize: 12, color: textSecondary),
             ),
           ],
         ),

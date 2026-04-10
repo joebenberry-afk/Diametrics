@@ -153,7 +153,7 @@ class _SplashScreenState extends State<SplashScreen>
         Text(
           'Loading your health data…',
           style: GoogleFonts.inter(
-            fontSize: 12,
+            fontSize: 14,
             color: Colors.white38,
           ),
         ),
