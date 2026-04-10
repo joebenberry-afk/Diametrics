@@ -12,8 +12,10 @@ import '../../src/domain/entities/food_analysis_result.dart';
 import '../../src/domain/entities/food_item.dart';
 import '../../src/domain/repositories/food_analyzer_repository.dart';
 import '../../viewmodels/logging_wizard_viewmodel.dart';
-import '../projection/projection_result_view.dart';
-import 'barcode_scanner_view.dart';
+import 'package:go_router/go_router.dart';
+import '../../models/projection_result.dart';
+import '../../router/projection_route_args.dart';
+import '../../router/route_names.dart';
 
 class MealWizardView extends ConsumerStatefulWidget {
   const MealWizardView({super.key});
@@ -125,10 +127,7 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
 
   Future<void> _openBarcodeScanner() async {
     AppLockConfig.ignoreNextResume = true;
-    final FoodItem? result = await Navigator.push<FoodItem>(
-      context,
-      MaterialPageRoute(builder: (_) => const BarcodeScannerView()),
-    );
+    final FoodItem? result = await context.push<FoodItem>(Routes.logMealBarcode);
     if (result != null && mounted) {
       // Populate viewmodel state
       ref.read(loggingWizardProvider.notifier).setFromBarcodeResult(
@@ -1155,14 +1154,12 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                             weightKg: _weightKg,
                           );
                           if (data != null && context.mounted) {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => ProjectionResultView(
-                                  result: data['result'],
-                                  unit: data['unit'],
-                                  mealCount: data['mealCount'] ?? 0,
-                                ),
+                            context.pushReplacement(
+                              Routes.logMealProjection,
+                              extra: ProjectionRouteArgs(
+                                result: data['result'] as ProjectionResult,
+                                unit: data['unit'] as String,
+                                mealCount: (data['mealCount'] ?? 0) as int,
                               ),
                             );
                           }
