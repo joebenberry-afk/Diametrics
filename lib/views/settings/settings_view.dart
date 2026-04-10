@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_tokens.dart';
 import '../../services/reminder_service.dart';
 import '../../viewmodels/profile_viewmodel.dart';
+import '../../router/route_names.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'emergency_contacts_view.dart';
 
 class SettingsView extends ConsumerStatefulWidget {
   const SettingsView({super.key});
@@ -299,7 +300,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
             Icons.arrow_back_ios_new_rounded,
             color: isDark ? Colors.white : AppThemeTokens.textPrimary,
           ),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.pop(),
         ),
         actions: [
           if (_isDirty)
@@ -793,12 +794,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                 ),
                 trailing: const Icon(Icons.chevron_right_rounded, color: AppThemeTokens.textSecondary),
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const EmergencyContactsView(),
-                    ),
-                  );
+                  context.push('${Routes.settings}/emergency-contacts');
                 },
               ),
             ],
