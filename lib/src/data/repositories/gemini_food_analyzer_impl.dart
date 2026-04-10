@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:google_generative_ai/google_generative_ai.dart';
 
 import 'package:injectable/injectable.dart';
@@ -128,38 +129,62 @@ class GeminiFoodAnalyzerImpl implements FoodAnalyzerRepository {
   void clearCache() => _cache.clear();
 
   Future<FoodAnalysisResult> _analyzeImageLocally(List<int> imageBytes) async {
+    // Load the system prompt from assets (editable without a rebuild)
+    final systemPrompt = await rootBundle.loadString(
+      'assets/prompts/food_analysis.txt',
+    );
+
+    // Build the response schema — enforces valid JSON, no markdown stripping needed
+    final schema = Schema.object(
+      properties: {
+        'items': Schema.array(
+          items: Schema.object(
+            properties: {
+              'name': Schema.string(),
+              'weight_g': Schema.number(),
+              'carbs_g': Schema.number(),
+              'protein_g': Schema.number(),
+              'fat_g': Schema.number(),
+              'calories': Schema.number(),
+            },
+            requiredProperties: [
+              'name', 'weight_g', 'carbs_g', 'protein_g', 'fat_g', 'calories',
+            ],
+          ),
+        ),
+        'totalCarbs': Schema.number(),
+        'totalCalories': Schema.number(),
+        'summary': Schema.string(),
+      },
+      requiredProperties: ['items', 'totalCarbs', 'totalCalories', 'summary'],
+    );
+
     final model = GenerativeModel(
       model: 'gemini-2.5-flash',
       apiKey: BackendConfig.geminiApiKey,
+      systemInstruction: Content.system(systemPrompt),
+      generationConfig: GenerationConfig(
+        responseMimeType: 'application/json',
+        responseSchema: schema,
+      ),
     );
-    
-    final prompt = TextPart(
-      'You are a clinical dietitian AI. Analyze this food image. '
-      'Identify all food items on the plate, their approximate portions, and estimate macronutrients. '
-      'Reply ONLY with a JSON object. NO markdown delimiters at the start or end, just raw JSON. Schema:\n'
-      '{"items": [{"name": "string", "portion": "string", "carbs_g": number, "calories": number, "protein_g": number, "fat_g": number, "source": "AI Estimate"}], '
-      '"totalCarbs": number, "totalCalories": number, "summary": "string"}'
-    );
-    final imagePart = DataPart('image/jpeg', Uint8List.fromList(imageBytes));
 
+    final imagePart = DataPart('image/jpeg', Uint8List.fromList(imageBytes));
     final response = await model.generateContent([
-      Content.multi([prompt, imagePart])
+      Content.multi([imagePart]),
     ]);
 
     final text = response.text;
-    if (text == null) {
+    if (text == null || text.trim().isEmpty) {
       throw Exception('Gemini returned an empty response.');
     }
 
-    // Clean JSON (in case Gemini included markdown blocks)
-    final cleanJson = text.replaceAll(RegExp(r'^```json\n?', multiLine: true), '').replaceAll(RegExp(r'\n?```$', multiLine: true), '').trim();
-    
     try {
-      final decoded = jsonDecode(cleanJson) as Map<String, dynamic>;
+      final decoded = jsonDecode(text) as Map<String, dynamic>;
       return FoodAnalysisResult.fromJson(decoded);
     } catch (e) {
-      debugPrint('Error parsing Gemini JSON: $e\nResponse: $text');
-      throw Exception('Failed to parse AI JSON response.');
+      debugPrint('FoodAnalyzer: JSON parse error — $e\nRaw: $text');
+      throw Exception('Failed to parse AI response. Please try again.');
     }
   }
 }
