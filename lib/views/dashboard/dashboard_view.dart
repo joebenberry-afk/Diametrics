@@ -79,7 +79,11 @@ class DashboardView extends ConsumerWidget {
     final activityAsync = ref.watch(recentActivityProvider);
 
     final stepsAsync = ref.watch(stepCountProvider);
-    final stepsDisplay = stepsAsync.valueOrNull?.toString() ?? '--';
+    final stepsDisplay = stepsAsync.when(
+      data: (steps) => steps.toString(),
+      loading: () => '…',
+      error: (e, s) => '--',
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -188,16 +192,13 @@ class DashboardView extends ConsumerWidget {
                       context.push(Routes.medicationHistory);
                     },
                   ),
-                  Tooltip(
-                    message: 'Step tracking coming soon',
-                    child: MetricCard(
-                      title: 'Activity',
-                      value: stepsDisplay,
-                      unit: 'Steps',
-                      icon: Icons.directions_walk,
-                      accentColor: AppThemeTokens.brandSecondary,
-                      trendData: const [],
-                    ),
+                  MetricCard(
+                    title: 'Activity',
+                    value: stepsDisplay,
+                    unit: 'Steps',
+                    icon: Icons.directions_walk,
+                    accentColor: AppThemeTokens.brandSecondary,
+                    trendData: const [],
                   ),
                 ],
               ),
