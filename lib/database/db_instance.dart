@@ -31,10 +31,18 @@ AppDatabase get db {
 
 /// Initializes the encrypted database. Safe to call multiple times; subsequent
 /// calls are no-ops if the database is already open.
+///
+/// Sends a no-op query immediately after opening so that SQLCipher's PBKDF2
+/// key derivation completes here — before [runApp] — rather than on the first
+/// Riverpod provider query, which would stall the splash screen.
 Future<void> initDatabase() async {
   if (_db != null) return;
   final executor = await openEncryptedDatabase();
   _db = AppDatabase(executor);
+  // Warm up: forces the background isolate to actually open the file and
+  // derive the encryption key (PBKDF2) now, so it's ready by the time
+  // ProfileViewModel queries the DB.
+  await _db!.customSelect('SELECT 1').get();
 }
 
 /// Migrates or generates a secure AES-256 key and returns the encrypted database connection.

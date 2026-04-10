@@ -30,12 +30,12 @@ class _SplashScreenState extends State<SplashScreen>
   // Pulsing dots loading indicator
   late final AnimationController _dotsCtrl;
 
-  // Timeout guard — shows retry UI if loading stalls beyond 30 seconds
+  // Timeout guard — shows retry UI if loading stalls beyond 60 seconds
   late Timer _timeoutTimer;
   bool _timedOut = false;
 
   void _startTimeoutTimer() {
-    _timeoutTimer = Timer(const Duration(seconds: 30), () {
+    _timeoutTimer = Timer(const Duration(seconds: 60), () {
       if (mounted) {
         setState(() => _timedOut = true);
       }
