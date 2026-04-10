@@ -16,13 +16,10 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   configureDependencies();
 
-  try {
-    await ReminderService.initialize();
-  } catch (e) {
-    debugPrint('Reminder initialization failed: $e');
-  }
-
-  // Essential blocking init — open & migrate the encrypted DB
+  // Essential blocking init — open & migrate the encrypted DB.
+  // ReminderService (timezone parsing) is intentionally NOT awaited here
+  // because tz.initializeTimeZones() is slow (~2-5s) and reminders are not
+  // required before the UI becomes interactive.
   try {
     await initDatabase();
     await LegacyMigrationService.runIfNeeded();
@@ -32,7 +29,7 @@ void main() async {
     return;
   }
 
-  // Start the app immediately — food seeding happens in the background
+  // Start the app immediately — everything else happens in the background.
   runApp(
     const ProviderScope(
       child: AuthWrapper(
@@ -41,7 +38,10 @@ void main() async {
     ),
   );
 
-  // Seed food reference data after the UI is live (non-blocking)
+  // Non-blocking post-startup work (order doesn't matter, UI is already live).
+  unawaited(ReminderService.initialize().catchError(
+    (e) => debugPrint('Reminder initialization failed: $e'),
+  ));
   unawaited(db.populateLocalFoodsIfEmpty().catchError(
     (e) => debugPrint('Food DB seeding failed: $e'),
   ));
