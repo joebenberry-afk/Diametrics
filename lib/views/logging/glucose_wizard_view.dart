@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../viewmodels/logging_wizard_viewmodel.dart';
 import '../../viewmodels/profile_viewmodel.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 
 class GlucoseWizardView extends ConsumerStatefulWidget {
   const GlucoseWizardView({super.key});
@@ -50,13 +49,7 @@ class _GlucoseWizardViewState extends ConsumerState<GlucoseWizardView> {
         title: const Text('Log Blood Glucose'),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(LucideIcons.x),
-            onPressed: () => Navigator.pop(context),
-            tooltip: 'Cancel',
-          ),
-        ],
+        actions: const [],
       ),
       body: SafeArea(
         child: Padding(
@@ -98,12 +91,29 @@ class _GlucoseWizardViewState extends ConsumerState<GlucoseWizardView> {
                         hintStyle: TextStyle(
                           color: AppThemeTokens.textSecondary,
                         ),
+                        errorStyle: TextStyle(fontSize: 11),
                       ),
                       onChanged: (val) {
                         final parsed = double.tryParse(val);
-                        if (parsed != null) {
+                        if (parsed == null) return;
+                        final isValid = state.glucoseUnit == 'mmol/L'
+                            ? parsed >= 1.1 && parsed <= 33.3
+                            : parsed >= 20 && parsed <= 600;
+                        if (isValid) {
                           viewModel.updateGlucoseValue(parsed);
                         }
+                      },
+                      validator: (val) {
+                        final v = double.tryParse(val ?? '');
+                        if (v == null) return 'Enter a number';
+                        final unit = state.glucoseUnit;
+                        if (unit == 'mmol/L' && (v < 1.1 || v > 33.3)) {
+                          return 'Enter a value between 1.1 and 33.3 mmol/L';
+                        }
+                        if (unit == 'mg/dL' && (v < 20 || v > 600)) {
+                          return 'Enter a value between 20 and 600 mg/dL';
+                        }
+                        return null;
                       },
                     ),
                   ),

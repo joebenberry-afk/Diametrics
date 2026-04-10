@@ -13,6 +13,18 @@ class MedicationWizardView extends ConsumerStatefulWidget {
 }
 
 class _MedicationWizardViewState extends ConsumerState<MedicationWizardView> {
+  String _dosageUnit(String medicationType) {
+    switch (medicationType) {
+      case 'rapid_acting_insulin':
+      case 'long_acting_insulin':
+        return 'units';
+      case 'pill':
+        return 'pills';
+      default:
+        return 'units';
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -67,13 +79,14 @@ class _MedicationWizardViewState extends ConsumerState<MedicationWizardView> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppThemeTokens.spaceSm),
-              Text(
-                'Required for Insulin-on-Board calculations',
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: AppThemeTokens.textSecondary,
+              if (state.medicationType != 'pill')
+                Text(
+                  'Used for Insulin-on-Board calculations in glucose projection',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: AppThemeTokens.textSecondary,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
-              ),
               const SizedBox(height: AppThemeTokens.spaceLg),
 
               Row(
@@ -111,7 +124,7 @@ class _MedicationWizardViewState extends ConsumerState<MedicationWizardView> {
                   ),
                   const SizedBox(width: AppThemeTokens.spaceSm),
                   Text(
-                    'Units',
+                    _dosageUnit(state.medicationType),
                     style: theme.textTheme.titleLarge?.copyWith(
                       color: AppThemeTokens.textSecondary,
                     ),
@@ -202,8 +215,9 @@ class _MedicationWizardViewState extends ConsumerState<MedicationWizardView> {
 
               // Save Button
               ElevatedButton(
-                onPressed:
-                    state.isSubmitting || state.pendingMedicationUnits == null
+                onPressed: (state.isSubmitting ||
+                        state.medicationType.isEmpty ||
+                        state.pendingMedicationUnits == null)
                     ? null
                     : () async {
                         final success = await viewModel.saveMedicationLog();
