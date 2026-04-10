@@ -87,7 +87,11 @@ class OnboardingViewModel extends Notifier<UserProfile> {
     required double minTarget,
     required double maxTarget,
   }) async {
-    updateTargets(min: minTarget, max: maxTarget);
-    await UserRepository().saveProfile(state);
+    final updated = state.copyWith(
+      targetGlucoseMin: minTarget,
+      targetGlucoseMax: maxTarget,
+    );
+    state = updated;
+    await UserRepository().saveProfile(updated);
   }
 }
