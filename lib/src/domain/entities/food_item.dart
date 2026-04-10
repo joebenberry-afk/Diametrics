@@ -21,11 +21,6 @@ abstract class FoodItem with _$FoodItem {
   factory FoodItem.fromJson(Map<String, dynamic> json) =>
       _$FoodItemFromJson(json);
 
-  /// Returns a copy with USDA nutritional data replacing the AI estimates.
-  FoodItem withUsdaData({required double carbsPer100g}) {
-    return copyWith(carbsGrams: carbsPer100g, source: 'USDA');
-  }
-
   /// Returns a copy with full macro data from any verified source.
   FoodItem withFullNutrition({
     required double carbsGrams,
