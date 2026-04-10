@@ -29,7 +29,7 @@ void main() async {
     return;
   }
 
-  // Start the app immediately — everything else happens in the background.
+  // Start the app immediately.
   runApp(
     const ProviderScope(
       child: AuthWrapper(
@@ -38,16 +38,29 @@ void main() async {
     ),
   );
 
-  // Non-blocking post-startup work (order doesn't matter, UI is already live).
+  // ReminderService (timezone parsing) doesn't touch the DB — safe to fire now.
   unawaited(ReminderService.initialize().catchError(
     (e) => debugPrint('Reminder initialization failed: $e'),
   ));
-  unawaited(db.populateLocalFoodsIfEmpty().catchError(
-    (e) => debugPrint('Food DB seeding failed: $e'),
-  ));
-  unawaited(db.populateN5kIfEmpty().catchError(
-    (e) => debugPrint('N5K seeding failed: $e'),
-  ));
+
+  // Food seeding MUST start after the first frame renders.
+  //
+  // runApp() is non-blocking: main() continues before Flutter builds the widget
+  // tree. If seeding starts here, its COUNT queries reach the DB isolate BEFORE
+  // ProfileViewModel.getProfile(), causing it to queue behind a batch insert of
+  // thousands of rows on first install — keeping userProfileProvider in
+  // isLoading indefinitely.
+  //
+  // addPostFrameCallback fires after the first frame is built, by which time
+  // ProfileViewModel.build() has already sent getProfile() to the isolate.
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    unawaited(db.populateLocalFoodsIfEmpty().catchError(
+      (e) => debugPrint('Food DB seeding failed: $e'),
+    ));
+    unawaited(db.populateN5kIfEmpty().catchError(
+      (e) => debugPrint('N5K seeding failed: $e'),
+    ));
+  });
 }
 
 class DiametricsApp extends ConsumerWidget {
