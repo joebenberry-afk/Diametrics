@@ -493,5 +493,70 @@ void main() {
         );
       });
     });
+
+    group('confidence band', () {
+      test('new user (mealCount=0) has width of 25 mg/dL', () {
+        final result = GlucoseProjectionService.project(
+          baselineGlucose: 100.0,
+          carbsGrams: 45.0,
+          fiberGrams: 0.0,
+          proteinGrams: 15.0,
+          fatGrams: 10.0,
+          containsAlcohol: false,
+          containsCaffeine: false,
+          mealCount: 0,
+        );
+
+        expect(result.confidenceWidth, closeTo(25.0, 0.01));
+      });
+
+      test('experienced user (mealCount=20) has width of 10 mg/dL', () {
+        final result = GlucoseProjectionService.project(
+          baselineGlucose: 100.0,
+          carbsGrams: 45.0,
+          fiberGrams: 0.0,
+          proteinGrams: 15.0,
+          fatGrams: 10.0,
+          containsAlcohol: false,
+          containsCaffeine: false,
+          mealCount: 20, // 25 - 20*0.75 = 10.0
+        );
+
+        expect(result.confidenceWidth, closeTo(10.0, 0.01));
+      });
+
+      test('confidence width floors at 10 mg/dL even with many meals', () {
+        final result = GlucoseProjectionService.project(
+          baselineGlucose: 100.0,
+          carbsGrams: 45.0,
+          fiberGrams: 0.0,
+          proteinGrams: 15.0,
+          fatGrams: 10.0,
+          containsAlcohol: false,
+          containsCaffeine: false,
+          mealCount: 100, // Well past convergence
+        );
+
+        expect(result.confidenceWidth, closeTo(10.0, 0.01));
+      });
+
+      test('confidence band is zero-width at t=0 (baseline point)', () {
+        final result = GlucoseProjectionService.project(
+          baselineGlucose: 100.0,
+          carbsGrams: 45.0,
+          fiberGrams: 0.0,
+          proteinGrams: 15.0,
+          fatGrams: 10.0,
+          containsAlcohol: false,
+          containsCaffeine: false,
+          mealCount: 0,
+        );
+
+        // At t=0, sin(0) = 0, so band width = 0 -> upper == lower == baseline
+        expect(result.upperBand.first.glucoseValue,
+            closeTo(result.lowerBand.first.glucoseValue, 0.01));
+        expect(result.upperBand.first.glucoseValue, closeTo(100.0, 0.01));
+      });
+    });
   });
 }
