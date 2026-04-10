@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/user_profile.dart';
 import '../repositories/user_repository.dart';
@@ -16,7 +17,15 @@ class ProfileViewModel extends AsyncNotifier<UserProfile?> {
   @override
   Future<UserProfile?> build() async {
     _repo = UserRepository();
-    return _repo.getProfile();
+    try {
+      return await _repo.getProfile();
+    } catch (e, st) {
+      // If the DB query fails for any reason (schema mismatch, migration
+      // failure, corruption), return null so the router sends the user to
+      // onboarding rather than leaving the splash screen stuck forever.
+      debugPrint('ProfileViewModel: getProfile() failed — $e\n$st');
+      return null;
+    }
   }
 
   /// Persists [profile] and updates the in-memory state.
