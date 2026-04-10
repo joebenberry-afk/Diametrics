@@ -74,6 +74,16 @@ class DashboardView extends ConsumerWidget {
     final stepsDisplay = stepsAsync.valueOrNull?.toString() ?? '--';
 
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.bar_chart_rounded),
+            tooltip: 'Glucose Trends',
+            onPressed: () => context.push(Routes.glucoseTrend),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppThemeTokens.spaceLg),

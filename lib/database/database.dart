@@ -47,7 +47,93 @@ class N5kIngredients extends Table {
   RealColumn get proteinPerG => real()(); // protein grams per gram
 }
 
-@DriftDatabase(tables: [LocalFoods, CustomFoods, MealLogs, N5kIngredients])
+@DataClassName('GlucoseLogRow')
+class GlucoseLogs extends Table {
+  TextColumn get id => text()();
+  RealColumn get value => real()();
+  TextColumn get unit => text()();
+  TextColumn get context => text()();
+  DateTimeColumn get timestamp => dateTime()();
+  TextColumn get notes => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+@DataClassName('MealMacroLog')
+class MealMacroLogs extends Table {
+  TextColumn get id => text()();
+  DateTimeColumn get timestamp => dateTime()();
+  TextColumn get name => text().nullable()();
+  RealColumn get carbohydrates => real()();
+  RealColumn get dietaryFiber => real().withDefault(const Constant(0.0))();
+  RealColumn get proteins => real()();
+  RealColumn get fats => real()();
+  RealColumn get calories => real().withDefault(const Constant(0.0))();
+  BoolColumn get containsAlcohol => boolean().withDefault(const Constant(false))();
+  BoolColumn get containsCaffeine => boolean().withDefault(const Constant(false))();
+  TextColumn get mealType => text()();
+  TextColumn get foodFormFactor => text().withDefault(const Constant('standard'))();
+  BoolColumn get postExercise => boolean().withDefault(const Constant(false))();
+  TextColumn get notes => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+@DataClassName('MedicationLogRow')
+class MedicationLogs extends Table {
+  TextColumn get id => text()();
+  DateTimeColumn get timestamp => dateTime()();
+  TextColumn get medicationType => text()();
+  TextColumn get insulinType => text().withDefault(const Constant('Humalog / NovoLog'))();
+  TextColumn get name => text().nullable()();
+  RealColumn get units => real()();
+  TextColumn get notes => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+@DataClassName('UserProfileRow')
+class UserProfiles extends Table {
+  TextColumn get id => text()();
+  TextColumn get name => text().withDefault(const Constant(''))();
+  IntColumn get age => integer()();
+  TextColumn get gender => text()();
+  RealColumn get heightCm => real()();
+  RealColumn get weightKg => real()();
+  RealColumn get targetWeightKg => real().nullable()();
+  TextColumn get diabetesType => text()();
+  IntColumn get diagnosisYear => integer()();
+  TextColumn get preferredGlucoseUnit => text()();
+  BoolColumn get usesInsulin => boolean().withDefault(const Constant(false))();
+  BoolColumn get usesPills => boolean().withDefault(const Constant(false))();
+  BoolColumn get usesCgm => boolean().withDefault(const Constant(false))();
+  RealColumn get targetGlucoseMin => real()();
+  RealColumn get targetGlucoseMax => real()();
+  RealColumn get metabolicClearanceRate => real().withDefault(const Constant(0.010))();
+  RealColumn get insulinSensitivityFactor => real().withDefault(const Constant(50.0))();
+  RealColumn get absorptionDelayBase => real().withDefault(const Constant(40.0))();
+  IntColumn get tuningMealCount => integer().withDefault(const Constant(0))();
+  RealColumn get fastingSetpoint => real().withDefault(const Constant(90.0))();
+  TextColumn get insulinCategory => text().withDefault(const Constant('standard_rapid'))();
+  RealColumn get insulinDiaMinutes => real().withDefault(const Constant(240.0))();
+  RealColumn get ekfCovP1 => real().withDefault(const Constant(1.0))();
+  RealColumn get ekfCovISF => real().withDefault(const Constant(1.0))();
+  RealColumn get ekfCovTMax => real().withDefault(const Constant(1.0))();
+  BoolColumn get hasAgreedToDisclaimer => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+@DriftDatabase(tables: [
+  LocalFoods, CustomFoods, MealLogs, N5kIngredients,
+  GlucoseLogs, MealMacroLogs, MedicationLogs, UserProfiles,
+])
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
@@ -55,7 +141,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -75,6 +161,12 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(mealLogs, mealLogs.totalCalories);
         await m.addColumn(mealLogs, mealLogs.totalProtein);
         await m.addColumn(mealLogs, mealLogs.totalFat);
+      }
+      if (from <= 4) {
+        await m.createTable(glucoseLogs);
+        await m.createTable(mealMacroLogs);
+        await m.createTable(medicationLogs);
+        await m.createTable(userProfiles);
       }
     },
   );

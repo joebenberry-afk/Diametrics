@@ -1758,6 +1758,3266 @@ class N5kIngredientsCompanion extends UpdateCompanion<N5kIngredient> {
   }
 }
 
+class $GlucoseLogsTable extends GlucoseLogs
+    with TableInfo<$GlucoseLogsTable, GlucoseLogRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $GlucoseLogsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _valueMeta = const VerificationMeta('value');
+  @override
+  late final GeneratedColumn<double> value = GeneratedColumn<double>(
+    'value',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _unitMeta = const VerificationMeta('unit');
+  @override
+  late final GeneratedColumn<String> unit = GeneratedColumn<String>(
+    'unit',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _contextMeta = const VerificationMeta(
+    'context',
+  );
+  @override
+  late final GeneratedColumn<String> context = GeneratedColumn<String>(
+    'context',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _timestampMeta = const VerificationMeta(
+    'timestamp',
+  );
+  @override
+  late final GeneratedColumn<DateTime> timestamp = GeneratedColumn<DateTime>(
+    'timestamp',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    value,
+    unit,
+    context,
+    timestamp,
+    notes,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'glucose_logs';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<GlucoseLogRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('value')) {
+      context.handle(
+        _valueMeta,
+        value.isAcceptableOrUnknown(data['value']!, _valueMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_valueMeta);
+    }
+    if (data.containsKey('unit')) {
+      context.handle(
+        _unitMeta,
+        unit.isAcceptableOrUnknown(data['unit']!, _unitMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_unitMeta);
+    }
+    if (data.containsKey('context')) {
+      context.handle(
+        _contextMeta,
+        this.context.isAcceptableOrUnknown(data['context']!, _contextMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_contextMeta);
+    }
+    if (data.containsKey('timestamp')) {
+      context.handle(
+        _timestampMeta,
+        timestamp.isAcceptableOrUnknown(data['timestamp']!, _timestampMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_timestampMeta);
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  GlucoseLogRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return GlucoseLogRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      value: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}value'],
+      )!,
+      unit: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}unit'],
+      )!,
+      context: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}context'],
+      )!,
+      timestamp: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}timestamp'],
+      )!,
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      ),
+    );
+  }
+
+  @override
+  $GlucoseLogsTable createAlias(String alias) {
+    return $GlucoseLogsTable(attachedDatabase, alias);
+  }
+}
+
+class GlucoseLogRow extends DataClass implements Insertable<GlucoseLogRow> {
+  final String id;
+  final double value;
+  final String unit;
+  final String context;
+  final DateTime timestamp;
+  final String? notes;
+  const GlucoseLogRow({
+    required this.id,
+    required this.value,
+    required this.unit,
+    required this.context,
+    required this.timestamp,
+    this.notes,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['value'] = Variable<double>(value);
+    map['unit'] = Variable<String>(unit);
+    map['context'] = Variable<String>(context);
+    map['timestamp'] = Variable<DateTime>(timestamp);
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
+    }
+    return map;
+  }
+
+  GlucoseLogsCompanion toCompanion(bool nullToAbsent) {
+    return GlucoseLogsCompanion(
+      id: Value(id),
+      value: Value(value),
+      unit: Value(unit),
+      context: Value(context),
+      timestamp: Value(timestamp),
+      notes: notes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notes),
+    );
+  }
+
+  factory GlucoseLogRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return GlucoseLogRow(
+      id: serializer.fromJson<String>(json['id']),
+      value: serializer.fromJson<double>(json['value']),
+      unit: serializer.fromJson<String>(json['unit']),
+      context: serializer.fromJson<String>(json['context']),
+      timestamp: serializer.fromJson<DateTime>(json['timestamp']),
+      notes: serializer.fromJson<String?>(json['notes']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'value': serializer.toJson<double>(value),
+      'unit': serializer.toJson<String>(unit),
+      'context': serializer.toJson<String>(context),
+      'timestamp': serializer.toJson<DateTime>(timestamp),
+      'notes': serializer.toJson<String?>(notes),
+    };
+  }
+
+  GlucoseLogRow copyWith({
+    String? id,
+    double? value,
+    String? unit,
+    String? context,
+    DateTime? timestamp,
+    Value<String?> notes = const Value.absent(),
+  }) => GlucoseLogRow(
+    id: id ?? this.id,
+    value: value ?? this.value,
+    unit: unit ?? this.unit,
+    context: context ?? this.context,
+    timestamp: timestamp ?? this.timestamp,
+    notes: notes.present ? notes.value : this.notes,
+  );
+  GlucoseLogRow copyWithCompanion(GlucoseLogsCompanion data) {
+    return GlucoseLogRow(
+      id: data.id.present ? data.id.value : this.id,
+      value: data.value.present ? data.value.value : this.value,
+      unit: data.unit.present ? data.unit.value : this.unit,
+      context: data.context.present ? data.context.value : this.context,
+      timestamp: data.timestamp.present ? data.timestamp.value : this.timestamp,
+      notes: data.notes.present ? data.notes.value : this.notes,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GlucoseLogRow(')
+          ..write('id: $id, ')
+          ..write('value: $value, ')
+          ..write('unit: $unit, ')
+          ..write('context: $context, ')
+          ..write('timestamp: $timestamp, ')
+          ..write('notes: $notes')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, value, unit, context, timestamp, notes);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is GlucoseLogRow &&
+          other.id == this.id &&
+          other.value == this.value &&
+          other.unit == this.unit &&
+          other.context == this.context &&
+          other.timestamp == this.timestamp &&
+          other.notes == this.notes);
+}
+
+class GlucoseLogsCompanion extends UpdateCompanion<GlucoseLogRow> {
+  final Value<String> id;
+  final Value<double> value;
+  final Value<String> unit;
+  final Value<String> context;
+  final Value<DateTime> timestamp;
+  final Value<String?> notes;
+  final Value<int> rowid;
+  const GlucoseLogsCompanion({
+    this.id = const Value.absent(),
+    this.value = const Value.absent(),
+    this.unit = const Value.absent(),
+    this.context = const Value.absent(),
+    this.timestamp = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  GlucoseLogsCompanion.insert({
+    required String id,
+    required double value,
+    required String unit,
+    required String context,
+    required DateTime timestamp,
+    this.notes = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       value = Value(value),
+       unit = Value(unit),
+       context = Value(context),
+       timestamp = Value(timestamp);
+  static Insertable<GlucoseLogRow> custom({
+    Expression<String>? id,
+    Expression<double>? value,
+    Expression<String>? unit,
+    Expression<String>? context,
+    Expression<DateTime>? timestamp,
+    Expression<String>? notes,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (value != null) 'value': value,
+      if (unit != null) 'unit': unit,
+      if (context != null) 'context': context,
+      if (timestamp != null) 'timestamp': timestamp,
+      if (notes != null) 'notes': notes,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  GlucoseLogsCompanion copyWith({
+    Value<String>? id,
+    Value<double>? value,
+    Value<String>? unit,
+    Value<String>? context,
+    Value<DateTime>? timestamp,
+    Value<String?>? notes,
+    Value<int>? rowid,
+  }) {
+    return GlucoseLogsCompanion(
+      id: id ?? this.id,
+      value: value ?? this.value,
+      unit: unit ?? this.unit,
+      context: context ?? this.context,
+      timestamp: timestamp ?? this.timestamp,
+      notes: notes ?? this.notes,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (value.present) {
+      map['value'] = Variable<double>(value.value);
+    }
+    if (unit.present) {
+      map['unit'] = Variable<String>(unit.value);
+    }
+    if (context.present) {
+      map['context'] = Variable<String>(context.value);
+    }
+    if (timestamp.present) {
+      map['timestamp'] = Variable<DateTime>(timestamp.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GlucoseLogsCompanion(')
+          ..write('id: $id, ')
+          ..write('value: $value, ')
+          ..write('unit: $unit, ')
+          ..write('context: $context, ')
+          ..write('timestamp: $timestamp, ')
+          ..write('notes: $notes, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $MealMacroLogsTable extends MealMacroLogs
+    with TableInfo<$MealMacroLogsTable, MealMacroLog> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $MealMacroLogsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _timestampMeta = const VerificationMeta(
+    'timestamp',
+  );
+  @override
+  late final GeneratedColumn<DateTime> timestamp = GeneratedColumn<DateTime>(
+    'timestamp',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _carbohydratesMeta = const VerificationMeta(
+    'carbohydrates',
+  );
+  @override
+  late final GeneratedColumn<double> carbohydrates = GeneratedColumn<double>(
+    'carbohydrates',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dietaryFiberMeta = const VerificationMeta(
+    'dietaryFiber',
+  );
+  @override
+  late final GeneratedColumn<double> dietaryFiber = GeneratedColumn<double>(
+    'dietary_fiber',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
+  static const VerificationMeta _proteinsMeta = const VerificationMeta(
+    'proteins',
+  );
+  @override
+  late final GeneratedColumn<double> proteins = GeneratedColumn<double>(
+    'proteins',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _fatsMeta = const VerificationMeta('fats');
+  @override
+  late final GeneratedColumn<double> fats = GeneratedColumn<double>(
+    'fats',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _caloriesMeta = const VerificationMeta(
+    'calories',
+  );
+  @override
+  late final GeneratedColumn<double> calories = GeneratedColumn<double>(
+    'calories',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
+  static const VerificationMeta _containsAlcoholMeta = const VerificationMeta(
+    'containsAlcohol',
+  );
+  @override
+  late final GeneratedColumn<bool> containsAlcohol = GeneratedColumn<bool>(
+    'contains_alcohol',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("contains_alcohol" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _containsCaffeineMeta = const VerificationMeta(
+    'containsCaffeine',
+  );
+  @override
+  late final GeneratedColumn<bool> containsCaffeine = GeneratedColumn<bool>(
+    'contains_caffeine',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("contains_caffeine" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _mealTypeMeta = const VerificationMeta(
+    'mealType',
+  );
+  @override
+  late final GeneratedColumn<String> mealType = GeneratedColumn<String>(
+    'meal_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _foodFormFactorMeta = const VerificationMeta(
+    'foodFormFactor',
+  );
+  @override
+  late final GeneratedColumn<String> foodFormFactor = GeneratedColumn<String>(
+    'food_form_factor',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('standard'),
+  );
+  static const VerificationMeta _postExerciseMeta = const VerificationMeta(
+    'postExercise',
+  );
+  @override
+  late final GeneratedColumn<bool> postExercise = GeneratedColumn<bool>(
+    'post_exercise',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("post_exercise" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    timestamp,
+    name,
+    carbohydrates,
+    dietaryFiber,
+    proteins,
+    fats,
+    calories,
+    containsAlcohol,
+    containsCaffeine,
+    mealType,
+    foodFormFactor,
+    postExercise,
+    notes,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'meal_macro_logs';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<MealMacroLog> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('timestamp')) {
+      context.handle(
+        _timestampMeta,
+        timestamp.isAcceptableOrUnknown(data['timestamp']!, _timestampMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_timestampMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    }
+    if (data.containsKey('carbohydrates')) {
+      context.handle(
+        _carbohydratesMeta,
+        carbohydrates.isAcceptableOrUnknown(
+          data['carbohydrates']!,
+          _carbohydratesMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_carbohydratesMeta);
+    }
+    if (data.containsKey('dietary_fiber')) {
+      context.handle(
+        _dietaryFiberMeta,
+        dietaryFiber.isAcceptableOrUnknown(
+          data['dietary_fiber']!,
+          _dietaryFiberMeta,
+        ),
+      );
+    }
+    if (data.containsKey('proteins')) {
+      context.handle(
+        _proteinsMeta,
+        proteins.isAcceptableOrUnknown(data['proteins']!, _proteinsMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_proteinsMeta);
+    }
+    if (data.containsKey('fats')) {
+      context.handle(
+        _fatsMeta,
+        fats.isAcceptableOrUnknown(data['fats']!, _fatsMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_fatsMeta);
+    }
+    if (data.containsKey('calories')) {
+      context.handle(
+        _caloriesMeta,
+        calories.isAcceptableOrUnknown(data['calories']!, _caloriesMeta),
+      );
+    }
+    if (data.containsKey('contains_alcohol')) {
+      context.handle(
+        _containsAlcoholMeta,
+        containsAlcohol.isAcceptableOrUnknown(
+          data['contains_alcohol']!,
+          _containsAlcoholMeta,
+        ),
+      );
+    }
+    if (data.containsKey('contains_caffeine')) {
+      context.handle(
+        _containsCaffeineMeta,
+        containsCaffeine.isAcceptableOrUnknown(
+          data['contains_caffeine']!,
+          _containsCaffeineMeta,
+        ),
+      );
+    }
+    if (data.containsKey('meal_type')) {
+      context.handle(
+        _mealTypeMeta,
+        mealType.isAcceptableOrUnknown(data['meal_type']!, _mealTypeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_mealTypeMeta);
+    }
+    if (data.containsKey('food_form_factor')) {
+      context.handle(
+        _foodFormFactorMeta,
+        foodFormFactor.isAcceptableOrUnknown(
+          data['food_form_factor']!,
+          _foodFormFactorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('post_exercise')) {
+      context.handle(
+        _postExerciseMeta,
+        postExercise.isAcceptableOrUnknown(
+          data['post_exercise']!,
+          _postExerciseMeta,
+        ),
+      );
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  MealMacroLog map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MealMacroLog(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      timestamp: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}timestamp'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      ),
+      carbohydrates: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}carbohydrates'],
+      )!,
+      dietaryFiber: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}dietary_fiber'],
+      )!,
+      proteins: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}proteins'],
+      )!,
+      fats: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}fats'],
+      )!,
+      calories: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}calories'],
+      )!,
+      containsAlcohol: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}contains_alcohol'],
+      )!,
+      containsCaffeine: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}contains_caffeine'],
+      )!,
+      mealType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}meal_type'],
+      )!,
+      foodFormFactor: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}food_form_factor'],
+      )!,
+      postExercise: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}post_exercise'],
+      )!,
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      ),
+    );
+  }
+
+  @override
+  $MealMacroLogsTable createAlias(String alias) {
+    return $MealMacroLogsTable(attachedDatabase, alias);
+  }
+}
+
+class MealMacroLog extends DataClass implements Insertable<MealMacroLog> {
+  final String id;
+  final DateTime timestamp;
+  final String? name;
+  final double carbohydrates;
+  final double dietaryFiber;
+  final double proteins;
+  final double fats;
+  final double calories;
+  final bool containsAlcohol;
+  final bool containsCaffeine;
+  final String mealType;
+  final String foodFormFactor;
+  final bool postExercise;
+  final String? notes;
+  const MealMacroLog({
+    required this.id,
+    required this.timestamp,
+    this.name,
+    required this.carbohydrates,
+    required this.dietaryFiber,
+    required this.proteins,
+    required this.fats,
+    required this.calories,
+    required this.containsAlcohol,
+    required this.containsCaffeine,
+    required this.mealType,
+    required this.foodFormFactor,
+    required this.postExercise,
+    this.notes,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['timestamp'] = Variable<DateTime>(timestamp);
+    if (!nullToAbsent || name != null) {
+      map['name'] = Variable<String>(name);
+    }
+    map['carbohydrates'] = Variable<double>(carbohydrates);
+    map['dietary_fiber'] = Variable<double>(dietaryFiber);
+    map['proteins'] = Variable<double>(proteins);
+    map['fats'] = Variable<double>(fats);
+    map['calories'] = Variable<double>(calories);
+    map['contains_alcohol'] = Variable<bool>(containsAlcohol);
+    map['contains_caffeine'] = Variable<bool>(containsCaffeine);
+    map['meal_type'] = Variable<String>(mealType);
+    map['food_form_factor'] = Variable<String>(foodFormFactor);
+    map['post_exercise'] = Variable<bool>(postExercise);
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
+    }
+    return map;
+  }
+
+  MealMacroLogsCompanion toCompanion(bool nullToAbsent) {
+    return MealMacroLogsCompanion(
+      id: Value(id),
+      timestamp: Value(timestamp),
+      name: name == null && nullToAbsent ? const Value.absent() : Value(name),
+      carbohydrates: Value(carbohydrates),
+      dietaryFiber: Value(dietaryFiber),
+      proteins: Value(proteins),
+      fats: Value(fats),
+      calories: Value(calories),
+      containsAlcohol: Value(containsAlcohol),
+      containsCaffeine: Value(containsCaffeine),
+      mealType: Value(mealType),
+      foodFormFactor: Value(foodFormFactor),
+      postExercise: Value(postExercise),
+      notes: notes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notes),
+    );
+  }
+
+  factory MealMacroLog.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MealMacroLog(
+      id: serializer.fromJson<String>(json['id']),
+      timestamp: serializer.fromJson<DateTime>(json['timestamp']),
+      name: serializer.fromJson<String?>(json['name']),
+      carbohydrates: serializer.fromJson<double>(json['carbohydrates']),
+      dietaryFiber: serializer.fromJson<double>(json['dietaryFiber']),
+      proteins: serializer.fromJson<double>(json['proteins']),
+      fats: serializer.fromJson<double>(json['fats']),
+      calories: serializer.fromJson<double>(json['calories']),
+      containsAlcohol: serializer.fromJson<bool>(json['containsAlcohol']),
+      containsCaffeine: serializer.fromJson<bool>(json['containsCaffeine']),
+      mealType: serializer.fromJson<String>(json['mealType']),
+      foodFormFactor: serializer.fromJson<String>(json['foodFormFactor']),
+      postExercise: serializer.fromJson<bool>(json['postExercise']),
+      notes: serializer.fromJson<String?>(json['notes']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'timestamp': serializer.toJson<DateTime>(timestamp),
+      'name': serializer.toJson<String?>(name),
+      'carbohydrates': serializer.toJson<double>(carbohydrates),
+      'dietaryFiber': serializer.toJson<double>(dietaryFiber),
+      'proteins': serializer.toJson<double>(proteins),
+      'fats': serializer.toJson<double>(fats),
+      'calories': serializer.toJson<double>(calories),
+      'containsAlcohol': serializer.toJson<bool>(containsAlcohol),
+      'containsCaffeine': serializer.toJson<bool>(containsCaffeine),
+      'mealType': serializer.toJson<String>(mealType),
+      'foodFormFactor': serializer.toJson<String>(foodFormFactor),
+      'postExercise': serializer.toJson<bool>(postExercise),
+      'notes': serializer.toJson<String?>(notes),
+    };
+  }
+
+  MealMacroLog copyWith({
+    String? id,
+    DateTime? timestamp,
+    Value<String?> name = const Value.absent(),
+    double? carbohydrates,
+    double? dietaryFiber,
+    double? proteins,
+    double? fats,
+    double? calories,
+    bool? containsAlcohol,
+    bool? containsCaffeine,
+    String? mealType,
+    String? foodFormFactor,
+    bool? postExercise,
+    Value<String?> notes = const Value.absent(),
+  }) => MealMacroLog(
+    id: id ?? this.id,
+    timestamp: timestamp ?? this.timestamp,
+    name: name.present ? name.value : this.name,
+    carbohydrates: carbohydrates ?? this.carbohydrates,
+    dietaryFiber: dietaryFiber ?? this.dietaryFiber,
+    proteins: proteins ?? this.proteins,
+    fats: fats ?? this.fats,
+    calories: calories ?? this.calories,
+    containsAlcohol: containsAlcohol ?? this.containsAlcohol,
+    containsCaffeine: containsCaffeine ?? this.containsCaffeine,
+    mealType: mealType ?? this.mealType,
+    foodFormFactor: foodFormFactor ?? this.foodFormFactor,
+    postExercise: postExercise ?? this.postExercise,
+    notes: notes.present ? notes.value : this.notes,
+  );
+  MealMacroLog copyWithCompanion(MealMacroLogsCompanion data) {
+    return MealMacroLog(
+      id: data.id.present ? data.id.value : this.id,
+      timestamp: data.timestamp.present ? data.timestamp.value : this.timestamp,
+      name: data.name.present ? data.name.value : this.name,
+      carbohydrates: data.carbohydrates.present
+          ? data.carbohydrates.value
+          : this.carbohydrates,
+      dietaryFiber: data.dietaryFiber.present
+          ? data.dietaryFiber.value
+          : this.dietaryFiber,
+      proteins: data.proteins.present ? data.proteins.value : this.proteins,
+      fats: data.fats.present ? data.fats.value : this.fats,
+      calories: data.calories.present ? data.calories.value : this.calories,
+      containsAlcohol: data.containsAlcohol.present
+          ? data.containsAlcohol.value
+          : this.containsAlcohol,
+      containsCaffeine: data.containsCaffeine.present
+          ? data.containsCaffeine.value
+          : this.containsCaffeine,
+      mealType: data.mealType.present ? data.mealType.value : this.mealType,
+      foodFormFactor: data.foodFormFactor.present
+          ? data.foodFormFactor.value
+          : this.foodFormFactor,
+      postExercise: data.postExercise.present
+          ? data.postExercise.value
+          : this.postExercise,
+      notes: data.notes.present ? data.notes.value : this.notes,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MealMacroLog(')
+          ..write('id: $id, ')
+          ..write('timestamp: $timestamp, ')
+          ..write('name: $name, ')
+          ..write('carbohydrates: $carbohydrates, ')
+          ..write('dietaryFiber: $dietaryFiber, ')
+          ..write('proteins: $proteins, ')
+          ..write('fats: $fats, ')
+          ..write('calories: $calories, ')
+          ..write('containsAlcohol: $containsAlcohol, ')
+          ..write('containsCaffeine: $containsCaffeine, ')
+          ..write('mealType: $mealType, ')
+          ..write('foodFormFactor: $foodFormFactor, ')
+          ..write('postExercise: $postExercise, ')
+          ..write('notes: $notes')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    timestamp,
+    name,
+    carbohydrates,
+    dietaryFiber,
+    proteins,
+    fats,
+    calories,
+    containsAlcohol,
+    containsCaffeine,
+    mealType,
+    foodFormFactor,
+    postExercise,
+    notes,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MealMacroLog &&
+          other.id == this.id &&
+          other.timestamp == this.timestamp &&
+          other.name == this.name &&
+          other.carbohydrates == this.carbohydrates &&
+          other.dietaryFiber == this.dietaryFiber &&
+          other.proteins == this.proteins &&
+          other.fats == this.fats &&
+          other.calories == this.calories &&
+          other.containsAlcohol == this.containsAlcohol &&
+          other.containsCaffeine == this.containsCaffeine &&
+          other.mealType == this.mealType &&
+          other.foodFormFactor == this.foodFormFactor &&
+          other.postExercise == this.postExercise &&
+          other.notes == this.notes);
+}
+
+class MealMacroLogsCompanion extends UpdateCompanion<MealMacroLog> {
+  final Value<String> id;
+  final Value<DateTime> timestamp;
+  final Value<String?> name;
+  final Value<double> carbohydrates;
+  final Value<double> dietaryFiber;
+  final Value<double> proteins;
+  final Value<double> fats;
+  final Value<double> calories;
+  final Value<bool> containsAlcohol;
+  final Value<bool> containsCaffeine;
+  final Value<String> mealType;
+  final Value<String> foodFormFactor;
+  final Value<bool> postExercise;
+  final Value<String?> notes;
+  final Value<int> rowid;
+  const MealMacroLogsCompanion({
+    this.id = const Value.absent(),
+    this.timestamp = const Value.absent(),
+    this.name = const Value.absent(),
+    this.carbohydrates = const Value.absent(),
+    this.dietaryFiber = const Value.absent(),
+    this.proteins = const Value.absent(),
+    this.fats = const Value.absent(),
+    this.calories = const Value.absent(),
+    this.containsAlcohol = const Value.absent(),
+    this.containsCaffeine = const Value.absent(),
+    this.mealType = const Value.absent(),
+    this.foodFormFactor = const Value.absent(),
+    this.postExercise = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  MealMacroLogsCompanion.insert({
+    required String id,
+    required DateTime timestamp,
+    this.name = const Value.absent(),
+    required double carbohydrates,
+    this.dietaryFiber = const Value.absent(),
+    required double proteins,
+    required double fats,
+    this.calories = const Value.absent(),
+    this.containsAlcohol = const Value.absent(),
+    this.containsCaffeine = const Value.absent(),
+    required String mealType,
+    this.foodFormFactor = const Value.absent(),
+    this.postExercise = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       timestamp = Value(timestamp),
+       carbohydrates = Value(carbohydrates),
+       proteins = Value(proteins),
+       fats = Value(fats),
+       mealType = Value(mealType);
+  static Insertable<MealMacroLog> custom({
+    Expression<String>? id,
+    Expression<DateTime>? timestamp,
+    Expression<String>? name,
+    Expression<double>? carbohydrates,
+    Expression<double>? dietaryFiber,
+    Expression<double>? proteins,
+    Expression<double>? fats,
+    Expression<double>? calories,
+    Expression<bool>? containsAlcohol,
+    Expression<bool>? containsCaffeine,
+    Expression<String>? mealType,
+    Expression<String>? foodFormFactor,
+    Expression<bool>? postExercise,
+    Expression<String>? notes,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (timestamp != null) 'timestamp': timestamp,
+      if (name != null) 'name': name,
+      if (carbohydrates != null) 'carbohydrates': carbohydrates,
+      if (dietaryFiber != null) 'dietary_fiber': dietaryFiber,
+      if (proteins != null) 'proteins': proteins,
+      if (fats != null) 'fats': fats,
+      if (calories != null) 'calories': calories,
+      if (containsAlcohol != null) 'contains_alcohol': containsAlcohol,
+      if (containsCaffeine != null) 'contains_caffeine': containsCaffeine,
+      if (mealType != null) 'meal_type': mealType,
+      if (foodFormFactor != null) 'food_form_factor': foodFormFactor,
+      if (postExercise != null) 'post_exercise': postExercise,
+      if (notes != null) 'notes': notes,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  MealMacroLogsCompanion copyWith({
+    Value<String>? id,
+    Value<DateTime>? timestamp,
+    Value<String?>? name,
+    Value<double>? carbohydrates,
+    Value<double>? dietaryFiber,
+    Value<double>? proteins,
+    Value<double>? fats,
+    Value<double>? calories,
+    Value<bool>? containsAlcohol,
+    Value<bool>? containsCaffeine,
+    Value<String>? mealType,
+    Value<String>? foodFormFactor,
+    Value<bool>? postExercise,
+    Value<String?>? notes,
+    Value<int>? rowid,
+  }) {
+    return MealMacroLogsCompanion(
+      id: id ?? this.id,
+      timestamp: timestamp ?? this.timestamp,
+      name: name ?? this.name,
+      carbohydrates: carbohydrates ?? this.carbohydrates,
+      dietaryFiber: dietaryFiber ?? this.dietaryFiber,
+      proteins: proteins ?? this.proteins,
+      fats: fats ?? this.fats,
+      calories: calories ?? this.calories,
+      containsAlcohol: containsAlcohol ?? this.containsAlcohol,
+      containsCaffeine: containsCaffeine ?? this.containsCaffeine,
+      mealType: mealType ?? this.mealType,
+      foodFormFactor: foodFormFactor ?? this.foodFormFactor,
+      postExercise: postExercise ?? this.postExercise,
+      notes: notes ?? this.notes,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (timestamp.present) {
+      map['timestamp'] = Variable<DateTime>(timestamp.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (carbohydrates.present) {
+      map['carbohydrates'] = Variable<double>(carbohydrates.value);
+    }
+    if (dietaryFiber.present) {
+      map['dietary_fiber'] = Variable<double>(dietaryFiber.value);
+    }
+    if (proteins.present) {
+      map['proteins'] = Variable<double>(proteins.value);
+    }
+    if (fats.present) {
+      map['fats'] = Variable<double>(fats.value);
+    }
+    if (calories.present) {
+      map['calories'] = Variable<double>(calories.value);
+    }
+    if (containsAlcohol.present) {
+      map['contains_alcohol'] = Variable<bool>(containsAlcohol.value);
+    }
+    if (containsCaffeine.present) {
+      map['contains_caffeine'] = Variable<bool>(containsCaffeine.value);
+    }
+    if (mealType.present) {
+      map['meal_type'] = Variable<String>(mealType.value);
+    }
+    if (foodFormFactor.present) {
+      map['food_form_factor'] = Variable<String>(foodFormFactor.value);
+    }
+    if (postExercise.present) {
+      map['post_exercise'] = Variable<bool>(postExercise.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MealMacroLogsCompanion(')
+          ..write('id: $id, ')
+          ..write('timestamp: $timestamp, ')
+          ..write('name: $name, ')
+          ..write('carbohydrates: $carbohydrates, ')
+          ..write('dietaryFiber: $dietaryFiber, ')
+          ..write('proteins: $proteins, ')
+          ..write('fats: $fats, ')
+          ..write('calories: $calories, ')
+          ..write('containsAlcohol: $containsAlcohol, ')
+          ..write('containsCaffeine: $containsCaffeine, ')
+          ..write('mealType: $mealType, ')
+          ..write('foodFormFactor: $foodFormFactor, ')
+          ..write('postExercise: $postExercise, ')
+          ..write('notes: $notes, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $MedicationLogsTable extends MedicationLogs
+    with TableInfo<$MedicationLogsTable, MedicationLogRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $MedicationLogsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _timestampMeta = const VerificationMeta(
+    'timestamp',
+  );
+  @override
+  late final GeneratedColumn<DateTime> timestamp = GeneratedColumn<DateTime>(
+    'timestamp',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _medicationTypeMeta = const VerificationMeta(
+    'medicationType',
+  );
+  @override
+  late final GeneratedColumn<String> medicationType = GeneratedColumn<String>(
+    'medication_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _insulinTypeMeta = const VerificationMeta(
+    'insulinType',
+  );
+  @override
+  late final GeneratedColumn<String> insulinType = GeneratedColumn<String>(
+    'insulin_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('Humalog / NovoLog'),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _unitsMeta = const VerificationMeta('units');
+  @override
+  late final GeneratedColumn<double> units = GeneratedColumn<double>(
+    'units',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    timestamp,
+    medicationType,
+    insulinType,
+    name,
+    units,
+    notes,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'medication_logs';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<MedicationLogRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('timestamp')) {
+      context.handle(
+        _timestampMeta,
+        timestamp.isAcceptableOrUnknown(data['timestamp']!, _timestampMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_timestampMeta);
+    }
+    if (data.containsKey('medication_type')) {
+      context.handle(
+        _medicationTypeMeta,
+        medicationType.isAcceptableOrUnknown(
+          data['medication_type']!,
+          _medicationTypeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_medicationTypeMeta);
+    }
+    if (data.containsKey('insulin_type')) {
+      context.handle(
+        _insulinTypeMeta,
+        insulinType.isAcceptableOrUnknown(
+          data['insulin_type']!,
+          _insulinTypeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    }
+    if (data.containsKey('units')) {
+      context.handle(
+        _unitsMeta,
+        units.isAcceptableOrUnknown(data['units']!, _unitsMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_unitsMeta);
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  MedicationLogRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MedicationLogRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      timestamp: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}timestamp'],
+      )!,
+      medicationType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}medication_type'],
+      )!,
+      insulinType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}insulin_type'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      ),
+      units: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}units'],
+      )!,
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      ),
+    );
+  }
+
+  @override
+  $MedicationLogsTable createAlias(String alias) {
+    return $MedicationLogsTable(attachedDatabase, alias);
+  }
+}
+
+class MedicationLogRow extends DataClass
+    implements Insertable<MedicationLogRow> {
+  final String id;
+  final DateTime timestamp;
+  final String medicationType;
+  final String insulinType;
+  final String? name;
+  final double units;
+  final String? notes;
+  const MedicationLogRow({
+    required this.id,
+    required this.timestamp,
+    required this.medicationType,
+    required this.insulinType,
+    this.name,
+    required this.units,
+    this.notes,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['timestamp'] = Variable<DateTime>(timestamp);
+    map['medication_type'] = Variable<String>(medicationType);
+    map['insulin_type'] = Variable<String>(insulinType);
+    if (!nullToAbsent || name != null) {
+      map['name'] = Variable<String>(name);
+    }
+    map['units'] = Variable<double>(units);
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
+    }
+    return map;
+  }
+
+  MedicationLogsCompanion toCompanion(bool nullToAbsent) {
+    return MedicationLogsCompanion(
+      id: Value(id),
+      timestamp: Value(timestamp),
+      medicationType: Value(medicationType),
+      insulinType: Value(insulinType),
+      name: name == null && nullToAbsent ? const Value.absent() : Value(name),
+      units: Value(units),
+      notes: notes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notes),
+    );
+  }
+
+  factory MedicationLogRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MedicationLogRow(
+      id: serializer.fromJson<String>(json['id']),
+      timestamp: serializer.fromJson<DateTime>(json['timestamp']),
+      medicationType: serializer.fromJson<String>(json['medicationType']),
+      insulinType: serializer.fromJson<String>(json['insulinType']),
+      name: serializer.fromJson<String?>(json['name']),
+      units: serializer.fromJson<double>(json['units']),
+      notes: serializer.fromJson<String?>(json['notes']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'timestamp': serializer.toJson<DateTime>(timestamp),
+      'medicationType': serializer.toJson<String>(medicationType),
+      'insulinType': serializer.toJson<String>(insulinType),
+      'name': serializer.toJson<String?>(name),
+      'units': serializer.toJson<double>(units),
+      'notes': serializer.toJson<String?>(notes),
+    };
+  }
+
+  MedicationLogRow copyWith({
+    String? id,
+    DateTime? timestamp,
+    String? medicationType,
+    String? insulinType,
+    Value<String?> name = const Value.absent(),
+    double? units,
+    Value<String?> notes = const Value.absent(),
+  }) => MedicationLogRow(
+    id: id ?? this.id,
+    timestamp: timestamp ?? this.timestamp,
+    medicationType: medicationType ?? this.medicationType,
+    insulinType: insulinType ?? this.insulinType,
+    name: name.present ? name.value : this.name,
+    units: units ?? this.units,
+    notes: notes.present ? notes.value : this.notes,
+  );
+  MedicationLogRow copyWithCompanion(MedicationLogsCompanion data) {
+    return MedicationLogRow(
+      id: data.id.present ? data.id.value : this.id,
+      timestamp: data.timestamp.present ? data.timestamp.value : this.timestamp,
+      medicationType: data.medicationType.present
+          ? data.medicationType.value
+          : this.medicationType,
+      insulinType: data.insulinType.present
+          ? data.insulinType.value
+          : this.insulinType,
+      name: data.name.present ? data.name.value : this.name,
+      units: data.units.present ? data.units.value : this.units,
+      notes: data.notes.present ? data.notes.value : this.notes,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MedicationLogRow(')
+          ..write('id: $id, ')
+          ..write('timestamp: $timestamp, ')
+          ..write('medicationType: $medicationType, ')
+          ..write('insulinType: $insulinType, ')
+          ..write('name: $name, ')
+          ..write('units: $units, ')
+          ..write('notes: $notes')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    timestamp,
+    medicationType,
+    insulinType,
+    name,
+    units,
+    notes,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MedicationLogRow &&
+          other.id == this.id &&
+          other.timestamp == this.timestamp &&
+          other.medicationType == this.medicationType &&
+          other.insulinType == this.insulinType &&
+          other.name == this.name &&
+          other.units == this.units &&
+          other.notes == this.notes);
+}
+
+class MedicationLogsCompanion extends UpdateCompanion<MedicationLogRow> {
+  final Value<String> id;
+  final Value<DateTime> timestamp;
+  final Value<String> medicationType;
+  final Value<String> insulinType;
+  final Value<String?> name;
+  final Value<double> units;
+  final Value<String?> notes;
+  final Value<int> rowid;
+  const MedicationLogsCompanion({
+    this.id = const Value.absent(),
+    this.timestamp = const Value.absent(),
+    this.medicationType = const Value.absent(),
+    this.insulinType = const Value.absent(),
+    this.name = const Value.absent(),
+    this.units = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  MedicationLogsCompanion.insert({
+    required String id,
+    required DateTime timestamp,
+    required String medicationType,
+    this.insulinType = const Value.absent(),
+    this.name = const Value.absent(),
+    required double units,
+    this.notes = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       timestamp = Value(timestamp),
+       medicationType = Value(medicationType),
+       units = Value(units);
+  static Insertable<MedicationLogRow> custom({
+    Expression<String>? id,
+    Expression<DateTime>? timestamp,
+    Expression<String>? medicationType,
+    Expression<String>? insulinType,
+    Expression<String>? name,
+    Expression<double>? units,
+    Expression<String>? notes,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (timestamp != null) 'timestamp': timestamp,
+      if (medicationType != null) 'medication_type': medicationType,
+      if (insulinType != null) 'insulin_type': insulinType,
+      if (name != null) 'name': name,
+      if (units != null) 'units': units,
+      if (notes != null) 'notes': notes,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  MedicationLogsCompanion copyWith({
+    Value<String>? id,
+    Value<DateTime>? timestamp,
+    Value<String>? medicationType,
+    Value<String>? insulinType,
+    Value<String?>? name,
+    Value<double>? units,
+    Value<String?>? notes,
+    Value<int>? rowid,
+  }) {
+    return MedicationLogsCompanion(
+      id: id ?? this.id,
+      timestamp: timestamp ?? this.timestamp,
+      medicationType: medicationType ?? this.medicationType,
+      insulinType: insulinType ?? this.insulinType,
+      name: name ?? this.name,
+      units: units ?? this.units,
+      notes: notes ?? this.notes,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (timestamp.present) {
+      map['timestamp'] = Variable<DateTime>(timestamp.value);
+    }
+    if (medicationType.present) {
+      map['medication_type'] = Variable<String>(medicationType.value);
+    }
+    if (insulinType.present) {
+      map['insulin_type'] = Variable<String>(insulinType.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (units.present) {
+      map['units'] = Variable<double>(units.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MedicationLogsCompanion(')
+          ..write('id: $id, ')
+          ..write('timestamp: $timestamp, ')
+          ..write('medicationType: $medicationType, ')
+          ..write('insulinType: $insulinType, ')
+          ..write('name: $name, ')
+          ..write('units: $units, ')
+          ..write('notes: $notes, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $UserProfilesTable extends UserProfiles
+    with TableInfo<$UserProfilesTable, UserProfileRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $UserProfilesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _ageMeta = const VerificationMeta('age');
+  @override
+  late final GeneratedColumn<int> age = GeneratedColumn<int>(
+    'age',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _genderMeta = const VerificationMeta('gender');
+  @override
+  late final GeneratedColumn<String> gender = GeneratedColumn<String>(
+    'gender',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _heightCmMeta = const VerificationMeta(
+    'heightCm',
+  );
+  @override
+  late final GeneratedColumn<double> heightCm = GeneratedColumn<double>(
+    'height_cm',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _weightKgMeta = const VerificationMeta(
+    'weightKg',
+  );
+  @override
+  late final GeneratedColumn<double> weightKg = GeneratedColumn<double>(
+    'weight_kg',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _targetWeightKgMeta = const VerificationMeta(
+    'targetWeightKg',
+  );
+  @override
+  late final GeneratedColumn<double> targetWeightKg = GeneratedColumn<double>(
+    'target_weight_kg',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _diabetesTypeMeta = const VerificationMeta(
+    'diabetesType',
+  );
+  @override
+  late final GeneratedColumn<String> diabetesType = GeneratedColumn<String>(
+    'diabetes_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _diagnosisYearMeta = const VerificationMeta(
+    'diagnosisYear',
+  );
+  @override
+  late final GeneratedColumn<int> diagnosisYear = GeneratedColumn<int>(
+    'diagnosis_year',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _preferredGlucoseUnitMeta =
+      const VerificationMeta('preferredGlucoseUnit');
+  @override
+  late final GeneratedColumn<String> preferredGlucoseUnit =
+      GeneratedColumn<String>(
+        'preferred_glucose_unit',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _usesInsulinMeta = const VerificationMeta(
+    'usesInsulin',
+  );
+  @override
+  late final GeneratedColumn<bool> usesInsulin = GeneratedColumn<bool>(
+    'uses_insulin',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("uses_insulin" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _usesPillsMeta = const VerificationMeta(
+    'usesPills',
+  );
+  @override
+  late final GeneratedColumn<bool> usesPills = GeneratedColumn<bool>(
+    'uses_pills',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("uses_pills" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _usesCgmMeta = const VerificationMeta(
+    'usesCgm',
+  );
+  @override
+  late final GeneratedColumn<bool> usesCgm = GeneratedColumn<bool>(
+    'uses_cgm',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("uses_cgm" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _targetGlucoseMinMeta = const VerificationMeta(
+    'targetGlucoseMin',
+  );
+  @override
+  late final GeneratedColumn<double> targetGlucoseMin = GeneratedColumn<double>(
+    'target_glucose_min',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _targetGlucoseMaxMeta = const VerificationMeta(
+    'targetGlucoseMax',
+  );
+  @override
+  late final GeneratedColumn<double> targetGlucoseMax = GeneratedColumn<double>(
+    'target_glucose_max',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _metabolicClearanceRateMeta =
+      const VerificationMeta('metabolicClearanceRate');
+  @override
+  late final GeneratedColumn<double> metabolicClearanceRate =
+      GeneratedColumn<double>(
+        'metabolic_clearance_rate',
+        aliasedName,
+        false,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(0.010),
+      );
+  static const VerificationMeta _insulinSensitivityFactorMeta =
+      const VerificationMeta('insulinSensitivityFactor');
+  @override
+  late final GeneratedColumn<double> insulinSensitivityFactor =
+      GeneratedColumn<double>(
+        'insulin_sensitivity_factor',
+        aliasedName,
+        false,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(50.0),
+      );
+  static const VerificationMeta _absorptionDelayBaseMeta =
+      const VerificationMeta('absorptionDelayBase');
+  @override
+  late final GeneratedColumn<double> absorptionDelayBase =
+      GeneratedColumn<double>(
+        'absorption_delay_base',
+        aliasedName,
+        false,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(40.0),
+      );
+  static const VerificationMeta _tuningMealCountMeta = const VerificationMeta(
+    'tuningMealCount',
+  );
+  @override
+  late final GeneratedColumn<int> tuningMealCount = GeneratedColumn<int>(
+    'tuning_meal_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _fastingSetpointMeta = const VerificationMeta(
+    'fastingSetpoint',
+  );
+  @override
+  late final GeneratedColumn<double> fastingSetpoint = GeneratedColumn<double>(
+    'fasting_setpoint',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(90.0),
+  );
+  static const VerificationMeta _insulinCategoryMeta = const VerificationMeta(
+    'insulinCategory',
+  );
+  @override
+  late final GeneratedColumn<String> insulinCategory = GeneratedColumn<String>(
+    'insulin_category',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('standard_rapid'),
+  );
+  static const VerificationMeta _insulinDiaMinutesMeta = const VerificationMeta(
+    'insulinDiaMinutes',
+  );
+  @override
+  late final GeneratedColumn<double> insulinDiaMinutes =
+      GeneratedColumn<double>(
+        'insulin_dia_minutes',
+        aliasedName,
+        false,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(240.0),
+      );
+  static const VerificationMeta _ekfCovP1Meta = const VerificationMeta(
+    'ekfCovP1',
+  );
+  @override
+  late final GeneratedColumn<double> ekfCovP1 = GeneratedColumn<double>(
+    'ekf_cov_p1',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1.0),
+  );
+  static const VerificationMeta _ekfCovISFMeta = const VerificationMeta(
+    'ekfCovISF',
+  );
+  @override
+  late final GeneratedColumn<double> ekfCovISF = GeneratedColumn<double>(
+    'ekf_cov_i_s_f',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1.0),
+  );
+  static const VerificationMeta _ekfCovTMaxMeta = const VerificationMeta(
+    'ekfCovTMax',
+  );
+  @override
+  late final GeneratedColumn<double> ekfCovTMax = GeneratedColumn<double>(
+    'ekf_cov_t_max',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1.0),
+  );
+  static const VerificationMeta _hasAgreedToDisclaimerMeta =
+      const VerificationMeta('hasAgreedToDisclaimer');
+  @override
+  late final GeneratedColumn<bool> hasAgreedToDisclaimer =
+      GeneratedColumn<bool>(
+        'has_agreed_to_disclaimer',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("has_agreed_to_disclaimer" IN (0, 1))',
+        ),
+        defaultValue: const Constant(false),
+      );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    age,
+    gender,
+    heightCm,
+    weightKg,
+    targetWeightKg,
+    diabetesType,
+    diagnosisYear,
+    preferredGlucoseUnit,
+    usesInsulin,
+    usesPills,
+    usesCgm,
+    targetGlucoseMin,
+    targetGlucoseMax,
+    metabolicClearanceRate,
+    insulinSensitivityFactor,
+    absorptionDelayBase,
+    tuningMealCount,
+    fastingSetpoint,
+    insulinCategory,
+    insulinDiaMinutes,
+    ekfCovP1,
+    ekfCovISF,
+    ekfCovTMax,
+    hasAgreedToDisclaimer,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'user_profiles';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<UserProfileRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    }
+    if (data.containsKey('age')) {
+      context.handle(
+        _ageMeta,
+        age.isAcceptableOrUnknown(data['age']!, _ageMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_ageMeta);
+    }
+    if (data.containsKey('gender')) {
+      context.handle(
+        _genderMeta,
+        gender.isAcceptableOrUnknown(data['gender']!, _genderMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_genderMeta);
+    }
+    if (data.containsKey('height_cm')) {
+      context.handle(
+        _heightCmMeta,
+        heightCm.isAcceptableOrUnknown(data['height_cm']!, _heightCmMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_heightCmMeta);
+    }
+    if (data.containsKey('weight_kg')) {
+      context.handle(
+        _weightKgMeta,
+        weightKg.isAcceptableOrUnknown(data['weight_kg']!, _weightKgMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_weightKgMeta);
+    }
+    if (data.containsKey('target_weight_kg')) {
+      context.handle(
+        _targetWeightKgMeta,
+        targetWeightKg.isAcceptableOrUnknown(
+          data['target_weight_kg']!,
+          _targetWeightKgMeta,
+        ),
+      );
+    }
+    if (data.containsKey('diabetes_type')) {
+      context.handle(
+        _diabetesTypeMeta,
+        diabetesType.isAcceptableOrUnknown(
+          data['diabetes_type']!,
+          _diabetesTypeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_diabetesTypeMeta);
+    }
+    if (data.containsKey('diagnosis_year')) {
+      context.handle(
+        _diagnosisYearMeta,
+        diagnosisYear.isAcceptableOrUnknown(
+          data['diagnosis_year']!,
+          _diagnosisYearMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_diagnosisYearMeta);
+    }
+    if (data.containsKey('preferred_glucose_unit')) {
+      context.handle(
+        _preferredGlucoseUnitMeta,
+        preferredGlucoseUnit.isAcceptableOrUnknown(
+          data['preferred_glucose_unit']!,
+          _preferredGlucoseUnitMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_preferredGlucoseUnitMeta);
+    }
+    if (data.containsKey('uses_insulin')) {
+      context.handle(
+        _usesInsulinMeta,
+        usesInsulin.isAcceptableOrUnknown(
+          data['uses_insulin']!,
+          _usesInsulinMeta,
+        ),
+      );
+    }
+    if (data.containsKey('uses_pills')) {
+      context.handle(
+        _usesPillsMeta,
+        usesPills.isAcceptableOrUnknown(data['uses_pills']!, _usesPillsMeta),
+      );
+    }
+    if (data.containsKey('uses_cgm')) {
+      context.handle(
+        _usesCgmMeta,
+        usesCgm.isAcceptableOrUnknown(data['uses_cgm']!, _usesCgmMeta),
+      );
+    }
+    if (data.containsKey('target_glucose_min')) {
+      context.handle(
+        _targetGlucoseMinMeta,
+        targetGlucoseMin.isAcceptableOrUnknown(
+          data['target_glucose_min']!,
+          _targetGlucoseMinMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_targetGlucoseMinMeta);
+    }
+    if (data.containsKey('target_glucose_max')) {
+      context.handle(
+        _targetGlucoseMaxMeta,
+        targetGlucoseMax.isAcceptableOrUnknown(
+          data['target_glucose_max']!,
+          _targetGlucoseMaxMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_targetGlucoseMaxMeta);
+    }
+    if (data.containsKey('metabolic_clearance_rate')) {
+      context.handle(
+        _metabolicClearanceRateMeta,
+        metabolicClearanceRate.isAcceptableOrUnknown(
+          data['metabolic_clearance_rate']!,
+          _metabolicClearanceRateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('insulin_sensitivity_factor')) {
+      context.handle(
+        _insulinSensitivityFactorMeta,
+        insulinSensitivityFactor.isAcceptableOrUnknown(
+          data['insulin_sensitivity_factor']!,
+          _insulinSensitivityFactorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('absorption_delay_base')) {
+      context.handle(
+        _absorptionDelayBaseMeta,
+        absorptionDelayBase.isAcceptableOrUnknown(
+          data['absorption_delay_base']!,
+          _absorptionDelayBaseMeta,
+        ),
+      );
+    }
+    if (data.containsKey('tuning_meal_count')) {
+      context.handle(
+        _tuningMealCountMeta,
+        tuningMealCount.isAcceptableOrUnknown(
+          data['tuning_meal_count']!,
+          _tuningMealCountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('fasting_setpoint')) {
+      context.handle(
+        _fastingSetpointMeta,
+        fastingSetpoint.isAcceptableOrUnknown(
+          data['fasting_setpoint']!,
+          _fastingSetpointMeta,
+        ),
+      );
+    }
+    if (data.containsKey('insulin_category')) {
+      context.handle(
+        _insulinCategoryMeta,
+        insulinCategory.isAcceptableOrUnknown(
+          data['insulin_category']!,
+          _insulinCategoryMeta,
+        ),
+      );
+    }
+    if (data.containsKey('insulin_dia_minutes')) {
+      context.handle(
+        _insulinDiaMinutesMeta,
+        insulinDiaMinutes.isAcceptableOrUnknown(
+          data['insulin_dia_minutes']!,
+          _insulinDiaMinutesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('ekf_cov_p1')) {
+      context.handle(
+        _ekfCovP1Meta,
+        ekfCovP1.isAcceptableOrUnknown(data['ekf_cov_p1']!, _ekfCovP1Meta),
+      );
+    }
+    if (data.containsKey('ekf_cov_i_s_f')) {
+      context.handle(
+        _ekfCovISFMeta,
+        ekfCovISF.isAcceptableOrUnknown(data['ekf_cov_i_s_f']!, _ekfCovISFMeta),
+      );
+    }
+    if (data.containsKey('ekf_cov_t_max')) {
+      context.handle(
+        _ekfCovTMaxMeta,
+        ekfCovTMax.isAcceptableOrUnknown(
+          data['ekf_cov_t_max']!,
+          _ekfCovTMaxMeta,
+        ),
+      );
+    }
+    if (data.containsKey('has_agreed_to_disclaimer')) {
+      context.handle(
+        _hasAgreedToDisclaimerMeta,
+        hasAgreedToDisclaimer.isAcceptableOrUnknown(
+          data['has_agreed_to_disclaimer']!,
+          _hasAgreedToDisclaimerMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  UserProfileRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return UserProfileRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      age: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}age'],
+      )!,
+      gender: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}gender'],
+      )!,
+      heightCm: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}height_cm'],
+      )!,
+      weightKg: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}weight_kg'],
+      )!,
+      targetWeightKg: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}target_weight_kg'],
+      ),
+      diabetesType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}diabetes_type'],
+      )!,
+      diagnosisYear: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}diagnosis_year'],
+      )!,
+      preferredGlucoseUnit: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}preferred_glucose_unit'],
+      )!,
+      usesInsulin: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}uses_insulin'],
+      )!,
+      usesPills: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}uses_pills'],
+      )!,
+      usesCgm: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}uses_cgm'],
+      )!,
+      targetGlucoseMin: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}target_glucose_min'],
+      )!,
+      targetGlucoseMax: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}target_glucose_max'],
+      )!,
+      metabolicClearanceRate: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}metabolic_clearance_rate'],
+      )!,
+      insulinSensitivityFactor: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}insulin_sensitivity_factor'],
+      )!,
+      absorptionDelayBase: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}absorption_delay_base'],
+      )!,
+      tuningMealCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}tuning_meal_count'],
+      )!,
+      fastingSetpoint: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}fasting_setpoint'],
+      )!,
+      insulinCategory: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}insulin_category'],
+      )!,
+      insulinDiaMinutes: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}insulin_dia_minutes'],
+      )!,
+      ekfCovP1: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}ekf_cov_p1'],
+      )!,
+      ekfCovISF: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}ekf_cov_i_s_f'],
+      )!,
+      ekfCovTMax: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}ekf_cov_t_max'],
+      )!,
+      hasAgreedToDisclaimer: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}has_agreed_to_disclaimer'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $UserProfilesTable createAlias(String alias) {
+    return $UserProfilesTable(attachedDatabase, alias);
+  }
+}
+
+class UserProfileRow extends DataClass implements Insertable<UserProfileRow> {
+  final String id;
+  final String name;
+  final int age;
+  final String gender;
+  final double heightCm;
+  final double weightKg;
+  final double? targetWeightKg;
+  final String diabetesType;
+  final int diagnosisYear;
+  final String preferredGlucoseUnit;
+  final bool usesInsulin;
+  final bool usesPills;
+  final bool usesCgm;
+  final double targetGlucoseMin;
+  final double targetGlucoseMax;
+  final double metabolicClearanceRate;
+  final double insulinSensitivityFactor;
+  final double absorptionDelayBase;
+  final int tuningMealCount;
+  final double fastingSetpoint;
+  final String insulinCategory;
+  final double insulinDiaMinutes;
+  final double ekfCovP1;
+  final double ekfCovISF;
+  final double ekfCovTMax;
+  final bool hasAgreedToDisclaimer;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const UserProfileRow({
+    required this.id,
+    required this.name,
+    required this.age,
+    required this.gender,
+    required this.heightCm,
+    required this.weightKg,
+    this.targetWeightKg,
+    required this.diabetesType,
+    required this.diagnosisYear,
+    required this.preferredGlucoseUnit,
+    required this.usesInsulin,
+    required this.usesPills,
+    required this.usesCgm,
+    required this.targetGlucoseMin,
+    required this.targetGlucoseMax,
+    required this.metabolicClearanceRate,
+    required this.insulinSensitivityFactor,
+    required this.absorptionDelayBase,
+    required this.tuningMealCount,
+    required this.fastingSetpoint,
+    required this.insulinCategory,
+    required this.insulinDiaMinutes,
+    required this.ekfCovP1,
+    required this.ekfCovISF,
+    required this.ekfCovTMax,
+    required this.hasAgreedToDisclaimer,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['name'] = Variable<String>(name);
+    map['age'] = Variable<int>(age);
+    map['gender'] = Variable<String>(gender);
+    map['height_cm'] = Variable<double>(heightCm);
+    map['weight_kg'] = Variable<double>(weightKg);
+    if (!nullToAbsent || targetWeightKg != null) {
+      map['target_weight_kg'] = Variable<double>(targetWeightKg);
+    }
+    map['diabetes_type'] = Variable<String>(diabetesType);
+    map['diagnosis_year'] = Variable<int>(diagnosisYear);
+    map['preferred_glucose_unit'] = Variable<String>(preferredGlucoseUnit);
+    map['uses_insulin'] = Variable<bool>(usesInsulin);
+    map['uses_pills'] = Variable<bool>(usesPills);
+    map['uses_cgm'] = Variable<bool>(usesCgm);
+    map['target_glucose_min'] = Variable<double>(targetGlucoseMin);
+    map['target_glucose_max'] = Variable<double>(targetGlucoseMax);
+    map['metabolic_clearance_rate'] = Variable<double>(metabolicClearanceRate);
+    map['insulin_sensitivity_factor'] = Variable<double>(
+      insulinSensitivityFactor,
+    );
+    map['absorption_delay_base'] = Variable<double>(absorptionDelayBase);
+    map['tuning_meal_count'] = Variable<int>(tuningMealCount);
+    map['fasting_setpoint'] = Variable<double>(fastingSetpoint);
+    map['insulin_category'] = Variable<String>(insulinCategory);
+    map['insulin_dia_minutes'] = Variable<double>(insulinDiaMinutes);
+    map['ekf_cov_p1'] = Variable<double>(ekfCovP1);
+    map['ekf_cov_i_s_f'] = Variable<double>(ekfCovISF);
+    map['ekf_cov_t_max'] = Variable<double>(ekfCovTMax);
+    map['has_agreed_to_disclaimer'] = Variable<bool>(hasAgreedToDisclaimer);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  UserProfilesCompanion toCompanion(bool nullToAbsent) {
+    return UserProfilesCompanion(
+      id: Value(id),
+      name: Value(name),
+      age: Value(age),
+      gender: Value(gender),
+      heightCm: Value(heightCm),
+      weightKg: Value(weightKg),
+      targetWeightKg: targetWeightKg == null && nullToAbsent
+          ? const Value.absent()
+          : Value(targetWeightKg),
+      diabetesType: Value(diabetesType),
+      diagnosisYear: Value(diagnosisYear),
+      preferredGlucoseUnit: Value(preferredGlucoseUnit),
+      usesInsulin: Value(usesInsulin),
+      usesPills: Value(usesPills),
+      usesCgm: Value(usesCgm),
+      targetGlucoseMin: Value(targetGlucoseMin),
+      targetGlucoseMax: Value(targetGlucoseMax),
+      metabolicClearanceRate: Value(metabolicClearanceRate),
+      insulinSensitivityFactor: Value(insulinSensitivityFactor),
+      absorptionDelayBase: Value(absorptionDelayBase),
+      tuningMealCount: Value(tuningMealCount),
+      fastingSetpoint: Value(fastingSetpoint),
+      insulinCategory: Value(insulinCategory),
+      insulinDiaMinutes: Value(insulinDiaMinutes),
+      ekfCovP1: Value(ekfCovP1),
+      ekfCovISF: Value(ekfCovISF),
+      ekfCovTMax: Value(ekfCovTMax),
+      hasAgreedToDisclaimer: Value(hasAgreedToDisclaimer),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory UserProfileRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return UserProfileRow(
+      id: serializer.fromJson<String>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      age: serializer.fromJson<int>(json['age']),
+      gender: serializer.fromJson<String>(json['gender']),
+      heightCm: serializer.fromJson<double>(json['heightCm']),
+      weightKg: serializer.fromJson<double>(json['weightKg']),
+      targetWeightKg: serializer.fromJson<double?>(json['targetWeightKg']),
+      diabetesType: serializer.fromJson<String>(json['diabetesType']),
+      diagnosisYear: serializer.fromJson<int>(json['diagnosisYear']),
+      preferredGlucoseUnit: serializer.fromJson<String>(
+        json['preferredGlucoseUnit'],
+      ),
+      usesInsulin: serializer.fromJson<bool>(json['usesInsulin']),
+      usesPills: serializer.fromJson<bool>(json['usesPills']),
+      usesCgm: serializer.fromJson<bool>(json['usesCgm']),
+      targetGlucoseMin: serializer.fromJson<double>(json['targetGlucoseMin']),
+      targetGlucoseMax: serializer.fromJson<double>(json['targetGlucoseMax']),
+      metabolicClearanceRate: serializer.fromJson<double>(
+        json['metabolicClearanceRate'],
+      ),
+      insulinSensitivityFactor: serializer.fromJson<double>(
+        json['insulinSensitivityFactor'],
+      ),
+      absorptionDelayBase: serializer.fromJson<double>(
+        json['absorptionDelayBase'],
+      ),
+      tuningMealCount: serializer.fromJson<int>(json['tuningMealCount']),
+      fastingSetpoint: serializer.fromJson<double>(json['fastingSetpoint']),
+      insulinCategory: serializer.fromJson<String>(json['insulinCategory']),
+      insulinDiaMinutes: serializer.fromJson<double>(json['insulinDiaMinutes']),
+      ekfCovP1: serializer.fromJson<double>(json['ekfCovP1']),
+      ekfCovISF: serializer.fromJson<double>(json['ekfCovISF']),
+      ekfCovTMax: serializer.fromJson<double>(json['ekfCovTMax']),
+      hasAgreedToDisclaimer: serializer.fromJson<bool>(
+        json['hasAgreedToDisclaimer'],
+      ),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'name': serializer.toJson<String>(name),
+      'age': serializer.toJson<int>(age),
+      'gender': serializer.toJson<String>(gender),
+      'heightCm': serializer.toJson<double>(heightCm),
+      'weightKg': serializer.toJson<double>(weightKg),
+      'targetWeightKg': serializer.toJson<double?>(targetWeightKg),
+      'diabetesType': serializer.toJson<String>(diabetesType),
+      'diagnosisYear': serializer.toJson<int>(diagnosisYear),
+      'preferredGlucoseUnit': serializer.toJson<String>(preferredGlucoseUnit),
+      'usesInsulin': serializer.toJson<bool>(usesInsulin),
+      'usesPills': serializer.toJson<bool>(usesPills),
+      'usesCgm': serializer.toJson<bool>(usesCgm),
+      'targetGlucoseMin': serializer.toJson<double>(targetGlucoseMin),
+      'targetGlucoseMax': serializer.toJson<double>(targetGlucoseMax),
+      'metabolicClearanceRate': serializer.toJson<double>(
+        metabolicClearanceRate,
+      ),
+      'insulinSensitivityFactor': serializer.toJson<double>(
+        insulinSensitivityFactor,
+      ),
+      'absorptionDelayBase': serializer.toJson<double>(absorptionDelayBase),
+      'tuningMealCount': serializer.toJson<int>(tuningMealCount),
+      'fastingSetpoint': serializer.toJson<double>(fastingSetpoint),
+      'insulinCategory': serializer.toJson<String>(insulinCategory),
+      'insulinDiaMinutes': serializer.toJson<double>(insulinDiaMinutes),
+      'ekfCovP1': serializer.toJson<double>(ekfCovP1),
+      'ekfCovISF': serializer.toJson<double>(ekfCovISF),
+      'ekfCovTMax': serializer.toJson<double>(ekfCovTMax),
+      'hasAgreedToDisclaimer': serializer.toJson<bool>(hasAgreedToDisclaimer),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  UserProfileRow copyWith({
+    String? id,
+    String? name,
+    int? age,
+    String? gender,
+    double? heightCm,
+    double? weightKg,
+    Value<double?> targetWeightKg = const Value.absent(),
+    String? diabetesType,
+    int? diagnosisYear,
+    String? preferredGlucoseUnit,
+    bool? usesInsulin,
+    bool? usesPills,
+    bool? usesCgm,
+    double? targetGlucoseMin,
+    double? targetGlucoseMax,
+    double? metabolicClearanceRate,
+    double? insulinSensitivityFactor,
+    double? absorptionDelayBase,
+    int? tuningMealCount,
+    double? fastingSetpoint,
+    String? insulinCategory,
+    double? insulinDiaMinutes,
+    double? ekfCovP1,
+    double? ekfCovISF,
+    double? ekfCovTMax,
+    bool? hasAgreedToDisclaimer,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => UserProfileRow(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    age: age ?? this.age,
+    gender: gender ?? this.gender,
+    heightCm: heightCm ?? this.heightCm,
+    weightKg: weightKg ?? this.weightKg,
+    targetWeightKg: targetWeightKg.present
+        ? targetWeightKg.value
+        : this.targetWeightKg,
+    diabetesType: diabetesType ?? this.diabetesType,
+    diagnosisYear: diagnosisYear ?? this.diagnosisYear,
+    preferredGlucoseUnit: preferredGlucoseUnit ?? this.preferredGlucoseUnit,
+    usesInsulin: usesInsulin ?? this.usesInsulin,
+    usesPills: usesPills ?? this.usesPills,
+    usesCgm: usesCgm ?? this.usesCgm,
+    targetGlucoseMin: targetGlucoseMin ?? this.targetGlucoseMin,
+    targetGlucoseMax: targetGlucoseMax ?? this.targetGlucoseMax,
+    metabolicClearanceRate:
+        metabolicClearanceRate ?? this.metabolicClearanceRate,
+    insulinSensitivityFactor:
+        insulinSensitivityFactor ?? this.insulinSensitivityFactor,
+    absorptionDelayBase: absorptionDelayBase ?? this.absorptionDelayBase,
+    tuningMealCount: tuningMealCount ?? this.tuningMealCount,
+    fastingSetpoint: fastingSetpoint ?? this.fastingSetpoint,
+    insulinCategory: insulinCategory ?? this.insulinCategory,
+    insulinDiaMinutes: insulinDiaMinutes ?? this.insulinDiaMinutes,
+    ekfCovP1: ekfCovP1 ?? this.ekfCovP1,
+    ekfCovISF: ekfCovISF ?? this.ekfCovISF,
+    ekfCovTMax: ekfCovTMax ?? this.ekfCovTMax,
+    hasAgreedToDisclaimer: hasAgreedToDisclaimer ?? this.hasAgreedToDisclaimer,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  UserProfileRow copyWithCompanion(UserProfilesCompanion data) {
+    return UserProfileRow(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      age: data.age.present ? data.age.value : this.age,
+      gender: data.gender.present ? data.gender.value : this.gender,
+      heightCm: data.heightCm.present ? data.heightCm.value : this.heightCm,
+      weightKg: data.weightKg.present ? data.weightKg.value : this.weightKg,
+      targetWeightKg: data.targetWeightKg.present
+          ? data.targetWeightKg.value
+          : this.targetWeightKg,
+      diabetesType: data.diabetesType.present
+          ? data.diabetesType.value
+          : this.diabetesType,
+      diagnosisYear: data.diagnosisYear.present
+          ? data.diagnosisYear.value
+          : this.diagnosisYear,
+      preferredGlucoseUnit: data.preferredGlucoseUnit.present
+          ? data.preferredGlucoseUnit.value
+          : this.preferredGlucoseUnit,
+      usesInsulin: data.usesInsulin.present
+          ? data.usesInsulin.value
+          : this.usesInsulin,
+      usesPills: data.usesPills.present ? data.usesPills.value : this.usesPills,
+      usesCgm: data.usesCgm.present ? data.usesCgm.value : this.usesCgm,
+      targetGlucoseMin: data.targetGlucoseMin.present
+          ? data.targetGlucoseMin.value
+          : this.targetGlucoseMin,
+      targetGlucoseMax: data.targetGlucoseMax.present
+          ? data.targetGlucoseMax.value
+          : this.targetGlucoseMax,
+      metabolicClearanceRate: data.metabolicClearanceRate.present
+          ? data.metabolicClearanceRate.value
+          : this.metabolicClearanceRate,
+      insulinSensitivityFactor: data.insulinSensitivityFactor.present
+          ? data.insulinSensitivityFactor.value
+          : this.insulinSensitivityFactor,
+      absorptionDelayBase: data.absorptionDelayBase.present
+          ? data.absorptionDelayBase.value
+          : this.absorptionDelayBase,
+      tuningMealCount: data.tuningMealCount.present
+          ? data.tuningMealCount.value
+          : this.tuningMealCount,
+      fastingSetpoint: data.fastingSetpoint.present
+          ? data.fastingSetpoint.value
+          : this.fastingSetpoint,
+      insulinCategory: data.insulinCategory.present
+          ? data.insulinCategory.value
+          : this.insulinCategory,
+      insulinDiaMinutes: data.insulinDiaMinutes.present
+          ? data.insulinDiaMinutes.value
+          : this.insulinDiaMinutes,
+      ekfCovP1: data.ekfCovP1.present ? data.ekfCovP1.value : this.ekfCovP1,
+      ekfCovISF: data.ekfCovISF.present ? data.ekfCovISF.value : this.ekfCovISF,
+      ekfCovTMax: data.ekfCovTMax.present
+          ? data.ekfCovTMax.value
+          : this.ekfCovTMax,
+      hasAgreedToDisclaimer: data.hasAgreedToDisclaimer.present
+          ? data.hasAgreedToDisclaimer.value
+          : this.hasAgreedToDisclaimer,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserProfileRow(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('age: $age, ')
+          ..write('gender: $gender, ')
+          ..write('heightCm: $heightCm, ')
+          ..write('weightKg: $weightKg, ')
+          ..write('targetWeightKg: $targetWeightKg, ')
+          ..write('diabetesType: $diabetesType, ')
+          ..write('diagnosisYear: $diagnosisYear, ')
+          ..write('preferredGlucoseUnit: $preferredGlucoseUnit, ')
+          ..write('usesInsulin: $usesInsulin, ')
+          ..write('usesPills: $usesPills, ')
+          ..write('usesCgm: $usesCgm, ')
+          ..write('targetGlucoseMin: $targetGlucoseMin, ')
+          ..write('targetGlucoseMax: $targetGlucoseMax, ')
+          ..write('metabolicClearanceRate: $metabolicClearanceRate, ')
+          ..write('insulinSensitivityFactor: $insulinSensitivityFactor, ')
+          ..write('absorptionDelayBase: $absorptionDelayBase, ')
+          ..write('tuningMealCount: $tuningMealCount, ')
+          ..write('fastingSetpoint: $fastingSetpoint, ')
+          ..write('insulinCategory: $insulinCategory, ')
+          ..write('insulinDiaMinutes: $insulinDiaMinutes, ')
+          ..write('ekfCovP1: $ekfCovP1, ')
+          ..write('ekfCovISF: $ekfCovISF, ')
+          ..write('ekfCovTMax: $ekfCovTMax, ')
+          ..write('hasAgreedToDisclaimer: $hasAgreedToDisclaimer, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hashAll([
+    id,
+    name,
+    age,
+    gender,
+    heightCm,
+    weightKg,
+    targetWeightKg,
+    diabetesType,
+    diagnosisYear,
+    preferredGlucoseUnit,
+    usesInsulin,
+    usesPills,
+    usesCgm,
+    targetGlucoseMin,
+    targetGlucoseMax,
+    metabolicClearanceRate,
+    insulinSensitivityFactor,
+    absorptionDelayBase,
+    tuningMealCount,
+    fastingSetpoint,
+    insulinCategory,
+    insulinDiaMinutes,
+    ekfCovP1,
+    ekfCovISF,
+    ekfCovTMax,
+    hasAgreedToDisclaimer,
+    createdAt,
+    updatedAt,
+  ]);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is UserProfileRow &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.age == this.age &&
+          other.gender == this.gender &&
+          other.heightCm == this.heightCm &&
+          other.weightKg == this.weightKg &&
+          other.targetWeightKg == this.targetWeightKg &&
+          other.diabetesType == this.diabetesType &&
+          other.diagnosisYear == this.diagnosisYear &&
+          other.preferredGlucoseUnit == this.preferredGlucoseUnit &&
+          other.usesInsulin == this.usesInsulin &&
+          other.usesPills == this.usesPills &&
+          other.usesCgm == this.usesCgm &&
+          other.targetGlucoseMin == this.targetGlucoseMin &&
+          other.targetGlucoseMax == this.targetGlucoseMax &&
+          other.metabolicClearanceRate == this.metabolicClearanceRate &&
+          other.insulinSensitivityFactor == this.insulinSensitivityFactor &&
+          other.absorptionDelayBase == this.absorptionDelayBase &&
+          other.tuningMealCount == this.tuningMealCount &&
+          other.fastingSetpoint == this.fastingSetpoint &&
+          other.insulinCategory == this.insulinCategory &&
+          other.insulinDiaMinutes == this.insulinDiaMinutes &&
+          other.ekfCovP1 == this.ekfCovP1 &&
+          other.ekfCovISF == this.ekfCovISF &&
+          other.ekfCovTMax == this.ekfCovTMax &&
+          other.hasAgreedToDisclaimer == this.hasAgreedToDisclaimer &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class UserProfilesCompanion extends UpdateCompanion<UserProfileRow> {
+  final Value<String> id;
+  final Value<String> name;
+  final Value<int> age;
+  final Value<String> gender;
+  final Value<double> heightCm;
+  final Value<double> weightKg;
+  final Value<double?> targetWeightKg;
+  final Value<String> diabetesType;
+  final Value<int> diagnosisYear;
+  final Value<String> preferredGlucoseUnit;
+  final Value<bool> usesInsulin;
+  final Value<bool> usesPills;
+  final Value<bool> usesCgm;
+  final Value<double> targetGlucoseMin;
+  final Value<double> targetGlucoseMax;
+  final Value<double> metabolicClearanceRate;
+  final Value<double> insulinSensitivityFactor;
+  final Value<double> absorptionDelayBase;
+  final Value<int> tuningMealCount;
+  final Value<double> fastingSetpoint;
+  final Value<String> insulinCategory;
+  final Value<double> insulinDiaMinutes;
+  final Value<double> ekfCovP1;
+  final Value<double> ekfCovISF;
+  final Value<double> ekfCovTMax;
+  final Value<bool> hasAgreedToDisclaimer;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const UserProfilesCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.age = const Value.absent(),
+    this.gender = const Value.absent(),
+    this.heightCm = const Value.absent(),
+    this.weightKg = const Value.absent(),
+    this.targetWeightKg = const Value.absent(),
+    this.diabetesType = const Value.absent(),
+    this.diagnosisYear = const Value.absent(),
+    this.preferredGlucoseUnit = const Value.absent(),
+    this.usesInsulin = const Value.absent(),
+    this.usesPills = const Value.absent(),
+    this.usesCgm = const Value.absent(),
+    this.targetGlucoseMin = const Value.absent(),
+    this.targetGlucoseMax = const Value.absent(),
+    this.metabolicClearanceRate = const Value.absent(),
+    this.insulinSensitivityFactor = const Value.absent(),
+    this.absorptionDelayBase = const Value.absent(),
+    this.tuningMealCount = const Value.absent(),
+    this.fastingSetpoint = const Value.absent(),
+    this.insulinCategory = const Value.absent(),
+    this.insulinDiaMinutes = const Value.absent(),
+    this.ekfCovP1 = const Value.absent(),
+    this.ekfCovISF = const Value.absent(),
+    this.ekfCovTMax = const Value.absent(),
+    this.hasAgreedToDisclaimer = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  UserProfilesCompanion.insert({
+    required String id,
+    this.name = const Value.absent(),
+    required int age,
+    required String gender,
+    required double heightCm,
+    required double weightKg,
+    this.targetWeightKg = const Value.absent(),
+    required String diabetesType,
+    required int diagnosisYear,
+    required String preferredGlucoseUnit,
+    this.usesInsulin = const Value.absent(),
+    this.usesPills = const Value.absent(),
+    this.usesCgm = const Value.absent(),
+    required double targetGlucoseMin,
+    required double targetGlucoseMax,
+    this.metabolicClearanceRate = const Value.absent(),
+    this.insulinSensitivityFactor = const Value.absent(),
+    this.absorptionDelayBase = const Value.absent(),
+    this.tuningMealCount = const Value.absent(),
+    this.fastingSetpoint = const Value.absent(),
+    this.insulinCategory = const Value.absent(),
+    this.insulinDiaMinutes = const Value.absent(),
+    this.ekfCovP1 = const Value.absent(),
+    this.ekfCovISF = const Value.absent(),
+    this.ekfCovTMax = const Value.absent(),
+    this.hasAgreedToDisclaimer = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       age = Value(age),
+       gender = Value(gender),
+       heightCm = Value(heightCm),
+       weightKg = Value(weightKg),
+       diabetesType = Value(diabetesType),
+       diagnosisYear = Value(diagnosisYear),
+       preferredGlucoseUnit = Value(preferredGlucoseUnit),
+       targetGlucoseMin = Value(targetGlucoseMin),
+       targetGlucoseMax = Value(targetGlucoseMax),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<UserProfileRow> custom({
+    Expression<String>? id,
+    Expression<String>? name,
+    Expression<int>? age,
+    Expression<String>? gender,
+    Expression<double>? heightCm,
+    Expression<double>? weightKg,
+    Expression<double>? targetWeightKg,
+    Expression<String>? diabetesType,
+    Expression<int>? diagnosisYear,
+    Expression<String>? preferredGlucoseUnit,
+    Expression<bool>? usesInsulin,
+    Expression<bool>? usesPills,
+    Expression<bool>? usesCgm,
+    Expression<double>? targetGlucoseMin,
+    Expression<double>? targetGlucoseMax,
+    Expression<double>? metabolicClearanceRate,
+    Expression<double>? insulinSensitivityFactor,
+    Expression<double>? absorptionDelayBase,
+    Expression<int>? tuningMealCount,
+    Expression<double>? fastingSetpoint,
+    Expression<String>? insulinCategory,
+    Expression<double>? insulinDiaMinutes,
+    Expression<double>? ekfCovP1,
+    Expression<double>? ekfCovISF,
+    Expression<double>? ekfCovTMax,
+    Expression<bool>? hasAgreedToDisclaimer,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (age != null) 'age': age,
+      if (gender != null) 'gender': gender,
+      if (heightCm != null) 'height_cm': heightCm,
+      if (weightKg != null) 'weight_kg': weightKg,
+      if (targetWeightKg != null) 'target_weight_kg': targetWeightKg,
+      if (diabetesType != null) 'diabetes_type': diabetesType,
+      if (diagnosisYear != null) 'diagnosis_year': diagnosisYear,
+      if (preferredGlucoseUnit != null)
+        'preferred_glucose_unit': preferredGlucoseUnit,
+      if (usesInsulin != null) 'uses_insulin': usesInsulin,
+      if (usesPills != null) 'uses_pills': usesPills,
+      if (usesCgm != null) 'uses_cgm': usesCgm,
+      if (targetGlucoseMin != null) 'target_glucose_min': targetGlucoseMin,
+      if (targetGlucoseMax != null) 'target_glucose_max': targetGlucoseMax,
+      if (metabolicClearanceRate != null)
+        'metabolic_clearance_rate': metabolicClearanceRate,
+      if (insulinSensitivityFactor != null)
+        'insulin_sensitivity_factor': insulinSensitivityFactor,
+      if (absorptionDelayBase != null)
+        'absorption_delay_base': absorptionDelayBase,
+      if (tuningMealCount != null) 'tuning_meal_count': tuningMealCount,
+      if (fastingSetpoint != null) 'fasting_setpoint': fastingSetpoint,
+      if (insulinCategory != null) 'insulin_category': insulinCategory,
+      if (insulinDiaMinutes != null) 'insulin_dia_minutes': insulinDiaMinutes,
+      if (ekfCovP1 != null) 'ekf_cov_p1': ekfCovP1,
+      if (ekfCovISF != null) 'ekf_cov_i_s_f': ekfCovISF,
+      if (ekfCovTMax != null) 'ekf_cov_t_max': ekfCovTMax,
+      if (hasAgreedToDisclaimer != null)
+        'has_agreed_to_disclaimer': hasAgreedToDisclaimer,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  UserProfilesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? name,
+    Value<int>? age,
+    Value<String>? gender,
+    Value<double>? heightCm,
+    Value<double>? weightKg,
+    Value<double?>? targetWeightKg,
+    Value<String>? diabetesType,
+    Value<int>? diagnosisYear,
+    Value<String>? preferredGlucoseUnit,
+    Value<bool>? usesInsulin,
+    Value<bool>? usesPills,
+    Value<bool>? usesCgm,
+    Value<double>? targetGlucoseMin,
+    Value<double>? targetGlucoseMax,
+    Value<double>? metabolicClearanceRate,
+    Value<double>? insulinSensitivityFactor,
+    Value<double>? absorptionDelayBase,
+    Value<int>? tuningMealCount,
+    Value<double>? fastingSetpoint,
+    Value<String>? insulinCategory,
+    Value<double>? insulinDiaMinutes,
+    Value<double>? ekfCovP1,
+    Value<double>? ekfCovISF,
+    Value<double>? ekfCovTMax,
+    Value<bool>? hasAgreedToDisclaimer,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return UserProfilesCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      age: age ?? this.age,
+      gender: gender ?? this.gender,
+      heightCm: heightCm ?? this.heightCm,
+      weightKg: weightKg ?? this.weightKg,
+      targetWeightKg: targetWeightKg ?? this.targetWeightKg,
+      diabetesType: diabetesType ?? this.diabetesType,
+      diagnosisYear: diagnosisYear ?? this.diagnosisYear,
+      preferredGlucoseUnit: preferredGlucoseUnit ?? this.preferredGlucoseUnit,
+      usesInsulin: usesInsulin ?? this.usesInsulin,
+      usesPills: usesPills ?? this.usesPills,
+      usesCgm: usesCgm ?? this.usesCgm,
+      targetGlucoseMin: targetGlucoseMin ?? this.targetGlucoseMin,
+      targetGlucoseMax: targetGlucoseMax ?? this.targetGlucoseMax,
+      metabolicClearanceRate:
+          metabolicClearanceRate ?? this.metabolicClearanceRate,
+      insulinSensitivityFactor:
+          insulinSensitivityFactor ?? this.insulinSensitivityFactor,
+      absorptionDelayBase: absorptionDelayBase ?? this.absorptionDelayBase,
+      tuningMealCount: tuningMealCount ?? this.tuningMealCount,
+      fastingSetpoint: fastingSetpoint ?? this.fastingSetpoint,
+      insulinCategory: insulinCategory ?? this.insulinCategory,
+      insulinDiaMinutes: insulinDiaMinutes ?? this.insulinDiaMinutes,
+      ekfCovP1: ekfCovP1 ?? this.ekfCovP1,
+      ekfCovISF: ekfCovISF ?? this.ekfCovISF,
+      ekfCovTMax: ekfCovTMax ?? this.ekfCovTMax,
+      hasAgreedToDisclaimer:
+          hasAgreedToDisclaimer ?? this.hasAgreedToDisclaimer,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (age.present) {
+      map['age'] = Variable<int>(age.value);
+    }
+    if (gender.present) {
+      map['gender'] = Variable<String>(gender.value);
+    }
+    if (heightCm.present) {
+      map['height_cm'] = Variable<double>(heightCm.value);
+    }
+    if (weightKg.present) {
+      map['weight_kg'] = Variable<double>(weightKg.value);
+    }
+    if (targetWeightKg.present) {
+      map['target_weight_kg'] = Variable<double>(targetWeightKg.value);
+    }
+    if (diabetesType.present) {
+      map['diabetes_type'] = Variable<String>(diabetesType.value);
+    }
+    if (diagnosisYear.present) {
+      map['diagnosis_year'] = Variable<int>(diagnosisYear.value);
+    }
+    if (preferredGlucoseUnit.present) {
+      map['preferred_glucose_unit'] = Variable<String>(
+        preferredGlucoseUnit.value,
+      );
+    }
+    if (usesInsulin.present) {
+      map['uses_insulin'] = Variable<bool>(usesInsulin.value);
+    }
+    if (usesPills.present) {
+      map['uses_pills'] = Variable<bool>(usesPills.value);
+    }
+    if (usesCgm.present) {
+      map['uses_cgm'] = Variable<bool>(usesCgm.value);
+    }
+    if (targetGlucoseMin.present) {
+      map['target_glucose_min'] = Variable<double>(targetGlucoseMin.value);
+    }
+    if (targetGlucoseMax.present) {
+      map['target_glucose_max'] = Variable<double>(targetGlucoseMax.value);
+    }
+    if (metabolicClearanceRate.present) {
+      map['metabolic_clearance_rate'] = Variable<double>(
+        metabolicClearanceRate.value,
+      );
+    }
+    if (insulinSensitivityFactor.present) {
+      map['insulin_sensitivity_factor'] = Variable<double>(
+        insulinSensitivityFactor.value,
+      );
+    }
+    if (absorptionDelayBase.present) {
+      map['absorption_delay_base'] = Variable<double>(
+        absorptionDelayBase.value,
+      );
+    }
+    if (tuningMealCount.present) {
+      map['tuning_meal_count'] = Variable<int>(tuningMealCount.value);
+    }
+    if (fastingSetpoint.present) {
+      map['fasting_setpoint'] = Variable<double>(fastingSetpoint.value);
+    }
+    if (insulinCategory.present) {
+      map['insulin_category'] = Variable<String>(insulinCategory.value);
+    }
+    if (insulinDiaMinutes.present) {
+      map['insulin_dia_minutes'] = Variable<double>(insulinDiaMinutes.value);
+    }
+    if (ekfCovP1.present) {
+      map['ekf_cov_p1'] = Variable<double>(ekfCovP1.value);
+    }
+    if (ekfCovISF.present) {
+      map['ekf_cov_i_s_f'] = Variable<double>(ekfCovISF.value);
+    }
+    if (ekfCovTMax.present) {
+      map['ekf_cov_t_max'] = Variable<double>(ekfCovTMax.value);
+    }
+    if (hasAgreedToDisclaimer.present) {
+      map['has_agreed_to_disclaimer'] = Variable<bool>(
+        hasAgreedToDisclaimer.value,
+      );
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserProfilesCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('age: $age, ')
+          ..write('gender: $gender, ')
+          ..write('heightCm: $heightCm, ')
+          ..write('weightKg: $weightKg, ')
+          ..write('targetWeightKg: $targetWeightKg, ')
+          ..write('diabetesType: $diabetesType, ')
+          ..write('diagnosisYear: $diagnosisYear, ')
+          ..write('preferredGlucoseUnit: $preferredGlucoseUnit, ')
+          ..write('usesInsulin: $usesInsulin, ')
+          ..write('usesPills: $usesPills, ')
+          ..write('usesCgm: $usesCgm, ')
+          ..write('targetGlucoseMin: $targetGlucoseMin, ')
+          ..write('targetGlucoseMax: $targetGlucoseMax, ')
+          ..write('metabolicClearanceRate: $metabolicClearanceRate, ')
+          ..write('insulinSensitivityFactor: $insulinSensitivityFactor, ')
+          ..write('absorptionDelayBase: $absorptionDelayBase, ')
+          ..write('tuningMealCount: $tuningMealCount, ')
+          ..write('fastingSetpoint: $fastingSetpoint, ')
+          ..write('insulinCategory: $insulinCategory, ')
+          ..write('insulinDiaMinutes: $insulinDiaMinutes, ')
+          ..write('ekfCovP1: $ekfCovP1, ')
+          ..write('ekfCovISF: $ekfCovISF, ')
+          ..write('ekfCovTMax: $ekfCovTMax, ')
+          ..write('hasAgreedToDisclaimer: $hasAgreedToDisclaimer, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -1765,6 +5025,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $CustomFoodsTable customFoods = $CustomFoodsTable(this);
   late final $MealLogsTable mealLogs = $MealLogsTable(this);
   late final $N5kIngredientsTable n5kIngredients = $N5kIngredientsTable(this);
+  late final $GlucoseLogsTable glucoseLogs = $GlucoseLogsTable(this);
+  late final $MealMacroLogsTable mealMacroLogs = $MealMacroLogsTable(this);
+  late final $MedicationLogsTable medicationLogs = $MedicationLogsTable(this);
+  late final $UserProfilesTable userProfiles = $UserProfilesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1774,6 +5038,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     customFoods,
     mealLogs,
     n5kIngredients,
+    glucoseLogs,
+    mealMacroLogs,
+    medicationLogs,
+    userProfiles,
   ];
 }
 
@@ -2686,6 +5954,1525 @@ typedef $$N5kIngredientsTableProcessedTableManager =
       N5kIngredient,
       PrefetchHooks Function()
     >;
+typedef $$GlucoseLogsTableCreateCompanionBuilder =
+    GlucoseLogsCompanion Function({
+      required String id,
+      required double value,
+      required String unit,
+      required String context,
+      required DateTime timestamp,
+      Value<String?> notes,
+      Value<int> rowid,
+    });
+typedef $$GlucoseLogsTableUpdateCompanionBuilder =
+    GlucoseLogsCompanion Function({
+      Value<String> id,
+      Value<double> value,
+      Value<String> unit,
+      Value<String> context,
+      Value<DateTime> timestamp,
+      Value<String?> notes,
+      Value<int> rowid,
+    });
+
+class $$GlucoseLogsTableFilterComposer
+    extends Composer<_$AppDatabase, $GlucoseLogsTable> {
+  $$GlucoseLogsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get value => $composableBuilder(
+    column: $table.value,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get unit => $composableBuilder(
+    column: $table.unit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get context => $composableBuilder(
+    column: $table.context,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get timestamp => $composableBuilder(
+    column: $table.timestamp,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$GlucoseLogsTableOrderingComposer
+    extends Composer<_$AppDatabase, $GlucoseLogsTable> {
+  $$GlucoseLogsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get value => $composableBuilder(
+    column: $table.value,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get unit => $composableBuilder(
+    column: $table.unit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get context => $composableBuilder(
+    column: $table.context,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get timestamp => $composableBuilder(
+    column: $table.timestamp,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$GlucoseLogsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $GlucoseLogsTable> {
+  $$GlucoseLogsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<double> get value =>
+      $composableBuilder(column: $table.value, builder: (column) => column);
+
+  GeneratedColumn<String> get unit =>
+      $composableBuilder(column: $table.unit, builder: (column) => column);
+
+  GeneratedColumn<String> get context =>
+      $composableBuilder(column: $table.context, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get timestamp =>
+      $composableBuilder(column: $table.timestamp, builder: (column) => column);
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+}
+
+class $$GlucoseLogsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $GlucoseLogsTable,
+          GlucoseLogRow,
+          $$GlucoseLogsTableFilterComposer,
+          $$GlucoseLogsTableOrderingComposer,
+          $$GlucoseLogsTableAnnotationComposer,
+          $$GlucoseLogsTableCreateCompanionBuilder,
+          $$GlucoseLogsTableUpdateCompanionBuilder,
+          (
+            GlucoseLogRow,
+            BaseReferences<_$AppDatabase, $GlucoseLogsTable, GlucoseLogRow>,
+          ),
+          GlucoseLogRow,
+          PrefetchHooks Function()
+        > {
+  $$GlucoseLogsTableTableManager(_$AppDatabase db, $GlucoseLogsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$GlucoseLogsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$GlucoseLogsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$GlucoseLogsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<double> value = const Value.absent(),
+                Value<String> unit = const Value.absent(),
+                Value<String> context = const Value.absent(),
+                Value<DateTime> timestamp = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => GlucoseLogsCompanion(
+                id: id,
+                value: value,
+                unit: unit,
+                context: context,
+                timestamp: timestamp,
+                notes: notes,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required double value,
+                required String unit,
+                required String context,
+                required DateTime timestamp,
+                Value<String?> notes = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => GlucoseLogsCompanion.insert(
+                id: id,
+                value: value,
+                unit: unit,
+                context: context,
+                timestamp: timestamp,
+                notes: notes,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$GlucoseLogsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $GlucoseLogsTable,
+      GlucoseLogRow,
+      $$GlucoseLogsTableFilterComposer,
+      $$GlucoseLogsTableOrderingComposer,
+      $$GlucoseLogsTableAnnotationComposer,
+      $$GlucoseLogsTableCreateCompanionBuilder,
+      $$GlucoseLogsTableUpdateCompanionBuilder,
+      (
+        GlucoseLogRow,
+        BaseReferences<_$AppDatabase, $GlucoseLogsTable, GlucoseLogRow>,
+      ),
+      GlucoseLogRow,
+      PrefetchHooks Function()
+    >;
+typedef $$MealMacroLogsTableCreateCompanionBuilder =
+    MealMacroLogsCompanion Function({
+      required String id,
+      required DateTime timestamp,
+      Value<String?> name,
+      required double carbohydrates,
+      Value<double> dietaryFiber,
+      required double proteins,
+      required double fats,
+      Value<double> calories,
+      Value<bool> containsAlcohol,
+      Value<bool> containsCaffeine,
+      required String mealType,
+      Value<String> foodFormFactor,
+      Value<bool> postExercise,
+      Value<String?> notes,
+      Value<int> rowid,
+    });
+typedef $$MealMacroLogsTableUpdateCompanionBuilder =
+    MealMacroLogsCompanion Function({
+      Value<String> id,
+      Value<DateTime> timestamp,
+      Value<String?> name,
+      Value<double> carbohydrates,
+      Value<double> dietaryFiber,
+      Value<double> proteins,
+      Value<double> fats,
+      Value<double> calories,
+      Value<bool> containsAlcohol,
+      Value<bool> containsCaffeine,
+      Value<String> mealType,
+      Value<String> foodFormFactor,
+      Value<bool> postExercise,
+      Value<String?> notes,
+      Value<int> rowid,
+    });
+
+class $$MealMacroLogsTableFilterComposer
+    extends Composer<_$AppDatabase, $MealMacroLogsTable> {
+  $$MealMacroLogsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get timestamp => $composableBuilder(
+    column: $table.timestamp,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get carbohydrates => $composableBuilder(
+    column: $table.carbohydrates,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get dietaryFiber => $composableBuilder(
+    column: $table.dietaryFiber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get proteins => $composableBuilder(
+    column: $table.proteins,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get fats => $composableBuilder(
+    column: $table.fats,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get calories => $composableBuilder(
+    column: $table.calories,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get containsAlcohol => $composableBuilder(
+    column: $table.containsAlcohol,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get containsCaffeine => $composableBuilder(
+    column: $table.containsCaffeine,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get mealType => $composableBuilder(
+    column: $table.mealType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get foodFormFactor => $composableBuilder(
+    column: $table.foodFormFactor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get postExercise => $composableBuilder(
+    column: $table.postExercise,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$MealMacroLogsTableOrderingComposer
+    extends Composer<_$AppDatabase, $MealMacroLogsTable> {
+  $$MealMacroLogsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get timestamp => $composableBuilder(
+    column: $table.timestamp,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get carbohydrates => $composableBuilder(
+    column: $table.carbohydrates,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get dietaryFiber => $composableBuilder(
+    column: $table.dietaryFiber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get proteins => $composableBuilder(
+    column: $table.proteins,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get fats => $composableBuilder(
+    column: $table.fats,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get calories => $composableBuilder(
+    column: $table.calories,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get containsAlcohol => $composableBuilder(
+    column: $table.containsAlcohol,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get containsCaffeine => $composableBuilder(
+    column: $table.containsCaffeine,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get mealType => $composableBuilder(
+    column: $table.mealType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get foodFormFactor => $composableBuilder(
+    column: $table.foodFormFactor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get postExercise => $composableBuilder(
+    column: $table.postExercise,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$MealMacroLogsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $MealMacroLogsTable> {
+  $$MealMacroLogsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get timestamp =>
+      $composableBuilder(column: $table.timestamp, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<double> get carbohydrates => $composableBuilder(
+    column: $table.carbohydrates,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get dietaryFiber => $composableBuilder(
+    column: $table.dietaryFiber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get proteins =>
+      $composableBuilder(column: $table.proteins, builder: (column) => column);
+
+  GeneratedColumn<double> get fats =>
+      $composableBuilder(column: $table.fats, builder: (column) => column);
+
+  GeneratedColumn<double> get calories =>
+      $composableBuilder(column: $table.calories, builder: (column) => column);
+
+  GeneratedColumn<bool> get containsAlcohol => $composableBuilder(
+    column: $table.containsAlcohol,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get containsCaffeine => $composableBuilder(
+    column: $table.containsCaffeine,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get mealType =>
+      $composableBuilder(column: $table.mealType, builder: (column) => column);
+
+  GeneratedColumn<String> get foodFormFactor => $composableBuilder(
+    column: $table.foodFormFactor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get postExercise => $composableBuilder(
+    column: $table.postExercise,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+}
+
+class $$MealMacroLogsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $MealMacroLogsTable,
+          MealMacroLog,
+          $$MealMacroLogsTableFilterComposer,
+          $$MealMacroLogsTableOrderingComposer,
+          $$MealMacroLogsTableAnnotationComposer,
+          $$MealMacroLogsTableCreateCompanionBuilder,
+          $$MealMacroLogsTableUpdateCompanionBuilder,
+          (
+            MealMacroLog,
+            BaseReferences<_$AppDatabase, $MealMacroLogsTable, MealMacroLog>,
+          ),
+          MealMacroLog,
+          PrefetchHooks Function()
+        > {
+  $$MealMacroLogsTableTableManager(_$AppDatabase db, $MealMacroLogsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$MealMacroLogsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$MealMacroLogsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$MealMacroLogsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<DateTime> timestamp = const Value.absent(),
+                Value<String?> name = const Value.absent(),
+                Value<double> carbohydrates = const Value.absent(),
+                Value<double> dietaryFiber = const Value.absent(),
+                Value<double> proteins = const Value.absent(),
+                Value<double> fats = const Value.absent(),
+                Value<double> calories = const Value.absent(),
+                Value<bool> containsAlcohol = const Value.absent(),
+                Value<bool> containsCaffeine = const Value.absent(),
+                Value<String> mealType = const Value.absent(),
+                Value<String> foodFormFactor = const Value.absent(),
+                Value<bool> postExercise = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MealMacroLogsCompanion(
+                id: id,
+                timestamp: timestamp,
+                name: name,
+                carbohydrates: carbohydrates,
+                dietaryFiber: dietaryFiber,
+                proteins: proteins,
+                fats: fats,
+                calories: calories,
+                containsAlcohol: containsAlcohol,
+                containsCaffeine: containsCaffeine,
+                mealType: mealType,
+                foodFormFactor: foodFormFactor,
+                postExercise: postExercise,
+                notes: notes,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required DateTime timestamp,
+                Value<String?> name = const Value.absent(),
+                required double carbohydrates,
+                Value<double> dietaryFiber = const Value.absent(),
+                required double proteins,
+                required double fats,
+                Value<double> calories = const Value.absent(),
+                Value<bool> containsAlcohol = const Value.absent(),
+                Value<bool> containsCaffeine = const Value.absent(),
+                required String mealType,
+                Value<String> foodFormFactor = const Value.absent(),
+                Value<bool> postExercise = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MealMacroLogsCompanion.insert(
+                id: id,
+                timestamp: timestamp,
+                name: name,
+                carbohydrates: carbohydrates,
+                dietaryFiber: dietaryFiber,
+                proteins: proteins,
+                fats: fats,
+                calories: calories,
+                containsAlcohol: containsAlcohol,
+                containsCaffeine: containsCaffeine,
+                mealType: mealType,
+                foodFormFactor: foodFormFactor,
+                postExercise: postExercise,
+                notes: notes,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$MealMacroLogsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $MealMacroLogsTable,
+      MealMacroLog,
+      $$MealMacroLogsTableFilterComposer,
+      $$MealMacroLogsTableOrderingComposer,
+      $$MealMacroLogsTableAnnotationComposer,
+      $$MealMacroLogsTableCreateCompanionBuilder,
+      $$MealMacroLogsTableUpdateCompanionBuilder,
+      (
+        MealMacroLog,
+        BaseReferences<_$AppDatabase, $MealMacroLogsTable, MealMacroLog>,
+      ),
+      MealMacroLog,
+      PrefetchHooks Function()
+    >;
+typedef $$MedicationLogsTableCreateCompanionBuilder =
+    MedicationLogsCompanion Function({
+      required String id,
+      required DateTime timestamp,
+      required String medicationType,
+      Value<String> insulinType,
+      Value<String?> name,
+      required double units,
+      Value<String?> notes,
+      Value<int> rowid,
+    });
+typedef $$MedicationLogsTableUpdateCompanionBuilder =
+    MedicationLogsCompanion Function({
+      Value<String> id,
+      Value<DateTime> timestamp,
+      Value<String> medicationType,
+      Value<String> insulinType,
+      Value<String?> name,
+      Value<double> units,
+      Value<String?> notes,
+      Value<int> rowid,
+    });
+
+class $$MedicationLogsTableFilterComposer
+    extends Composer<_$AppDatabase, $MedicationLogsTable> {
+  $$MedicationLogsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get timestamp => $composableBuilder(
+    column: $table.timestamp,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get medicationType => $composableBuilder(
+    column: $table.medicationType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get insulinType => $composableBuilder(
+    column: $table.insulinType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get units => $composableBuilder(
+    column: $table.units,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$MedicationLogsTableOrderingComposer
+    extends Composer<_$AppDatabase, $MedicationLogsTable> {
+  $$MedicationLogsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get timestamp => $composableBuilder(
+    column: $table.timestamp,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get medicationType => $composableBuilder(
+    column: $table.medicationType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get insulinType => $composableBuilder(
+    column: $table.insulinType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get units => $composableBuilder(
+    column: $table.units,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$MedicationLogsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $MedicationLogsTable> {
+  $$MedicationLogsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get timestamp =>
+      $composableBuilder(column: $table.timestamp, builder: (column) => column);
+
+  GeneratedColumn<String> get medicationType => $composableBuilder(
+    column: $table.medicationType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get insulinType => $composableBuilder(
+    column: $table.insulinType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<double> get units =>
+      $composableBuilder(column: $table.units, builder: (column) => column);
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+}
+
+class $$MedicationLogsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $MedicationLogsTable,
+          MedicationLogRow,
+          $$MedicationLogsTableFilterComposer,
+          $$MedicationLogsTableOrderingComposer,
+          $$MedicationLogsTableAnnotationComposer,
+          $$MedicationLogsTableCreateCompanionBuilder,
+          $$MedicationLogsTableUpdateCompanionBuilder,
+          (
+            MedicationLogRow,
+            BaseReferences<
+              _$AppDatabase,
+              $MedicationLogsTable,
+              MedicationLogRow
+            >,
+          ),
+          MedicationLogRow,
+          PrefetchHooks Function()
+        > {
+  $$MedicationLogsTableTableManager(
+    _$AppDatabase db,
+    $MedicationLogsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$MedicationLogsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$MedicationLogsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$MedicationLogsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<DateTime> timestamp = const Value.absent(),
+                Value<String> medicationType = const Value.absent(),
+                Value<String> insulinType = const Value.absent(),
+                Value<String?> name = const Value.absent(),
+                Value<double> units = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MedicationLogsCompanion(
+                id: id,
+                timestamp: timestamp,
+                medicationType: medicationType,
+                insulinType: insulinType,
+                name: name,
+                units: units,
+                notes: notes,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required DateTime timestamp,
+                required String medicationType,
+                Value<String> insulinType = const Value.absent(),
+                Value<String?> name = const Value.absent(),
+                required double units,
+                Value<String?> notes = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MedicationLogsCompanion.insert(
+                id: id,
+                timestamp: timestamp,
+                medicationType: medicationType,
+                insulinType: insulinType,
+                name: name,
+                units: units,
+                notes: notes,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$MedicationLogsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $MedicationLogsTable,
+      MedicationLogRow,
+      $$MedicationLogsTableFilterComposer,
+      $$MedicationLogsTableOrderingComposer,
+      $$MedicationLogsTableAnnotationComposer,
+      $$MedicationLogsTableCreateCompanionBuilder,
+      $$MedicationLogsTableUpdateCompanionBuilder,
+      (
+        MedicationLogRow,
+        BaseReferences<_$AppDatabase, $MedicationLogsTable, MedicationLogRow>,
+      ),
+      MedicationLogRow,
+      PrefetchHooks Function()
+    >;
+typedef $$UserProfilesTableCreateCompanionBuilder =
+    UserProfilesCompanion Function({
+      required String id,
+      Value<String> name,
+      required int age,
+      required String gender,
+      required double heightCm,
+      required double weightKg,
+      Value<double?> targetWeightKg,
+      required String diabetesType,
+      required int diagnosisYear,
+      required String preferredGlucoseUnit,
+      Value<bool> usesInsulin,
+      Value<bool> usesPills,
+      Value<bool> usesCgm,
+      required double targetGlucoseMin,
+      required double targetGlucoseMax,
+      Value<double> metabolicClearanceRate,
+      Value<double> insulinSensitivityFactor,
+      Value<double> absorptionDelayBase,
+      Value<int> tuningMealCount,
+      Value<double> fastingSetpoint,
+      Value<String> insulinCategory,
+      Value<double> insulinDiaMinutes,
+      Value<double> ekfCovP1,
+      Value<double> ekfCovISF,
+      Value<double> ekfCovTMax,
+      Value<bool> hasAgreedToDisclaimer,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<int> rowid,
+    });
+typedef $$UserProfilesTableUpdateCompanionBuilder =
+    UserProfilesCompanion Function({
+      Value<String> id,
+      Value<String> name,
+      Value<int> age,
+      Value<String> gender,
+      Value<double> heightCm,
+      Value<double> weightKg,
+      Value<double?> targetWeightKg,
+      Value<String> diabetesType,
+      Value<int> diagnosisYear,
+      Value<String> preferredGlucoseUnit,
+      Value<bool> usesInsulin,
+      Value<bool> usesPills,
+      Value<bool> usesCgm,
+      Value<double> targetGlucoseMin,
+      Value<double> targetGlucoseMax,
+      Value<double> metabolicClearanceRate,
+      Value<double> insulinSensitivityFactor,
+      Value<double> absorptionDelayBase,
+      Value<int> tuningMealCount,
+      Value<double> fastingSetpoint,
+      Value<String> insulinCategory,
+      Value<double> insulinDiaMinutes,
+      Value<double> ekfCovP1,
+      Value<double> ekfCovISF,
+      Value<double> ekfCovTMax,
+      Value<bool> hasAgreedToDisclaimer,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$UserProfilesTableFilterComposer
+    extends Composer<_$AppDatabase, $UserProfilesTable> {
+  $$UserProfilesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get age => $composableBuilder(
+    column: $table.age,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get gender => $composableBuilder(
+    column: $table.gender,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get heightCm => $composableBuilder(
+    column: $table.heightCm,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get weightKg => $composableBuilder(
+    column: $table.weightKg,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get targetWeightKg => $composableBuilder(
+    column: $table.targetWeightKg,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get diabetesType => $composableBuilder(
+    column: $table.diabetesType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get diagnosisYear => $composableBuilder(
+    column: $table.diagnosisYear,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get preferredGlucoseUnit => $composableBuilder(
+    column: $table.preferredGlucoseUnit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get usesInsulin => $composableBuilder(
+    column: $table.usesInsulin,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get usesPills => $composableBuilder(
+    column: $table.usesPills,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get usesCgm => $composableBuilder(
+    column: $table.usesCgm,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get targetGlucoseMin => $composableBuilder(
+    column: $table.targetGlucoseMin,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get targetGlucoseMax => $composableBuilder(
+    column: $table.targetGlucoseMax,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get metabolicClearanceRate => $composableBuilder(
+    column: $table.metabolicClearanceRate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get insulinSensitivityFactor => $composableBuilder(
+    column: $table.insulinSensitivityFactor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get absorptionDelayBase => $composableBuilder(
+    column: $table.absorptionDelayBase,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get tuningMealCount => $composableBuilder(
+    column: $table.tuningMealCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get fastingSetpoint => $composableBuilder(
+    column: $table.fastingSetpoint,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get insulinCategory => $composableBuilder(
+    column: $table.insulinCategory,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get insulinDiaMinutes => $composableBuilder(
+    column: $table.insulinDiaMinutes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get ekfCovP1 => $composableBuilder(
+    column: $table.ekfCovP1,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get ekfCovISF => $composableBuilder(
+    column: $table.ekfCovISF,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get ekfCovTMax => $composableBuilder(
+    column: $table.ekfCovTMax,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get hasAgreedToDisclaimer => $composableBuilder(
+    column: $table.hasAgreedToDisclaimer,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$UserProfilesTableOrderingComposer
+    extends Composer<_$AppDatabase, $UserProfilesTable> {
+  $$UserProfilesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get age => $composableBuilder(
+    column: $table.age,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get gender => $composableBuilder(
+    column: $table.gender,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get heightCm => $composableBuilder(
+    column: $table.heightCm,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get weightKg => $composableBuilder(
+    column: $table.weightKg,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get targetWeightKg => $composableBuilder(
+    column: $table.targetWeightKg,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get diabetesType => $composableBuilder(
+    column: $table.diabetesType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get diagnosisYear => $composableBuilder(
+    column: $table.diagnosisYear,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get preferredGlucoseUnit => $composableBuilder(
+    column: $table.preferredGlucoseUnit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get usesInsulin => $composableBuilder(
+    column: $table.usesInsulin,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get usesPills => $composableBuilder(
+    column: $table.usesPills,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get usesCgm => $composableBuilder(
+    column: $table.usesCgm,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get targetGlucoseMin => $composableBuilder(
+    column: $table.targetGlucoseMin,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get targetGlucoseMax => $composableBuilder(
+    column: $table.targetGlucoseMax,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get metabolicClearanceRate => $composableBuilder(
+    column: $table.metabolicClearanceRate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get insulinSensitivityFactor => $composableBuilder(
+    column: $table.insulinSensitivityFactor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get absorptionDelayBase => $composableBuilder(
+    column: $table.absorptionDelayBase,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get tuningMealCount => $composableBuilder(
+    column: $table.tuningMealCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get fastingSetpoint => $composableBuilder(
+    column: $table.fastingSetpoint,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get insulinCategory => $composableBuilder(
+    column: $table.insulinCategory,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get insulinDiaMinutes => $composableBuilder(
+    column: $table.insulinDiaMinutes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get ekfCovP1 => $composableBuilder(
+    column: $table.ekfCovP1,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get ekfCovISF => $composableBuilder(
+    column: $table.ekfCovISF,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get ekfCovTMax => $composableBuilder(
+    column: $table.ekfCovTMax,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get hasAgreedToDisclaimer => $composableBuilder(
+    column: $table.hasAgreedToDisclaimer,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$UserProfilesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $UserProfilesTable> {
+  $$UserProfilesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<int> get age =>
+      $composableBuilder(column: $table.age, builder: (column) => column);
+
+  GeneratedColumn<String> get gender =>
+      $composableBuilder(column: $table.gender, builder: (column) => column);
+
+  GeneratedColumn<double> get heightCm =>
+      $composableBuilder(column: $table.heightCm, builder: (column) => column);
+
+  GeneratedColumn<double> get weightKg =>
+      $composableBuilder(column: $table.weightKg, builder: (column) => column);
+
+  GeneratedColumn<double> get targetWeightKg => $composableBuilder(
+    column: $table.targetWeightKg,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get diabetesType => $composableBuilder(
+    column: $table.diabetesType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get diagnosisYear => $composableBuilder(
+    column: $table.diagnosisYear,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get preferredGlucoseUnit => $composableBuilder(
+    column: $table.preferredGlucoseUnit,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get usesInsulin => $composableBuilder(
+    column: $table.usesInsulin,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get usesPills =>
+      $composableBuilder(column: $table.usesPills, builder: (column) => column);
+
+  GeneratedColumn<bool> get usesCgm =>
+      $composableBuilder(column: $table.usesCgm, builder: (column) => column);
+
+  GeneratedColumn<double> get targetGlucoseMin => $composableBuilder(
+    column: $table.targetGlucoseMin,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get targetGlucoseMax => $composableBuilder(
+    column: $table.targetGlucoseMax,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get metabolicClearanceRate => $composableBuilder(
+    column: $table.metabolicClearanceRate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get insulinSensitivityFactor => $composableBuilder(
+    column: $table.insulinSensitivityFactor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get absorptionDelayBase => $composableBuilder(
+    column: $table.absorptionDelayBase,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get tuningMealCount => $composableBuilder(
+    column: $table.tuningMealCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get fastingSetpoint => $composableBuilder(
+    column: $table.fastingSetpoint,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get insulinCategory => $composableBuilder(
+    column: $table.insulinCategory,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get insulinDiaMinutes => $composableBuilder(
+    column: $table.insulinDiaMinutes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get ekfCovP1 =>
+      $composableBuilder(column: $table.ekfCovP1, builder: (column) => column);
+
+  GeneratedColumn<double> get ekfCovISF =>
+      $composableBuilder(column: $table.ekfCovISF, builder: (column) => column);
+
+  GeneratedColumn<double> get ekfCovTMax => $composableBuilder(
+    column: $table.ekfCovTMax,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get hasAgreedToDisclaimer => $composableBuilder(
+    column: $table.hasAgreedToDisclaimer,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$UserProfilesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $UserProfilesTable,
+          UserProfileRow,
+          $$UserProfilesTableFilterComposer,
+          $$UserProfilesTableOrderingComposer,
+          $$UserProfilesTableAnnotationComposer,
+          $$UserProfilesTableCreateCompanionBuilder,
+          $$UserProfilesTableUpdateCompanionBuilder,
+          (
+            UserProfileRow,
+            BaseReferences<_$AppDatabase, $UserProfilesTable, UserProfileRow>,
+          ),
+          UserProfileRow,
+          PrefetchHooks Function()
+        > {
+  $$UserProfilesTableTableManager(_$AppDatabase db, $UserProfilesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$UserProfilesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$UserProfilesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$UserProfilesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<int> age = const Value.absent(),
+                Value<String> gender = const Value.absent(),
+                Value<double> heightCm = const Value.absent(),
+                Value<double> weightKg = const Value.absent(),
+                Value<double?> targetWeightKg = const Value.absent(),
+                Value<String> diabetesType = const Value.absent(),
+                Value<int> diagnosisYear = const Value.absent(),
+                Value<String> preferredGlucoseUnit = const Value.absent(),
+                Value<bool> usesInsulin = const Value.absent(),
+                Value<bool> usesPills = const Value.absent(),
+                Value<bool> usesCgm = const Value.absent(),
+                Value<double> targetGlucoseMin = const Value.absent(),
+                Value<double> targetGlucoseMax = const Value.absent(),
+                Value<double> metabolicClearanceRate = const Value.absent(),
+                Value<double> insulinSensitivityFactor = const Value.absent(),
+                Value<double> absorptionDelayBase = const Value.absent(),
+                Value<int> tuningMealCount = const Value.absent(),
+                Value<double> fastingSetpoint = const Value.absent(),
+                Value<String> insulinCategory = const Value.absent(),
+                Value<double> insulinDiaMinutes = const Value.absent(),
+                Value<double> ekfCovP1 = const Value.absent(),
+                Value<double> ekfCovISF = const Value.absent(),
+                Value<double> ekfCovTMax = const Value.absent(),
+                Value<bool> hasAgreedToDisclaimer = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => UserProfilesCompanion(
+                id: id,
+                name: name,
+                age: age,
+                gender: gender,
+                heightCm: heightCm,
+                weightKg: weightKg,
+                targetWeightKg: targetWeightKg,
+                diabetesType: diabetesType,
+                diagnosisYear: diagnosisYear,
+                preferredGlucoseUnit: preferredGlucoseUnit,
+                usesInsulin: usesInsulin,
+                usesPills: usesPills,
+                usesCgm: usesCgm,
+                targetGlucoseMin: targetGlucoseMin,
+                targetGlucoseMax: targetGlucoseMax,
+                metabolicClearanceRate: metabolicClearanceRate,
+                insulinSensitivityFactor: insulinSensitivityFactor,
+                absorptionDelayBase: absorptionDelayBase,
+                tuningMealCount: tuningMealCount,
+                fastingSetpoint: fastingSetpoint,
+                insulinCategory: insulinCategory,
+                insulinDiaMinutes: insulinDiaMinutes,
+                ekfCovP1: ekfCovP1,
+                ekfCovISF: ekfCovISF,
+                ekfCovTMax: ekfCovTMax,
+                hasAgreedToDisclaimer: hasAgreedToDisclaimer,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                Value<String> name = const Value.absent(),
+                required int age,
+                required String gender,
+                required double heightCm,
+                required double weightKg,
+                Value<double?> targetWeightKg = const Value.absent(),
+                required String diabetesType,
+                required int diagnosisYear,
+                required String preferredGlucoseUnit,
+                Value<bool> usesInsulin = const Value.absent(),
+                Value<bool> usesPills = const Value.absent(),
+                Value<bool> usesCgm = const Value.absent(),
+                required double targetGlucoseMin,
+                required double targetGlucoseMax,
+                Value<double> metabolicClearanceRate = const Value.absent(),
+                Value<double> insulinSensitivityFactor = const Value.absent(),
+                Value<double> absorptionDelayBase = const Value.absent(),
+                Value<int> tuningMealCount = const Value.absent(),
+                Value<double> fastingSetpoint = const Value.absent(),
+                Value<String> insulinCategory = const Value.absent(),
+                Value<double> insulinDiaMinutes = const Value.absent(),
+                Value<double> ekfCovP1 = const Value.absent(),
+                Value<double> ekfCovISF = const Value.absent(),
+                Value<double> ekfCovTMax = const Value.absent(),
+                Value<bool> hasAgreedToDisclaimer = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => UserProfilesCompanion.insert(
+                id: id,
+                name: name,
+                age: age,
+                gender: gender,
+                heightCm: heightCm,
+                weightKg: weightKg,
+                targetWeightKg: targetWeightKg,
+                diabetesType: diabetesType,
+                diagnosisYear: diagnosisYear,
+                preferredGlucoseUnit: preferredGlucoseUnit,
+                usesInsulin: usesInsulin,
+                usesPills: usesPills,
+                usesCgm: usesCgm,
+                targetGlucoseMin: targetGlucoseMin,
+                targetGlucoseMax: targetGlucoseMax,
+                metabolicClearanceRate: metabolicClearanceRate,
+                insulinSensitivityFactor: insulinSensitivityFactor,
+                absorptionDelayBase: absorptionDelayBase,
+                tuningMealCount: tuningMealCount,
+                fastingSetpoint: fastingSetpoint,
+                insulinCategory: insulinCategory,
+                insulinDiaMinutes: insulinDiaMinutes,
+                ekfCovP1: ekfCovP1,
+                ekfCovISF: ekfCovISF,
+                ekfCovTMax: ekfCovTMax,
+                hasAgreedToDisclaimer: hasAgreedToDisclaimer,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$UserProfilesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $UserProfilesTable,
+      UserProfileRow,
+      $$UserProfilesTableFilterComposer,
+      $$UserProfilesTableOrderingComposer,
+      $$UserProfilesTableAnnotationComposer,
+      $$UserProfilesTableCreateCompanionBuilder,
+      $$UserProfilesTableUpdateCompanionBuilder,
+      (
+        UserProfileRow,
+        BaseReferences<_$AppDatabase, $UserProfilesTable, UserProfileRow>,
+      ),
+      UserProfileRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -2698,4 +7485,12 @@ class $AppDatabaseManager {
       $$MealLogsTableTableManager(_db, _db.mealLogs);
   $$N5kIngredientsTableTableManager get n5kIngredients =>
       $$N5kIngredientsTableTableManager(_db, _db.n5kIngredients);
+  $$GlucoseLogsTableTableManager get glucoseLogs =>
+      $$GlucoseLogsTableTableManager(_db, _db.glucoseLogs);
+  $$MealMacroLogsTableTableManager get mealMacroLogs =>
+      $$MealMacroLogsTableTableManager(_db, _db.mealMacroLogs);
+  $$MedicationLogsTableTableManager get medicationLogs =>
+      $$MedicationLogsTableTableManager(_db, _db.medicationLogs);
+  $$UserProfilesTableTableManager get userProfiles =>
+      $$UserProfilesTableTableManager(_db, _db.userProfiles);
 }
