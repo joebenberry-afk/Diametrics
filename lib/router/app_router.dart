@@ -49,49 +49,49 @@ final routerProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(
         path: Routes.splash,
-        builder: (_, __) => const SplashScreen(),
+        builder: (_, _) => const SplashScreen(),
       ),
       GoRoute(
         path: Routes.onboarding,
-        builder: (_, __) => const OnboardingWrapper(),
+        builder: (_, _) => const OnboardingWrapper(),
       ),
       GoRoute(
         path: Routes.dashboard,
-        builder: (_, __) => const DashboardView(),
+        builder: (_, _) => const DashboardView(),
         routes: [
           GoRoute(
             path: 'glucose-trend',
-            builder: (_, __) => const GlucoseTrendView(),
+            builder: (_, _) => const GlucoseTrendView(),
           ),
           GoRoute(
             path: 'glucose-history',
-            builder: (_, __) => const GlucoseHistoryView(),
+            builder: (_, _) => const GlucoseHistoryView(),
           ),
           GoRoute(
             path: 'meal-history',
-            builder: (_, __) => const MealHistoryView(),
+            builder: (_, _) => const MealHistoryView(),
           ),
           GoRoute(
             path: 'medication-history',
-            builder: (_, __) => const MedicationHistoryView(),
+            builder: (_, _) => const MedicationHistoryView(),
           ),
           GoRoute(
             path: 'emergency-contacts',
-            builder: (_, __) => const EmergencyContactsView(),
+            builder: (_, _) => const EmergencyContactsView(),
           ),
         ],
       ),
       GoRoute(
         path: Routes.logGlucose,
-        builder: (_, __) => const GlucoseWizardView(),
+        builder: (_, _) => const GlucoseWizardView(),
       ),
       GoRoute(
         path: Routes.logMeal,
-        builder: (_, __) => const MealWizardView(),
+        builder: (_, _) => const MealWizardView(),
         routes: [
           GoRoute(
             path: 'barcode',
-            builder: (_, __) => const BarcodeScannerView(),
+            builder: (_, _) => const BarcodeScannerView(),
           ),
           GoRoute(
             path: 'projection',
@@ -108,15 +108,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: Routes.logMedication,
-        builder: (_, __) => const MedicationWizardView(),
+        builder: (_, _) => const MedicationWizardView(),
       ),
       GoRoute(
         path: Routes.settings,
-        builder: (_, __) => const SettingsView(),
+        builder: (_, _) => const SettingsView(),
         routes: [
           GoRoute(
             path: 'emergency-contacts',
-            builder: (_, __) => const EmergencyContactsView(),
+            builder: (_, _) => const EmergencyContactsView(),
           ),
         ],
       ),
@@ -127,6 +127,6 @@ final routerProvider = Provider<GoRouter>((ref) {
 /// Makes GoRouter re-evaluate redirects whenever the profile AsyncValue changes.
 class _ProfileListenable extends ChangeNotifier {
   _ProfileListenable(Ref ref) {
-    ref.listen(userProfileProvider, (_, __) => notifyListeners());
+    ref.listen(userProfileProvider, (_, _) => notifyListeners());
   }
 }
