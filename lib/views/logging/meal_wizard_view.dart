@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../config/app_lock_config.dart';
+import '../../config/backend_config.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../repositories/user_repository.dart';
 import '../../src/core/di/injection.dart';
@@ -429,7 +430,7 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'^\d{0,3}\.?\d*')),
+                      FilteringTextInputFormatter.allow(RegExp(r'^\d{0,3}\.?\d{0,1}$')),
                     ],
                     textAlign: TextAlign.center,
                     style: theme.textTheme.headlineLarge?.copyWith(
@@ -455,7 +456,11 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                     onChanged: (val) {
                       final parsed = double.tryParse(val);
                       if (parsed != null && parsed > 0) {
-                        viewModel.setPreMealGlucose(parsed);
+                        final isMmol = _preferredGlucoseUnit == 'mmol/L';
+                        final max = isMmol ? 33.3 : 600.0;
+                        if (parsed <= max) {
+                          viewModel.setPreMealGlucose(parsed);
+                        }
                       }
                     },
                   ),
@@ -764,7 +769,31 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
       );
     }
 
-    // Default: tap to analyze
+    // Default: tap to analyze (or disabled state when AI not available)
+    final bool aiAvailable =
+        BackendConfig.isConfigured || BackendConfig.isDirectGeminiEnabled;
+
+    if (!aiAvailable) {
+      return Container(
+        height: 130,
+        padding: const EdgeInsets.all(AppThemeTokens.spaceMd),
+        decoration: base,
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.cloud_off, color: Colors.white38, size: 28),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'AI analysis not available.\nBuild with --dart-define=GEMINI_API_KEY=your_key',
+                style: TextStyle(color: Colors.white38, fontSize: 13),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return InkWell(
       borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
       onTap: _showSourceSheet,

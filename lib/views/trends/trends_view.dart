@@ -119,13 +119,18 @@ class _RangeChips extends ConsumerWidget {
           child: ChoiceChip(
             label: Text(label),
             selected: isSelected,
+            showCheckmark: false,
             onSelected: (_) =>
                 ref.read(selectedRangeProvider.notifier).state = days,
             selectedColor: AppThemeTokens.brandPrimary,
-            labelStyle: TextStyle(
+            backgroundColor: Colors.white.withValues(alpha: 0.08),
+            side: BorderSide(
               color: isSelected
-                  ? AppThemeTokens.textPrimaryInverse
-                  : AppThemeTokens.textPrimary,
+                  ? AppThemeTokens.brandPrimary
+                  : Colors.white.withValues(alpha: 0.35),
+            ),
+            labelStyle: const TextStyle(
+              color: Colors.white,
               fontWeight: FontWeight.w600,
             ),
           ),
