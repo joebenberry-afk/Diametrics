@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/theme/app_theme.dart';
+import 'core/widgets/database_error_screen.dart';
 import 'database/db_instance.dart';
 import 'package:diametrics/src/core/di/injection.dart';
 import 'router/app_router.dart';
@@ -23,8 +24,10 @@ void main() async {
     await LegacyMigrationService.runIfNeeded();
     await db.populateLocalFoodsIfEmpty();
     await db.populateN5kIfEmpty();
-  } catch (e) {
-    debugPrint('Database initialization failed: $e');
+  } catch (e, st) {
+    debugPrint('Database initialization failed: $e\n$st');
+    runApp(DatabaseErrorScreen(error: e));
+    return;
   }
 
   runApp(const ProviderScope(child: DiametricsApp()));
