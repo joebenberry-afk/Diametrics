@@ -64,7 +64,7 @@ class FoodRagService {
           enrichedItems.add(FoodItem(
             name: item.name,
             portion: item.portion,
-            carbsGrams: (localMatch.carbsPerServing * qty).clamp(0.0, 500.0),
+            carbsGrams: (n5k.carbPerG * servingG * qty).clamp(0.0, 500.0),
             proteinGrams: (n5k.proteinPerG * servingG * qty).clamp(0.0, 300.0),
             fatGrams: (n5k.fatPerG * servingG * qty).clamp(0.0, 300.0),
             calories: (n5k.calPerG * servingG * qty).clamp(0.0, 3000.0),
