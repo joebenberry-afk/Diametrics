@@ -1,4 +1,4 @@
-import 'package:drift/drift.dart' hide isNull;
+import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:diametrics/database/database.dart';
@@ -16,134 +16,98 @@ void main() {
   });
 
   group('Database Tests', () {
-    test('should insert a log entry', () async {
+    test('should insert a local food entry', () async {
+      // Act
+      await database.into(database.localFoods).insert(
+            LocalFoodsCompanion.insert(
+              name: 'Brown Rice',
+              carbsPerServing: 45.0,
+            ),
+          );
+
+      // Assert
+      final foods = await database.select(database.localFoods).get();
+      expect(foods.length, 1);
+      expect(foods.first.name, 'Brown Rice');
+      expect(foods.first.carbsPerServing, 45.0);
+    });
+
+    test('should search local food by name', () async {
       // Arrange
-      final testTimestamp = DateTime.now();
+      await database.into(database.localFoods).insert(
+            LocalFoodsCompanion.insert(
+              name: 'White Bread',
+              carbsPerServing: 15.0,
+            ),
+          );
+      await database.into(database.localFoods).insert(
+            LocalFoodsCompanion.insert(
+              name: 'Chicken Breast',
+              carbsPerServing: 0.0,
+            ),
+          );
 
       // Act
-      await database
-          .into(database.logs)
-          .insert(
-            LogsCompanion.insert(
-              timestamp: testTimestamp,
-              bgValue: const Value(5.5),
-              bgUnit: const Value('mmol/L'),
-              contextTags: const Value('Fasting'),
-              foodVolume: const Value('None'),
-              finishedMeal: const Value(false),
-            ),
-          );
+      final result = await database.searchLocalFood('bread');
 
       // Assert
-      final logs = await database.select(database.logs).get();
-      expect(logs.length, 1);
-      expect(logs.first.bgValue, 5.5);
-      expect(logs.first.bgUnit, 'mmol/L');
-      expect(logs.first.contextTags, 'Fasting');
+      expect(result, isNotNull);
+      expect(result!.name, 'White Bread');
+      expect(result.carbsPerServing, 15.0);
     });
 
-    test('should retrieve recent logs within time window', () async {
-      // Arrange - Insert logs at different times
-      final now = DateTime.now();
-      final yesterday = now.subtract(const Duration(days: 1));
-      final lastWeek = now.subtract(const Duration(days: 7));
-
-      await database
-          .into(database.logs)
-          .insert(
-            LogsCompanion.insert(timestamp: now, bgValue: const Value(6.0)),
-          );
-      await database
-          .into(database.logs)
-          .insert(
-            LogsCompanion.insert(
-              timestamp: yesterday,
-              bgValue: const Value(5.5),
-            ),
-          );
-      await database
-          .into(database.logs)
-          .insert(
-            LogsCompanion.insert(
-              timestamp: lastWeek,
-              bgValue: const Value(5.0),
-            ),
-          );
-
-      // Act - Get logs from last 2 days
-      final recentLogs = await database.getRecentLogs(const Duration(days: 2));
-
-      // Assert
-      expect(recentLogs.length, 2);
-      expect(recentLogs.any((l) => l.bgValue == 6.0), true);
-      expect(recentLogs.any((l) => l.bgValue == 5.5), true);
-      expect(recentLogs.any((l) => l.bgValue == 5.0), false);
-    });
-
-    test('should store all log fields correctly', () async {
-      // Arrange
-      final testTimestamp = DateTime(2026, 2, 7, 10, 30, 0);
-
+    test('should store all local food fields correctly', () async {
       // Act
-      await database
-          .into(database.logs)
-          .insert(
-            LogsCompanion.insert(
-              timestamp: testTimestamp,
-              bgValue: const Value(7.2),
-              bgUnit: const Value('mmol/L'),
-              contextTags: const Value('After Meal'),
-              foodVolume: const Value('1 fist size'),
-              finishedMeal: const Value(true),
+      await database.into(database.localFoods).insert(
+            LocalFoodsCompanion.insert(
+              name: 'Oatmeal',
+              servingSize: const Value('40g'),
+              carbsPerServing: 27.0,
             ),
           );
 
       // Assert
-      final log = (await database.select(database.logs).get()).first;
-      expect(log.bgValue, 7.2);
-      expect(log.bgUnit, 'mmol/L');
-      expect(log.contextTags, 'After Meal');
-      expect(log.foodVolume, '1 fist size');
-      expect(log.finishedMeal, true);
-      expect(log.timestamp, testTimestamp);
+      final food = (await database.select(database.localFoods).get()).first;
+      expect(food.name, 'Oatmeal');
+      expect(food.servingSize, '40g');
+      expect(food.carbsPerServing, 27.0);
     });
 
-    test('should handle nullable fields', () async {
-      // Act - Insert with minimal required fields
-      await database
-          .into(database.logs)
-          .insert(LogsCompanion.insert(timestamp: DateTime.now()));
+    test('should handle nullable barcode in custom foods', () async {
+      // Act — insert without barcode (nullable)
+      await database.into(database.customFoods).insert(
+            CustomFoodsCompanion.insert(
+              userDefinedName: 'Homemade Granola',
+              carbsPerServing: 32.0,
+            ),
+          );
 
       // Assert
-      final log = (await database.select(database.logs).get()).first;
-      expect(log.bgValue, isNull);
-      expect(log.contextTags, isNull);
-      expect(log.foodVolume, isNull);
-      expect(log.bgUnit, 'mmol/L'); // Default value
-      expect(log.finishedMeal, false); // Default value
+      final food = (await database.select(database.customFoods).get()).first;
+      expect(food.userDefinedName, 'Homemade Granola');
+      expect(food.barcode, isNull);
+      expect(food.servingSize, '1 serving'); // Default value
     });
 
-    test('should delete logs', () async {
+    test('should delete local foods', () async {
       // Arrange
-      await database
-          .into(database.logs)
-          .insert(
-            LogsCompanion.insert(
-              timestamp: DateTime.now(),
-              bgValue: const Value(5.5),
+      await database.into(database.localFoods).insert(
+            LocalFoodsCompanion.insert(
+              name: 'Apple',
+              carbsPerServing: 25.0,
             ),
           );
 
       // Verify inserted
-      var logs = await database.select(database.logs).get();
-      expect(logs.length, 1);
+      var foods = await database.select(database.localFoods).get();
+      expect(foods.length, 1);
 
       // Act
-      await database.delete(database.logs).go();
+      await database.delete(database.localFoods).go();
 
       // Assert
-      logs = await database.select(database.logs).get();
-      expect(logs.length, 0);
+      foods = await database.select(database.localFoods).get();
+      expect(foods.length, 0);
     });
   });
 }

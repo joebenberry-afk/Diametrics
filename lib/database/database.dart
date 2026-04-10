@@ -4,16 +4,6 @@ import 'package:flutter/services.dart' show rootBundle;
 
 part 'database.g.dart';
 
-class Logs extends Table {
-  IntColumn get id => integer().autoIncrement()();
-  DateTimeColumn get timestamp => dateTime()();
-  RealColumn get bgValue => real().nullable()();
-  TextColumn get bgUnit => text().withDefault(const Constant('mmol/L'))();
-  TextColumn get contextTags => text().nullable()();
-  TextColumn get foodVolume => text().nullable()();
-  BoolColumn get finishedMeal => boolean().withDefault(const Constant(false))();
-}
-
 class LocalFoods extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text()();
@@ -57,7 +47,7 @@ class N5kIngredients extends Table {
   RealColumn get proteinPerG => real()(); // protein grams per gram
 }
 
-@DriftDatabase(tables: [Logs, LocalFoods, CustomFoods, MealLogs, N5kIngredients])
+@DriftDatabase(tables: [LocalFoods, CustomFoods, MealLogs, N5kIngredients])
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
@@ -181,46 +171,6 @@ class AppDatabase extends _$AppDatabase {
     }
   }
 
-  // ── Log queries ────────────────────────────────────────────────────────
-
-  Future<int> insertGlucoseLog({
-    required DateTime timestamp,
-    required double bgValue,
-    String bgUnit = 'mmol/L',
-  }) {
-    return into(logs).insert(
-      LogsCompanion.insert(
-        timestamp: timestamp,
-        bgValue: Value(bgValue),
-        bgUnit: Value(bgUnit),
-      ),
-    );
-  }
-
-  Future<List<Log>> getLogsLastDays(int days) {
-    final cutoff = DateTime.now().subtract(Duration(days: days));
-    return (select(logs)
-          ..where((l) => l.timestamp.isBiggerThanValue(cutoff))
-          ..orderBy([(l) => OrderingTerm.desc(l.timestamp)]))
-        .get();
-  }
-
-  Future<List<Log>> getAllLogs() {
-    return (select(
-      logs,
-    )..orderBy([(l) => OrderingTerm.desc(l.timestamp)])).get();
-  }
-
-  Future deleteLog(int id) =>
-      (delete(logs)..where((t) => t.id.equals(id))).go();
-
-  Future<List<Log>> getRecentLogs(Duration window) {
-    final cutoff = DateTime.now().subtract(window);
-    return (select(
-      logs,
-    )..where((l) => l.timestamp.isBiggerThanValue(cutoff))).get();
-  }
-
   // ── Food search ────────────────────────────────────────────────────────
 
   /// Searches local USDA foods for a name match (carbs only).
@@ -250,11 +200,4 @@ class AppDatabase extends _$AppDatabase {
         .getSingleOrNull();
   }
 
-  /// Looks up a custom food directly by barcode string.
-  Future<CustomFood?> searchCustomFoodByBarcode(String barcode) async {
-    return (select(customFoods)
-          ..where((f) => f.barcode.equals(barcode))
-          ..limit(1))
-        .getSingleOrNull();
-  }
 }

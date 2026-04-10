@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../services/open_food_facts_service.dart';
 import '../../src/domain/entities/food_item.dart';
@@ -118,7 +119,7 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView>
       if (!mounted) return;
 
       if (item != null) {
-        Navigator.pop(context, item);
+        context.pop(item);
       } else {
         setState(() {
           _isLookingUp = false;
@@ -215,7 +216,7 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView>
         children: [
           IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => context.pop(),
           ),
           const Expanded(
             child: Text(

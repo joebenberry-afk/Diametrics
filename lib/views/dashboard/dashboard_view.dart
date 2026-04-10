@@ -1,18 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_tokens.dart';
+import '../../router/route_names.dart';
 import '../../core/widgets/account_card.dart';
 import '../../core/widgets/metric_card.dart';
 import '../../viewmodels/profile_viewmodel.dart';
-import '../logging/glucose_wizard_view.dart';
-import '../logging/meal_wizard_view.dart';
-import '../logging/medication_wizard_view.dart';
-import '../settings/settings_view.dart';
-import '../settings/emergency_contacts_view.dart';
-import '../history/glucose_trend_view.dart';
-import '../history/meal_history_view.dart';
-import '../history/medication_history_view.dart';
 import '../../services/emergency_service.dart';
 import '../../viewmodels/health_data_viewmodel.dart';
 import '../../viewmodels/activity_viewmodel.dart';
@@ -95,10 +89,7 @@ class DashboardView extends ConsumerWidget {
                       userName: displayName,
                       userStatus: statusText,
                       onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const SettingsView()),
-                        );
+                        context.push(Routes.settings);
                       },
                     ),
                   ),
@@ -155,12 +146,7 @@ class DashboardView extends ConsumerWidget {
                     accentColor: glucoseColor,
                     trendData: trendData,
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const GlucoseTrendView(),
-                        ),
-                      );
+                      context.push(Routes.glucoseTrend);
                     },
                   ),
                   MetricCard(
@@ -171,12 +157,7 @@ class DashboardView extends ConsumerWidget {
                     accentColor: AppThemeTokens.brandSuccess,
                     trendData: const [],
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const MealHistoryView(),
-                        ),
-                      );
+                      context.push(Routes.mealHistory);
                     },
                   ),
                   MetricCard(
@@ -186,12 +167,7 @@ class DashboardView extends ConsumerWidget {
                     icon: Icons.medication_outlined,
                     accentColor: AppThemeTokens.brandAccent,
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const MedicationHistoryView(),
-                        ),
-                      );
+                      context.push(Routes.medicationHistory);
                     },
                   ),
                   MetricCard(
@@ -201,7 +177,6 @@ class DashboardView extends ConsumerWidget {
                     icon: Icons.directions_walk,
                     accentColor: AppThemeTokens.brandSecondary,
                     trendData: const [],
-                    onTap: () {},
                   ),
                 ],
               ),
@@ -370,12 +345,7 @@ class _QuickLogSheet extends StatelessWidget {
                 color: AppThemeTokens.brandPrimary,
                 onTap: () {
                   Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const GlucoseWizardView(),
-                    ),
-                  );
+                  if (context.mounted) context.push(Routes.logGlucose);
                 },
               ),
               _QuickLogButton(
@@ -384,10 +354,7 @@ class _QuickLogSheet extends StatelessWidget {
                 color: AppThemeTokens.brandSuccess,
                 onTap: () {
                   Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const MealWizardView()),
-                  );
+                  if (context.mounted) context.push(Routes.logMeal);
                 },
               ),
               _QuickLogButton(
@@ -396,12 +363,7 @@ class _QuickLogSheet extends StatelessWidget {
                 color: AppThemeTokens.brandAccent,
                 onTap: () {
                   Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const MedicationWizardView(),
-                    ),
-                  );
+                  if (context.mounted) context.push(Routes.logMedication);
                 },
               ),
             ],
@@ -761,10 +723,7 @@ class _SOSButtonState extends State<_SOSButton> {
             label: 'Configure',
             textColor: Colors.white,
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const EmergencyContactsView()),
-              );
+              context.push(Routes.emergencyContacts);
             },
           ),
         ),

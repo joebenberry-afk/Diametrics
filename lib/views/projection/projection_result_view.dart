@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../core/theme/app_tokens.dart';
@@ -239,7 +240,7 @@ class ProjectionResultView extends StatelessWidget {
               // ── Done Button ──
               ElevatedButton(
                 onPressed: () {
-                  Navigator.pop(context);
+                  context.pop();
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppThemeTokens.brandPrimary,
