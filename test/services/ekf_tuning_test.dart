@@ -503,4 +503,205 @@ void main() {
     });
   });
 
+  group('EkfTuningService parameter bounds clamping', () {
+    late DateTime mealTime;
+
+    UserProfile nearLowerBound() => UserProfile(
+      id: 'profile-low',
+      age: 35,
+      gender: 'male',
+      heightCm: 175.0,
+      weightKg: 70.0,
+      diabetesType: 'type2',
+      diagnosisYear: 2020,
+      createdAt: DateTime(2024, 1, 1),
+      updatedAt: DateTime(2024, 1, 1),
+      // Parameters close to lower bounds
+      metabolicClearanceRate: 0.0021,
+      insulinSensitivityFactor: 21.0,
+      absorptionDelayBase: 21.0,
+      ekfCovP1: 100.0,   // high cov -> large Kalman gain -> large update step
+      ekfCovISF: 100.0,
+      ekfCovTMax: 100.0,
+      tuningMealCount: 5,
+    );
+
+    UserProfile nearUpperBound() => UserProfile(
+      id: 'profile-high',
+      age: 35,
+      gender: 'male',
+      heightCm: 175.0,
+      weightKg: 70.0,
+      diabetesType: 'type2',
+      diagnosisYear: 2020,
+      createdAt: DateTime(2024, 1, 1),
+      updatedAt: DateTime(2024, 1, 1),
+      // Parameters close to upper bounds
+      metabolicClearanceRate: 0.0199,
+      insulinSensitivityFactor: 149.0,
+      absorptionDelayBase: 89.0,
+      ekfCovP1: 100.0,
+      ekfCovISF: 100.0,
+      ekfCovTMax: 100.0,
+      tuningMealCount: 5,
+    );
+
+    setUp(() {
+      mealTime = DateTime(2024, 6, 1, 12, 0);
+      when(() => mockDataRepo.getMealLogs())
+          .thenAnswer((_) async => [_testMeal(timestamp: mealTime)]);
+      when(() => mockDataRepo.getGlucoseLogs()).thenAnswer((_) async => [
+        _preMealGlucose(mealTime: mealTime),
+      ]);
+    });
+
+    test('p1 never falls below 0.002', () async {
+      when(() => mockUserRepo.getProfile())
+          .thenAnswer((_) async => nearLowerBound());
+
+      // Large positive innovation -> p1 wants to decrease below 0.002 -> clamped
+      final glucoseLog = _postMealGlucose(
+        mealTime: mealTime,
+        minutesAfter: 120,
+        ctx: 'post_meal_120',
+        value: 300.0,
+      );
+
+      await EkfTuningService.tuneFromGlucoseLog(
+        glucoseLog: glucoseLog,
+        dataRepo: mockDataRepo,
+        userRepo: mockUserRepo,
+      );
+
+      final captured =
+          verify(() => mockUserRepo.saveProfile(captureAny())).captured;
+      final saved = captured.last as UserProfile;
+
+      expect(saved.metabolicClearanceRate, greaterThanOrEqualTo(0.002));
+    });
+
+    test('p1 never exceeds 0.020', () async {
+      when(() => mockUserRepo.getProfile())
+          .thenAnswer((_) async => nearUpperBound());
+
+      // Large negative innovation -> p1 wants to increase above 0.020 -> clamped
+      final glucoseLog = _postMealGlucose(
+        mealTime: mealTime,
+        minutesAfter: 120,
+        ctx: 'post_meal_120',
+        value: 50.0,
+      );
+
+      await EkfTuningService.tuneFromGlucoseLog(
+        glucoseLog: glucoseLog,
+        dataRepo: mockDataRepo,
+        userRepo: mockUserRepo,
+      );
+
+      final captured =
+          verify(() => mockUserRepo.saveProfile(captureAny())).captured;
+      final saved = captured.last as UserProfile;
+
+      expect(saved.metabolicClearanceRate, lessThanOrEqualTo(0.020));
+    });
+
+    test('ISF never falls below 20.0', () async {
+      when(() => mockUserRepo.getProfile())
+          .thenAnswer((_) async => nearLowerBound());
+
+      // Negative innovation -> ISF wants to decrease below 20 -> clamped
+      final glucoseLog = _postMealGlucose(
+        mealTime: mealTime,
+        minutesAfter: 120,
+        ctx: 'post_meal_120',
+        value: 50.0,
+      );
+
+      await EkfTuningService.tuneFromGlucoseLog(
+        glucoseLog: glucoseLog,
+        dataRepo: mockDataRepo,
+        userRepo: mockUserRepo,
+      );
+
+      final captured =
+          verify(() => mockUserRepo.saveProfile(captureAny())).captured;
+      final saved = captured.last as UserProfile;
+
+      expect(saved.insulinSensitivityFactor, greaterThanOrEqualTo(20.0));
+    });
+
+    test('ISF never exceeds 150.0', () async {
+      when(() => mockUserRepo.getProfile())
+          .thenAnswer((_) async => nearUpperBound());
+
+      final glucoseLog = _postMealGlucose(
+        mealTime: mealTime,
+        minutesAfter: 120,
+        ctx: 'post_meal_120',
+        value: 300.0,
+      );
+
+      await EkfTuningService.tuneFromGlucoseLog(
+        glucoseLog: glucoseLog,
+        dataRepo: mockDataRepo,
+        userRepo: mockUserRepo,
+      );
+
+      final captured =
+          verify(() => mockUserRepo.saveProfile(captureAny())).captured;
+      final saved = captured.last as UserProfile;
+
+      expect(saved.insulinSensitivityFactor, lessThanOrEqualTo(150.0));
+    });
+
+    test('tMax never falls below 20.0', () async {
+      when(() => mockUserRepo.getProfile())
+          .thenAnswer((_) async => nearLowerBound());
+
+      // Large 30-min reading -> big positive innovation -> tMax wants to go below 20
+      final glucoseLog = _postMealGlucose(
+        mealTime: mealTime,
+        minutesAfter: 30,
+        ctx: 'post_meal_30',
+        value: 300.0,
+      );
+
+      await EkfTuningService.tuneFromGlucoseLog(
+        glucoseLog: glucoseLog,
+        dataRepo: mockDataRepo,
+        userRepo: mockUserRepo,
+      );
+
+      final captured =
+          verify(() => mockUserRepo.saveProfile(captureAny())).captured;
+      final saved = captured.last as UserProfile;
+
+      expect(saved.absorptionDelayBase, greaterThanOrEqualTo(20.0));
+    });
+
+    test('tMax never exceeds 90.0', () async {
+      when(() => mockUserRepo.getProfile())
+          .thenAnswer((_) async => nearUpperBound());
+
+      // Low 30-min reading -> negative innovation -> tMax wants to go above 90
+      final glucoseLog = _postMealGlucose(
+        mealTime: mealTime,
+        minutesAfter: 30,
+        ctx: 'post_meal_30',
+        value: 50.0,
+      );
+
+      await EkfTuningService.tuneFromGlucoseLog(
+        glucoseLog: glucoseLog,
+        dataRepo: mockDataRepo,
+        userRepo: mockUserRepo,
+      );
+
+      final captured =
+          verify(() => mockUserRepo.saveProfile(captureAny())).captured;
+      final saved = captured.last as UserProfile;
+
+      expect(saved.absorptionDelayBase, lessThanOrEqualTo(90.0));
+    });
+  });
 }
