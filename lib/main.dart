@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/auth/auth_wrapper.dart';
 import 'core/theme/app_theme.dart';
 import 'core/widgets/database_error_screen.dart';
 import 'database/db_instance.dart';
@@ -30,7 +31,13 @@ void main() async {
     return;
   }
 
-  runApp(const ProviderScope(child: DiametricsApp()));
+  runApp(
+    const ProviderScope(
+      child: AuthWrapper(
+        child: DiametricsApp(),
+      ),
+    ),
+  );
 }
 
 class DiametricsApp extends ConsumerWidget {
