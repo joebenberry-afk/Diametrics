@@ -1,106 +1,135 @@
+import 'package:drift/drift.dart';
+import '../database/database.dart';
+import '../database/db_instance.dart';
 import '../models/glucose_log.dart';
-import '../models/meal_log.dart';
+import '../models/meal_log.dart' as domain_models;
 import '../models/medication_log.dart';
-import '../core/database/database_helper.dart';
 
 class HealthDataRepository {
-  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
+  // ── Glucose ────────────────────────────────────────────────────────────
 
-  // Glucose
   Future<List<GlucoseLog>> getGlucoseLogs() async {
-    final db = await _dbHelper.database;
-    final List<Map<String, dynamic>> maps = await db.query('glucose_logs');
-    return maps.map((e) {
-      final map = Map<String, dynamic>.from(e);
-      map['isSynced'] = map['synced'] == 1;
-      return GlucoseLog.fromJson(map);
-    }).toList();
+    final rows = await db.select(db.glucoseLogs).get();
+    return rows.map(_glucoseFromRow).toList();
   }
 
   Future<void> addGlucoseLog(GlucoseLog log) async {
-    final db = await _dbHelper.database;
-    final map = log.toJson();
-    map['synced'] = map.remove('isSynced') == true ? 1 : 0;
-    await db.insert('glucose_logs', map);
+    await db.into(db.glucoseLogs).insert(GlucoseLogsCompanion(
+      id: Value(log.id),
+      value: Value(log.value),
+      unit: Value(log.unit),
+      context: Value(log.context),
+      timestamp: Value(log.timestamp),
+      notes: Value(log.notes),
+    ));
   }
 
-  /// Returns the most recent glucose log matching [context] within [within].
   Future<GlucoseLog?> getRecentGlucoseByContext(
     String context,
     Duration within,
   ) async {
-    final db = await _dbHelper.database;
-    final cutoff = DateTime.now().subtract(within).toIso8601String();
-    final maps = await db.query(
-      'glucose_logs',
-      where: 'context = ? AND timestamp > ?',
-      whereArgs: [context, cutoff],
-      orderBy: 'timestamp DESC',
-      limit: 1,
-    );
-    if (maps.isEmpty) return null;
-    final map = Map<String, dynamic>.from(maps.first);
-    map['isSynced'] = map['synced'] == 1;
-    return GlucoseLog.fromJson(map);
+    final cutoff = DateTime.now().subtract(within);
+    final row = await (db.select(db.glucoseLogs)
+          ..where(
+            (t) =>
+                t.context.equals(context) &
+                t.timestamp.isBiggerThanValue(cutoff),
+          )
+          ..orderBy([(t) => OrderingTerm.desc(t.timestamp)])
+          ..limit(1))
+        .getSingleOrNull();
+    return row == null ? null : _glucoseFromRow(row);
   }
 
-  // Meals
-  Future<List<MealLog>> getMealLogs() async {
-    final db = await _dbHelper.database;
-    final List<Map<String, dynamic>> maps = await db.query('meal_logs');
-    return maps.map((e) {
-      final map = Map<String, dynamic>.from(e);
-      map['isSynced'] = map['synced'] == 1;
-      map['containsAlcohol'] = map['containsAlcohol'] == 1;
-      map['containsCaffeine'] = map['containsCaffeine'] == 1;
-      map['postExercise'] = map['postExercise'] == 1;
-      return MealLog.fromJson(map);
-    }).toList();
+  // ── Meals ──────────────────────────────────────────────────────────────
+
+  Future<List<domain_models.MealLog>> getMealLogs() async {
+    final rows = await db.select(db.mealMacroLogs).get();
+    return rows.map(_mealFromRow).toList();
   }
 
-  Future<void> addMealLog(MealLog log) async {
-    final db = await _dbHelper.database;
-    final map = log.toJson();
-    map['synced'] = map.remove('isSynced') == true ? 1 : 0;
-    map['containsAlcohol'] = map['containsAlcohol'] == true ? 1 : 0;
-    map['containsCaffeine'] = map['containsCaffeine'] == true ? 1 : 0;
-    map['postExercise'] = map['postExercise'] == true ? 1 : 0;
-    // foodFormFactor is already a String, no conversion needed
-    await db.insert('meal_logs', map);
+  Future<void> addMealLog(domain_models.MealLog log) async {
+    await db.into(db.mealMacroLogs).insert(MealMacroLogsCompanion(
+      id: Value(log.id),
+      timestamp: Value(log.timestamp),
+      name: Value(log.name),
+      carbohydrates: Value(log.carbohydrates),
+      dietaryFiber: Value(log.dietaryFiber),
+      proteins: Value(log.proteins),
+      fats: Value(log.fats),
+      calories: Value(log.calories),
+      containsAlcohol: Value(log.containsAlcohol),
+      containsCaffeine: Value(log.containsCaffeine),
+      mealType: Value(log.mealType),
+      foodFormFactor: Value(log.foodFormFactor),
+      postExercise: Value(log.postExercise),
+      notes: Value(log.notes),
+    ));
   }
 
-  // Medications (including time-windowed query for IOB)
+  // ── Medications ────────────────────────────────────────────────────────
+
   Future<List<MedicationLog>> getMedicationLogs() async {
-    final db = await _dbHelper.database;
-    final List<Map<String, dynamic>> maps = await db.query('medication_logs');
-    return maps.map((e) {
-      final map = Map<String, dynamic>.from(e);
-      map['isSynced'] = map['synced'] == 1;
-      return MedicationLog.fromJson(map);
-    }).toList();
+    final rows = await db.select(db.medicationLogs).get();
+    return rows.map(_medFromRow).toList();
   }
 
-  /// Returns all medication logs within [within] duration (for IOB calculation).
   Future<List<MedicationLog>> getRecentMedicationLogs(Duration within) async {
-    final db = await _dbHelper.database;
-    final cutoff = DateTime.now().subtract(within).toIso8601String();
-    final maps = await db.query(
-      'medication_logs',
-      where: 'timestamp > ?',
-      whereArgs: [cutoff],
-      orderBy: 'timestamp DESC',
-    );
-    return maps.map((e) {
-      final map = Map<String, dynamic>.from(e);
-      map['isSynced'] = map['synced'] == 1;
-      return MedicationLog.fromJson(map);
-    }).toList();
+    final cutoff = DateTime.now().subtract(within);
+    final rows = await (db.select(db.medicationLogs)
+          ..where((t) => t.timestamp.isBiggerThanValue(cutoff))
+          ..orderBy([(t) => OrderingTerm.desc(t.timestamp)]))
+        .get();
+    return rows.map(_medFromRow).toList();
   }
 
   Future<void> addMedicationLog(MedicationLog log) async {
-    final db = await _dbHelper.database;
-    final map = log.toJson();
-    map['synced'] = map.remove('isSynced') == true ? 1 : 0;
-    await db.insert('medication_logs', map);
+    await db.into(db.medicationLogs).insert(MedicationLogsCompanion(
+      id: Value(log.id),
+      timestamp: Value(log.timestamp),
+      medicationType: Value(log.medicationType),
+      insulinType: Value(log.insulinType),
+      name: Value(log.name),
+      units: Value(log.units),
+      notes: Value(log.notes),
+    ));
   }
+
+  // ── Mappers ────────────────────────────────────────────────────────────
+
+  GlucoseLog _glucoseFromRow(GlucoseLogRow row) => GlucoseLog(
+    id: row.id,
+    timestamp: row.timestamp,
+    value: row.value,
+    unit: row.unit,
+    context: row.context,
+    notes: row.notes,
+  );
+
+  domain_models.MealLog _mealFromRow(MealMacroLog row) => domain_models.MealLog(
+    id: row.id,
+    timestamp: row.timestamp,
+    name: row.name,
+    carbohydrates: row.carbohydrates,
+    dietaryFiber: row.dietaryFiber,
+    proteins: row.proteins,
+    fats: row.fats,
+    calories: row.calories,
+    containsAlcohol: row.containsAlcohol,
+    containsCaffeine: row.containsCaffeine,
+    mealType: row.mealType,
+    foodFormFactor: row.foodFormFactor,
+    postExercise: row.postExercise,
+    notes: row.notes,
+  );
+
+  MedicationLog _medFromRow(MedicationLogRow row) => MedicationLog(
+    id: row.id,
+    timestamp: row.timestamp,
+    medicationType: row.medicationType,
+    insulinType: row.insulinType,
+    name: row.name,
+    units: row.units,
+    notes: row.notes,
+  );
 }
