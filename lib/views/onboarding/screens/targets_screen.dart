@@ -49,9 +49,15 @@ class _TargetsScreenState extends ConsumerState<TargetsScreen> {
         return;
       }
 
+      // Convert targets to mg/dL for storage (internal unit is always mg/dL)
+      final preferredUnit = ref.read(onboardingViewModelProvider).preferredGlucoseUnit;
+      final factor = preferredUnit == 'mmol/L' ? 18.0182 : 1.0;
+      final targetMinMgdl = minVal * factor;
+      final targetMaxMgdl = maxVal * factor;
+
       await ref
           .read(onboardingViewModelProvider.notifier)
-          .updateTargetsAndFinish(minTarget: minVal, maxTarget: maxVal);
+          .updateTargetsAndFinish(minTarget: targetMinMgdl, maxTarget: targetMaxMgdl);
       if (!mounted) return;
       widget.onComplete();
     }

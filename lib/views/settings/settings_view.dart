@@ -77,8 +77,11 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
     if (profile.diagnosisYear > 1900) {
       _diagnosisYearCtrl.text = profile.diagnosisYear.toString();
     }
-    _glucoseMinCtrl.text = profile.targetGlucoseMin.toStringAsFixed(0);
-    _glucoseMaxCtrl.text = profile.targetGlucoseMax.toStringAsFixed(0);
+    // Convert from mg/dL (storage) to preferred unit for display
+    final displayFactor = profile.preferredGlucoseUnit == 'mmol/L' ? 1 / 18.0182 : 1.0;
+    final decimalPlaces = profile.preferredGlucoseUnit == 'mmol/L' ? 1 : 0;
+    _glucoseMinCtrl.text = (profile.targetGlucoseMin * displayFactor).toStringAsFixed(decimalPlaces);
+    _glucoseMaxCtrl.text = (profile.targetGlucoseMax * displayFactor).toStringAsFixed(decimalPlaces);
 
     // Detect "custom Other" values saved from a previous session
     final storedGender = profile.gender as String;
@@ -142,8 +145,12 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final minTarget = double.tryParse(_glucoseMinCtrl.text) ?? 70.0;
-    final maxTarget = double.tryParse(_glucoseMaxCtrl.text) ?? 180.0;
+    final minTargetDisplay = double.tryParse(_glucoseMinCtrl.text) ?? 70.0;
+    final maxTargetDisplay = double.tryParse(_glucoseMaxCtrl.text) ?? 180.0;
+    // Convert from preferred unit back to mg/dL for storage
+    final storageFactor = _glucoseUnit == 'mmol/L' ? 18.0182 : 1.0;
+    final minTarget = minTargetDisplay * storageFactor;
+    final maxTarget = maxTargetDisplay * storageFactor;
 
     if (minTarget >= maxTarget) {
       _showError('Low target must be less than high target.');

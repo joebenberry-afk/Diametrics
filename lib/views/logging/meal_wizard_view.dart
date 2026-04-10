@@ -34,6 +34,7 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
 
   // User profile weight for projection
   double _weightKg = 70.0;
+  String _preferredGlucoseUnit = 'mg/dL';
 
   // Controllers for macro fields so they can be updated programmatically by AI
   final _carbsCtrl = TextEditingController();
@@ -62,7 +63,10 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
   Future<void> _loadUserWeight() async {
     final profile = await UserRepository().getProfile();
     if (profile != null && mounted) {
-      setState(() => _weightKg = profile.weightKg);
+      setState(() {
+        _weightKg = profile.weightKg;
+        _preferredGlucoseUnit = profile.preferredGlucoseUnit;
+      });
     }
   }
 
@@ -368,7 +372,7 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                       color: AppThemeTokens.brandSuccessLight, size: 18),
                   const SizedBox(width: AppThemeTokens.spaceSm),
                   Text(
-                    '${state.preMealGlucose!.toStringAsFixed(0)} mg/dL',
+                    '${state.preMealGlucose!.toStringAsFixed(0)} $_preferredGlucoseUnit',
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: AppThemeTokens.brandSuccessLight,
@@ -437,7 +441,7 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                             : AppThemeTokens.textSecondary.withValues(alpha: 0.5),
                         fontSize: 32,
                       ),
-                      suffixText: 'mg/dL',
+                      suffixText: _preferredGlucoseUnit,
                       suffixStyle: TextStyle(
                         color: isDark ? Colors.white60 : AppThemeTokens.textSecondary,
                         fontSize: 16,

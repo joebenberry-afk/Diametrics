@@ -138,10 +138,11 @@ final glucoseAlertProvider = Provider<GlucoseAlertLevel>((ref) {
   final profile = ref.watch(userProfileProvider).valueOrNull;
   if (latest == null || profile == null) return GlucoseAlertLevel.none;
 
-  final v = latest.value;
-  if (v < profile.targetGlucoseMin) return GlucoseAlertLevel.hypo;
-  if (v > profile.targetGlucoseMax + 70) return GlucoseAlertLevel.hyperHigh;
-  if (v > profile.targetGlucoseMax) return GlucoseAlertLevel.hyperElevated;
+  // Normalise log value to mg/dL using the log's own unit field
+  final mgdl = latest.unit == 'mmol/L' ? latest.value * 18.0182 : latest.value;
+  if (mgdl < profile.targetGlucoseMin) return GlucoseAlertLevel.hypo;
+  if (mgdl > profile.targetGlucoseMax + 70) return GlucoseAlertLevel.hyperHigh;
+  if (mgdl > profile.targetGlucoseMax) return GlucoseAlertLevel.hyperElevated;
   return GlucoseAlertLevel.none;
 });
 
@@ -249,12 +250,14 @@ final dailySummaryProvider = Provider<AsyncValue<DailySummary>>((ref) {
   final targetMin = profile?.targetGlucoseMin ?? 70.0;
   final targetMax = profile?.targetGlucoseMax ?? 180.0;
 
+  // Normalise each reading to mg/dL using its own unit field before comparison
+  double toMgdl(dynamic g) => g.unit == 'mmol/L' ? g.value * 18.0182 : g.value;
   final avgGlucose = todayGlucose.isEmpty
       ? 0.0
-      : todayGlucose.map((g) => g.value).reduce((a, b) => a + b) /
+      : todayGlucose.map(toMgdl).reduce((a, b) => a + b) /
             todayGlucose.length;
   final inRange = todayGlucose
-      .where((g) => g.value >= targetMin && g.value <= targetMax)
+      .where((g) => toMgdl(g) >= targetMin && toMgdl(g) <= targetMax)
       .length;
   final tir = todayGlucose.isEmpty
       ? 0.0

@@ -31,8 +31,12 @@ class DashboardView extends ConsumerWidget {
         : 'Patient';
 
     final diabetesType = profile?.diabetesType ?? '';
+    final preferredUnit = profile?.preferredGlucoseUnit ?? 'mg/dL';
+    // Convert stored mg/dL targets to preferred unit for display
+    final targetDisplayFactor = preferredUnit == 'mmol/L' ? 1 / 18.0182 : 1.0;
+    final targetDecimalPlaces = preferredUnit == 'mmol/L' ? 1 : 0;
     final statusText = profile != null && diabetesType.isNotEmpty
-        ? '$diabetesType • Target ${profile.targetGlucoseMin.toStringAsFixed(0)}–${profile.targetGlucoseMax.toStringAsFixed(0)} ${profile.preferredGlucoseUnit}'
+        ? '$diabetesType • Target ${(profile.targetGlucoseMin * targetDisplayFactor).toStringAsFixed(targetDecimalPlaces)}–${(profile.targetGlucoseMax * targetDisplayFactor).toStringAsFixed(targetDecimalPlaces)} $preferredUnit'
         : 'Loading profile…';
 
     // Get latest glucose
@@ -47,7 +51,11 @@ class DashboardView extends ConsumerWidget {
     final allGlucose = allGlucoseAsync.valueOrNull ?? [];
     final sortedGlucose = List<GlucoseLog>.from(allGlucose)
       ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
-    final trendData = sortedGlucose.take(6).map((g) => g.value).toList();
+    // Take newest 6 readings (end of ascending sort) for the sparkline
+    final recentGlucose = sortedGlucose.length > 6
+        ? sortedGlucose.sublist(sortedGlucose.length - 6)
+        : sortedGlucose;
+    final trendData = recentGlucose.map((g) => g.value).toList();
 
     // Color: red if out of range, green if in range, primary if no data
     Color glucoseColor = AppThemeTokens.brandPrimary;
@@ -488,8 +496,17 @@ class _DailySummaryCard extends ConsumerWidget {
           summaryAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (_, _) => const Text('Could not load summary'),
-            data: (s) =>
-                s.glucoseReadings == 0 &&
+            data: (s) {
+                // Convert avg glucose from mg/dL to preferred unit for display
+                final summaryProfile = ref.watch(userProfileProvider).valueOrNull;
+                final summaryUnit = summaryProfile?.preferredGlucoseUnit ?? 'mg/dL';
+                final avgDisplayFactor = summaryUnit == 'mmol/L' ? 1 / 18.0182 : 1.0;
+                final avgDecimalPlaces = summaryUnit == 'mmol/L' ? 1 : 0;
+                final avgDisplay = s.avgGlucose > 0
+                    ? (s.avgGlucose * avgDisplayFactor).toStringAsFixed(avgDecimalPlaces)
+                    : '--';
+
+                return s.glucoseReadings == 0 &&
                     s.mealsLogged == 0 &&
                     s.dosesLogged == 0
                 ? const Text(
@@ -549,10 +566,8 @@ class _DailySummaryCard extends ConsumerWidget {
                         children: [
                           _SummaryStatTile(
                             label: 'Avg Glucose',
-                            value: s.avgGlucose > 0
-                                ? s.avgGlucose.toStringAsFixed(0)
-                                : '--',
-                            unit: 'mg/dL',
+                            value: avgDisplay,
+                            unit: summaryUnit,
                           ),
                           _SummaryStatTile(
                             label: 'Carbs',
@@ -574,7 +589,8 @@ class _DailySummaryCard extends ConsumerWidget {
                         ],
                       ),
                     ],
-                  ),
+                  );
+            },
           ),
         ],
       ),
