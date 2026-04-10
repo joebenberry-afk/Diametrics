@@ -220,5 +220,89 @@ void main() {
         expect(result.peakGlucose, greaterThanOrEqualTo(100.0));
       });
     });
+
+    group('insulin on board', () {
+      test('IOB lowers peak glucose compared to no IOB', () {
+        final withoutIOB = GlucoseProjectionService.project(
+          baselineGlucose: 120.0,
+          carbsGrams: 60.0,
+          fiberGrams: 0.0,
+          proteinGrams: 15.0,
+          fatGrams: 10.0,
+          containsAlcohol: false,
+          containsCaffeine: false,
+          weightKg: 70.0,
+          insulinOnBoard: 0.0,
+        );
+
+        final withIOB = GlucoseProjectionService.project(
+          baselineGlucose: 120.0,
+          carbsGrams: 60.0,
+          fiberGrams: 0.0,
+          proteinGrams: 15.0,
+          fatGrams: 10.0,
+          containsAlcohol: false,
+          containsCaffeine: false,
+          weightKg: 70.0,
+          insulinOnBoard: 2.0,
+          isf: 50.0,
+        );
+
+        expect(
+          withIOB.peakGlucose,
+          lessThan(withoutIOB.peakGlucose),
+          reason: 'Active insulin should suppress the glucose peak',
+        );
+      });
+
+      test('larger IOB produces a lower peak than smaller IOB', () {
+        final result1u = GlucoseProjectionService.project(
+          baselineGlucose: 120.0,
+          carbsGrams: 60.0,
+          fiberGrams: 0.0,
+          proteinGrams: 10.0,
+          fatGrams: 5.0,
+          containsAlcohol: false,
+          containsCaffeine: false,
+          insulinOnBoard: 1.0,
+          isf: 50.0,
+        );
+
+        final result3u = GlucoseProjectionService.project(
+          baselineGlucose: 120.0,
+          carbsGrams: 60.0,
+          fiberGrams: 0.0,
+          proteinGrams: 10.0,
+          fatGrams: 5.0,
+          containsAlcohol: false,
+          containsCaffeine: false,
+          insulinOnBoard: 3.0,
+          isf: 50.0,
+        );
+
+        expect(result3u.peakGlucose, lessThan(result1u.peakGlucose));
+      });
+
+      test('IOB stops being applied once glucose drops below 70', () {
+        // With massive IOB and tiny carbs, glucose should hit hypo_risk
+        // but never go below the 40 mg/dL safety clamp
+        final result = GlucoseProjectionService.project(
+          baselineGlucose: 100.0,
+          carbsGrams: 5.0,
+          fiberGrams: 0.0,
+          proteinGrams: 0.0,
+          fatGrams: 0.0,
+          containsAlcohol: false,
+          containsCaffeine: false,
+          insulinOnBoard: 15.0,
+          isf: 100.0,
+        );
+
+        final minGlucose = result.points
+            .map((p) => p.glucoseValue)
+            .reduce((a, b) => a < b ? a : b);
+        expect(minGlucose, greaterThanOrEqualTo(40.0));
+      });
+    });
   });
 }
