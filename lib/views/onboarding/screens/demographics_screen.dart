@@ -1,3 +1,4 @@
+import 'package:diametrics/core/theme/app_tokens.dart';
 import 'package:diametrics/viewmodels/onboarding_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -5,8 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class DemographicsScreen extends ConsumerStatefulWidget {
   final VoidCallback onNext;
+  final VoidCallback onBack;
 
-  const DemographicsScreen({super.key, required this.onNext});
+  const DemographicsScreen({super.key, required this.onNext, required this.onBack});
 
   @override
   ConsumerState<DemographicsScreen> createState() => _DemographicsScreenState();
@@ -235,6 +237,18 @@ class _DemographicsScreenState extends ConsumerState<DemographicsScreen> {
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
+            SizedBox(height: 16.0),
+            TextButton(
+              onPressed: widget.onBack,
+              child: Text(
+                'Back',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: colorScheme.primary,
+                ),
+              ),
+            ),
             SizedBox(height: 32.0),
           ],
         ),
@@ -249,18 +263,19 @@ class _DemographicsScreenState extends ConsumerState<DemographicsScreen> {
   ) {
     final isSelected = _selectedGender == gender;
 
-    return GestureDetector(
-      onTap: () => setState(() => _selectedGender = gender),
-      child: Semantics(
-        button: true,
-        selected: isSelected,
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      child: InkWell(
+        onTap: () => setState(() => _selectedGender = gender),
+        borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           decoration: BoxDecoration(
             color: isSelected
                 ? colorScheme.primary
                 : colorScheme.surfaceContainer,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
             border: Border.all(
               color: isSelected ? colorScheme.primary : colorScheme.outline,
               width: 2,

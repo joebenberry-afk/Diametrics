@@ -108,7 +108,7 @@ class _OnboardingWrapperState extends ConsumerState<OnboardingWrapper> {
                 },
                 children: [
                   WelcomeScreen(onNext: _nextPage),
-                  DemographicsScreen(onNext: _nextPage),
+                  DemographicsScreen(onNext: _nextPage, onBack: _previousPage),
                   DiabetesInfoScreen(onNext: _nextPage, onBack: _previousPage),
                   MedicationInfoScreen(
                     onNext: _nextPage,

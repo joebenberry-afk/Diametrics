@@ -21,6 +21,7 @@ class _TargetsScreenState extends ConsumerState<TargetsScreen> {
   final _formKey = GlobalKey<FormState>();
   final _minTargetController = TextEditingController(text: '70');
   final _maxTargetController = TextEditingController(text: '180');
+  bool _isSubmitting = false;
 
   @override
   void initState() {
@@ -43,7 +44,7 @@ class _TargetsScreenState extends ConsumerState<TargetsScreen> {
     super.dispose();
   }
 
-  void _submit() async {
+  Future<void> _submit() async {
     if (_formKey.currentState!.validate()) {
       final minVal = double.parse(_minTargetController.text);
       final maxVal = double.parse(_maxTargetController.text);
@@ -109,34 +110,6 @@ class _TargetsScreenState extends ConsumerState<TargetsScreen> {
             ),
             SizedBox(height: 32.0),
 
-            // Target High
-            TextFormField(
-              controller: _maxTargetController,
-              decoration: InputDecoration(
-                labelText: 'High Target ($unitString)',
-                hintText: unitString == 'mmol/L' ? 'e.g., 10.0' : 'e.g., 180',
-                border: const OutlineInputBorder(),
-                helperText: 'Typical safe maximum (varies by doctor)',
-              ),
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-              ],
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter high target';
-                }
-                final h = double.tryParse(value);
-                if (h == null || h <= 0) {
-                  return 'Valid target required';
-                }
-                return null;
-              },
-            ),
-            SizedBox(height: 32.0),
-
             // Target Low
             TextFormField(
               controller: _minTargetController,
@@ -163,6 +136,34 @@ class _TargetsScreenState extends ConsumerState<TargetsScreen> {
                 return null;
               },
             ),
+            SizedBox(height: 32.0),
+
+            // Target High
+            TextFormField(
+              controller: _maxTargetController,
+              decoration: InputDecoration(
+                labelText: 'High Target ($unitString)',
+                hintText: unitString == 'mmol/L' ? 'e.g., 10.0' : 'e.g., 180',
+                border: const OutlineInputBorder(),
+                helperText: 'Typical safe maximum (varies by doctor)',
+              ),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+              ],
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter high target';
+                }
+                final h = double.tryParse(value);
+                if (h == null || h <= 0) {
+                  return 'Valid target required';
+                }
+                return null;
+              },
+            ),
 
             SizedBox(height: 48.0),
 
@@ -173,11 +174,28 @@ class _TargetsScreenState extends ConsumerState<TargetsScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              onPressed: _submit,
-              child: const Text(
-                'Complete Setup',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+              onPressed: _isSubmitting
+                  ? null
+                  : () async {
+                      setState(() => _isSubmitting = true);
+                      try {
+                        await _submit();
+                      } finally {
+                        if (mounted) setState(() => _isSubmitting = false);
+                      }
+                    },
+              child: _isSubmitting
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Text(
+                      'Complete Setup',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
             ),
             SizedBox(height: 16.0),
             TextButton(

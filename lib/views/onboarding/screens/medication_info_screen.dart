@@ -1,3 +1,4 @@
+import 'package:diametrics/core/theme/app_tokens.dart';
 import 'package:diametrics/viewmodels/onboarding_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -63,6 +64,23 @@ class _MedicationInfoScreenState extends ConsumerState<MedicationInfoScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          Text(
+            'Your Treatment',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: AppThemeTokens.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Tell us about your current treatment so we can personalise your experience.',
+            style: TextStyle(
+              fontSize: 15,
+              color: AppThemeTokens.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 24),
           _buildCheckboxTile(
             title: "Insulin",
             subtitle: "I take insulin injections or use a pump",
@@ -103,7 +121,7 @@ class _MedicationInfoScreenState extends ConsumerState<MedicationInfoScreen> {
                 backgroundColor: colorScheme.primary,
                 foregroundColor: colorScheme.onPrimary,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
                 ),
               ),
               child: Text(
@@ -114,6 +132,19 @@ class _MedicationInfoScreenState extends ConsumerState<MedicationInfoScreen> {
               ),
             ),
           ),
+          const SizedBox(height: 16),
+          TextButton(
+            onPressed: widget.onBack,
+            child: Text(
+              'Back',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: colorScheme.primary,
+              ),
+            ),
+          ),
+          const SizedBox(height: 32),
         ],
       ),
     );

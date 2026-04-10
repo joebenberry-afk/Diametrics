@@ -1,3 +1,4 @@
+import 'package:diametrics/core/theme/app_tokens.dart';
 import 'package:diametrics/viewmodels/onboarding_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -214,11 +215,46 @@ class _DiabetesInfoScreenState extends ConsumerState<DiabetesInfoScreen> {
   ) {
     final isSelected = _selectedType == type;
 
-    return GestureDetector(
-      onTap: () => setState(() => _selectedType = type),
-      child: Semantics(
-        button: true,
-        selected: isSelected,
+    Widget label;
+    if (type == 'LADA') {
+      label = Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            type,
+            style: textTheme.bodyLarge?.copyWith(
+              color: isSelected
+                  ? colorScheme.onPrimaryContainer
+                  : colorScheme.onSurface,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Tooltip(
+            message: 'Latent Autoimmune Diabetes in Adults — '
+                'a slow-progressing form of autoimmune diabetes',
+            child: Icon(Icons.info_outline, size: 14, color: AppThemeTokens.textSecondary),
+          ),
+        ],
+      );
+    } else {
+      label = Text(
+        type,
+        style: textTheme.bodyLarge?.copyWith(
+          color: isSelected
+              ? colorScheme.onPrimaryContainer
+              : colorScheme.onSurface,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+        ),
+      );
+    }
+
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      child: InkWell(
+        onTap: () => setState(() => _selectedType = type),
+        borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           decoration: BoxDecoration(
@@ -229,17 +265,9 @@ class _DiabetesInfoScreenState extends ConsumerState<DiabetesInfoScreen> {
               color: isSelected ? colorScheme.primary : colorScheme.outline,
               width: 1.5,
             ),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
           ),
-          child: Text(
-            type,
-            style: textTheme.bodyLarge?.copyWith(
-              color: isSelected
-                  ? colorScheme.onPrimaryContainer
-                  : colorScheme.onSurface,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-            ),
-          ),
+          child: label,
         ),
       ),
     );
@@ -252,15 +280,16 @@ class _DiabetesInfoScreenState extends ConsumerState<DiabetesInfoScreen> {
   ) {
     final isSelected = _selectedUnit == unit;
 
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedUnit = unit;
-        });
-      },
-      child: Semantics(
-        button: true,
-        selected: isSelected,
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            _selectedUnit = unit;
+          });
+        },
+        borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
         child: Container(
           alignment: Alignment.center,
           padding: EdgeInsets.symmetric(vertical: 16),
@@ -272,7 +301,7 @@ class _DiabetesInfoScreenState extends ConsumerState<DiabetesInfoScreen> {
               color: isSelected ? colorScheme.primary : colorScheme.outline,
               width: 1.5,
             ),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
           ),
           child: Text(
             unit,
