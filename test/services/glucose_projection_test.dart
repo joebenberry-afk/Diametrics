@@ -125,5 +125,100 @@ void main() {
         }
       });
     });
+
+    group('risk classification', () {
+      test('normal risk: modest carbs stay within target', () {
+        // 20g net carbs from baseline 95 with strong clearance
+        // Should not exceed 180 mg/dL
+        final result = GlucoseProjectionService.project(
+          baselineGlucose: 95.0,
+          carbsGrams: 20.0,
+          fiberGrams: 0.0,
+          proteinGrams: 5.0,
+          fatGrams: 3.0,
+          containsAlcohol: false,
+          containsCaffeine: false,
+          weightKg: 70.0,
+          p1: 0.018, // strong clearance to ensure normal range
+        );
+
+        expect(result.riskLevel, 'normal');
+        expect(result.peakGlucose, lessThanOrEqualTo(180.0));
+      });
+
+      test('elevated risk: large carb meal pushes peak above 180', () {
+        // 35g carbs, baseline 105, moderate clearance -> peak 180-250
+        final result = GlucoseProjectionService.project(
+          baselineGlucose: 105.0,
+          carbsGrams: 35.0,
+          fiberGrams: 0.0,
+          proteinGrams: 8.0,
+          fatGrams: 4.0,
+          containsAlcohol: false,
+          containsCaffeine: false,
+          weightKg: 70.0,
+          p1: 0.013, // moderate clearance
+        );
+
+        expect(result.riskLevel, 'elevated');
+        expect(result.peakGlucose, greaterThan(180.0));
+        expect(result.peakGlucose, lessThanOrEqualTo(250.0));
+      });
+
+      test('high risk: very large carb load exceeds 250 mg/dL', () {
+        // 150g carbs, high baseline, minimal clearance -> peak > 250
+        final result = GlucoseProjectionService.project(
+          baselineGlucose: 160.0,
+          carbsGrams: 150.0,
+          fiberGrams: 0.0,
+          proteinGrams: 5.0,
+          fatGrams: 5.0,
+          containsAlcohol: false,
+          containsCaffeine: false,
+          weightKg: 70.0,
+          p1: 0.003, // low clearance
+        );
+
+        expect(result.riskLevel, 'high');
+        expect(result.peakGlucose, greaterThan(250.0));
+      });
+
+      test('hypo_risk: large IOB drives glucose below 70', () {
+        // 5 units insulin x ISF 100 = 500 mg/dL total drop
+        // With small carb load and baseline 110, glucose will dip below 70
+        final result = GlucoseProjectionService.project(
+          baselineGlucose: 110.0,
+          carbsGrams: 15.0,
+          fiberGrams: 0.0,
+          proteinGrams: 5.0,
+          fatGrams: 0.0,
+          containsAlcohol: false,
+          containsCaffeine: false,
+          weightKg: 70.0,
+          insulinOnBoard: 8.0,
+          isf: 100.0,
+        );
+
+        expect(result.riskLevel, 'hypo_risk');
+        // Verify at least one point is below 70
+        final hasHypo = result.points.any((p) => p.glucoseValue < 70.0);
+        expect(hasHypo, isTrue);
+      });
+
+      test('peakGlucose is always >= baselineGlucose when no IOB', () {
+        final result = GlucoseProjectionService.project(
+          baselineGlucose: 100.0,
+          carbsGrams: 45.0,
+          fiberGrams: 0.0,
+          proteinGrams: 20.0,
+          fatGrams: 10.0,
+          containsAlcohol: false,
+          containsCaffeine: false,
+          insulinOnBoard: 0.0,
+        );
+
+        expect(result.peakGlucose, greaterThanOrEqualTo(100.0));
+      });
+    });
   });
 }
