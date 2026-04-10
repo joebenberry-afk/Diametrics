@@ -8,6 +8,24 @@ import '../../router/route_names.dart';
 import '../../viewmodels/health_data_viewmodel.dart';
 import '../../viewmodels/profile_viewmodel.dart';
 
+const _contextLabels = {
+  'morning_fasting': 'Morning Fasting',
+  'pre_meal': 'Before Meal',
+  'post_meal_30': '30 Min After Meal',
+  'post_meal_60': '60 Min After Meal',
+  'post_meal_120': '2 Hours After Meal',
+  'post_meal_180': '3 Hours After Meal',
+  'bedtime': 'Bedtime',
+  'general': 'General',
+};
+
+String _friendlyContext(String context) =>
+    _contextLabels[context] ??
+    context
+        .split('_')
+        .map((w) => w.isEmpty ? w : '${w[0].toUpperCase()}${w.substring(1)}')
+        .join(' ');
+
 class GlucoseHistoryView extends ConsumerWidget {
   const GlucoseHistoryView({super.key});
 
@@ -23,7 +41,31 @@ class GlucoseHistoryView extends ConsumerWidget {
       ),
       body: logsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error loading history: $e')),
+        error: (e, _) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(AppThemeTokens.spaceLg),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.error_outline,
+                  size: 48,
+                  color: AppThemeTokens.error,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Something went wrong loading your history.',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => ref.invalidate(glucoseLogsProvider),
+                  child: const Text('Try Again'),
+                ),
+              ],
+            ),
+          ),
+        ),
         data: (logs) {
           if (logs.isEmpty) {
             return Center(
@@ -94,9 +136,25 @@ class GlucoseHistoryView extends ConsumerWidget {
                   ) ?? false;
                 },
                 onDismissed: (_) {
+                  final deleted = log;
                   ref
                       .read(glucoseLogsProvider.notifier)
-                      .deleteGlucoseLog(log.id);
+                      .deleteGlucoseLog(deleted.id);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text('Reading deleted'),
+                      duration: const Duration(seconds: 4),
+                      action: SnackBarAction(
+                        label: 'Undo',
+                        onPressed: () {
+                          ref
+                              .read(healthDataRepositoryProvider)
+                              .addGlucoseLog(deleted);
+                          ref.invalidate(glucoseLogsProvider);
+                        },
+                      ),
+                    ),
+                  );
                 },
                 child: _GlucoseHistoryTile(log: log, profile: profile),
               );
@@ -159,7 +217,7 @@ class _GlucoseHistoryTile extends StatelessWidget {
         style: const TextStyle(fontWeight: FontWeight.w600),
       ),
       subtitle: Text(
-        '${log.context.replaceAll('_', ' ')} • ${DateFormatter.formatDateTime(log.timestamp)}',
+        '${_friendlyContext(log.context)} • ${DateFormatter.formatDateTime(log.timestamp)}',
         style: const TextStyle(
           color: AppThemeTokens.textSecondary,
           fontSize: 13,

@@ -21,7 +21,31 @@ class MedicationHistoryView extends ConsumerWidget {
       ),
       body: logsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error loading history: $e')),
+        error: (e, _) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(AppThemeTokens.spaceLg),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.error_outline,
+                  size: 48,
+                  color: AppThemeTokens.error,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Something went wrong loading your history.',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => ref.invalidate(medicationLogsProvider),
+                  child: const Text('Try Again'),
+                ),
+              ],
+            ),
+          ),
+        ),
         data: (logs) {
           if (logs.isEmpty) {
             return Center(
@@ -92,9 +116,25 @@ class MedicationHistoryView extends ConsumerWidget {
                   ) ?? false;
                 },
                 onDismissed: (_) {
+                  final deleted = log;
                   ref
                       .read(medicationLogsProvider.notifier)
-                      .deleteMedicationLog(log.id);
+                      .deleteMedicationLog(deleted.id);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text('Medication deleted'),
+                      duration: const Duration(seconds: 4),
+                      action: SnackBarAction(
+                        label: 'Undo',
+                        onPressed: () {
+                          ref
+                              .read(healthDataRepositoryProvider)
+                              .addMedicationLog(deleted);
+                          ref.invalidate(medicationLogsProvider);
+                        },
+                      ),
+                    ),
+                  );
                 },
                 child: _MedicationHistoryTile(log: log),
               );
