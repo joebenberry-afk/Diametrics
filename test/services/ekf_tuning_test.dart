@@ -83,8 +83,18 @@ void main() {
   setUp(() {
     mockDataRepo = MockHealthDataRepository();
     mockUserRepo = MockUserRepository();
-    // Default: saveProfile is a no-op
-    when(() => mockUserRepo.saveProfile(any())).thenAnswer((_) async {});
+    // Default: updateEkfParameters is a no-op
+    when(() => mockUserRepo.updateEkfParameters(
+      profileId: any(named: 'profileId'),
+      metabolicClearanceRate: any(named: 'metabolicClearanceRate'),
+      insulinSensitivityFactor: any(named: 'insulinSensitivityFactor'),
+      absorptionDelayBase: any(named: 'absorptionDelayBase'),
+      tuningMealCount: any(named: 'tuningMealCount'),
+      fastingSetpoint: any(named: 'fastingSetpoint'),
+      ekfCovP1: any(named: 'ekfCovP1'),
+      ekfCovISF: any(named: 'ekfCovISF'),
+      ekfCovTMax: any(named: 'ekfCovTMax'),
+    )).thenAnswer((_) async {});
   });
 
   group('EkfTuningService early-exit guards', () {
@@ -103,7 +113,17 @@ void main() {
         userRepo: mockUserRepo,
       );
 
-      verifyNever(() => mockUserRepo.saveProfile(any()));
+      verifyNever(() => mockUserRepo.updateEkfParameters(
+        profileId: any(named: 'profileId'),
+        metabolicClearanceRate: any(named: 'metabolicClearanceRate'),
+        insulinSensitivityFactor: any(named: 'insulinSensitivityFactor'),
+        absorptionDelayBase: any(named: 'absorptionDelayBase'),
+        tuningMealCount: any(named: 'tuningMealCount'),
+        fastingSetpoint: any(named: 'fastingSetpoint'),
+        ekfCovP1: any(named: 'ekfCovP1'),
+        ekfCovISF: any(named: 'ekfCovISF'),
+        ekfCovTMax: any(named: 'ekfCovTMax'),
+      ));
     });
 
     test('does NOT update profile for bedtime context', () async {
@@ -121,7 +141,17 @@ void main() {
         userRepo: mockUserRepo,
       );
 
-      verifyNever(() => mockUserRepo.saveProfile(any()));
+      verifyNever(() => mockUserRepo.updateEkfParameters(
+        profileId: any(named: 'profileId'),
+        metabolicClearanceRate: any(named: 'metabolicClearanceRate'),
+        insulinSensitivityFactor: any(named: 'insulinSensitivityFactor'),
+        absorptionDelayBase: any(named: 'absorptionDelayBase'),
+        tuningMealCount: any(named: 'tuningMealCount'),
+        fastingSetpoint: any(named: 'fastingSetpoint'),
+        ekfCovP1: any(named: 'ekfCovP1'),
+        ekfCovISF: any(named: 'ekfCovISF'),
+        ekfCovTMax: any(named: 'ekfCovTMax'),
+      ));
     });
 
     test('does NOT update when profile is null', () async {
@@ -141,7 +171,17 @@ void main() {
         userRepo: mockUserRepo,
       );
 
-      verifyNever(() => mockUserRepo.saveProfile(any()));
+      verifyNever(() => mockUserRepo.updateEkfParameters(
+        profileId: any(named: 'profileId'),
+        metabolicClearanceRate: any(named: 'metabolicClearanceRate'),
+        insulinSensitivityFactor: any(named: 'insulinSensitivityFactor'),
+        absorptionDelayBase: any(named: 'absorptionDelayBase'),
+        tuningMealCount: any(named: 'tuningMealCount'),
+        fastingSetpoint: any(named: 'fastingSetpoint'),
+        ekfCovP1: any(named: 'ekfCovP1'),
+        ekfCovISF: any(named: 'ekfCovISF'),
+        ekfCovTMax: any(named: 'ekfCovTMax'),
+      ));
     });
 
     test('does NOT update when no meal is found in 3-hour window', () async {
@@ -164,7 +204,17 @@ void main() {
         userRepo: mockUserRepo,
       );
 
-      verifyNever(() => mockUserRepo.saveProfile(any()));
+      verifyNever(() => mockUserRepo.updateEkfParameters(
+        profileId: any(named: 'profileId'),
+        metabolicClearanceRate: any(named: 'metabolicClearanceRate'),
+        insulinSensitivityFactor: any(named: 'insulinSensitivityFactor'),
+        absorptionDelayBase: any(named: 'absorptionDelayBase'),
+        tuningMealCount: any(named: 'tuningMealCount'),
+        fastingSetpoint: any(named: 'fastingSetpoint'),
+        ekfCovP1: any(named: 'ekfCovP1'),
+        ekfCovISF: any(named: 'ekfCovISF'),
+        ekfCovTMax: any(named: 'ekfCovTMax'),
+      ));
     });
 
     test('does NOT update when no pre-meal glucose in 30-min window', () async {
@@ -196,7 +246,17 @@ void main() {
         userRepo: mockUserRepo,
       );
 
-      verifyNever(() => mockUserRepo.saveProfile(any()));
+      verifyNever(() => mockUserRepo.updateEkfParameters(
+        profileId: any(named: 'profileId'),
+        metabolicClearanceRate: any(named: 'metabolicClearanceRate'),
+        insulinSensitivityFactor: any(named: 'insulinSensitivityFactor'),
+        absorptionDelayBase: any(named: 'absorptionDelayBase'),
+        tuningMealCount: any(named: 'tuningMealCount'),
+        fastingSetpoint: any(named: 'fastingSetpoint'),
+        ekfCovP1: any(named: 'ekfCovP1'),
+        ekfCovISF: any(named: 'ekfCovISF'),
+        ekfCovTMax: any(named: 'ekfCovTMax'),
+      ));
     });
 
     test('does NOT update when >2 overlapping meals create superposition noise', () async {
@@ -228,7 +288,17 @@ void main() {
         userRepo: mockUserRepo,
       );
 
-      verifyNever(() => mockUserRepo.saveProfile(any()));
+      verifyNever(() => mockUserRepo.updateEkfParameters(
+        profileId: any(named: 'profileId'),
+        metabolicClearanceRate: any(named: 'metabolicClearanceRate'),
+        insulinSensitivityFactor: any(named: 'insulinSensitivityFactor'),
+        absorptionDelayBase: any(named: 'absorptionDelayBase'),
+        tuningMealCount: any(named: 'tuningMealCount'),
+        fastingSetpoint: any(named: 'fastingSetpoint'),
+        ekfCovP1: any(named: 'ekfCovP1'),
+        ekfCovISF: any(named: 'ekfCovISF'),
+        ekfCovTMax: any(named: 'ekfCovTMax'),
+      ));
     });
   });
 
@@ -247,7 +317,7 @@ void main() {
       ]);
     });
 
-    test('saveProfile is called once after a post_meal_30 reading', () async {
+    test('updateEkfParameters is called once after a post_meal_30 reading', () async {
       final glucoseLog = _postMealGlucose(
         mealTime: mealTime,
         minutesAfter: 30,
@@ -261,7 +331,17 @@ void main() {
         userRepo: mockUserRepo,
       );
 
-      verify(() => mockUserRepo.saveProfile(any())).called(1);
+      verify(() => mockUserRepo.updateEkfParameters(
+        profileId: any(named: 'profileId'),
+        metabolicClearanceRate: any(named: 'metabolicClearanceRate'),
+        insulinSensitivityFactor: any(named: 'insulinSensitivityFactor'),
+        absorptionDelayBase: any(named: 'absorptionDelayBase'),
+        tuningMealCount: any(named: 'tuningMealCount'),
+        fastingSetpoint: any(named: 'fastingSetpoint'),
+        ekfCovP1: any(named: 'ekfCovP1'),
+        ekfCovISF: any(named: 'ekfCovISF'),
+        ekfCovTMax: any(named: 'ekfCovTMax'),
+      )).called(1);
     });
 
     test('post_meal_30: only tMax changes, p1 and ISF remain the same', () async {
@@ -279,18 +359,34 @@ void main() {
         userRepo: mockUserRepo,
       );
 
-      final captured =
-          verify(() => mockUserRepo.saveProfile(captureAny())).captured;
-      final saved = captured.last as UserProfile;
+      final captured = verify(() => mockUserRepo.updateEkfParameters(
+        profileId: any(named: 'profileId'),
+        metabolicClearanceRate: captureAny(named: 'metabolicClearanceRate'),
+        insulinSensitivityFactor: captureAny(named: 'insulinSensitivityFactor'),
+        absorptionDelayBase: captureAny(named: 'absorptionDelayBase'),
+        tuningMealCount: captureAny(named: 'tuningMealCount'),
+        fastingSetpoint: captureAny(named: 'fastingSetpoint'),
+        ekfCovP1: captureAny(named: 'ekfCovP1'),
+        ekfCovISF: captureAny(named: 'ekfCovISF'),
+        ekfCovTMax: captureAny(named: 'ekfCovTMax'),
+      )).captured;
+      // captured[0] = metabolicClearanceRate
+      // captured[1] = insulinSensitivityFactor
+      // captured[2] = absorptionDelayBase
+      // captured[3] = tuningMealCount
+      // captured[4] = fastingSetpoint
+      // captured[5] = ekfCovP1
+      // captured[6] = ekfCovISF
+      // captured[7] = ekfCovTMax
+      final mcr = captured[0] as double;
+      final isf = captured[1] as double;
+      final tMax = captured[2] as double;
 
       // p1 and ISF must remain exactly as in original profile
-      expect(saved.metabolicClearanceRate,
-          closeTo(profile.metabolicClearanceRate, 1e-9));
-      expect(saved.insulinSensitivityFactor,
-          closeTo(profile.insulinSensitivityFactor, 1e-9));
+      expect(mcr, closeTo(profile.metabolicClearanceRate, 1e-9));
+      expect(isf, closeTo(profile.insulinSensitivityFactor, 1e-9));
       // tMax must have changed
-      expect(saved.absorptionDelayBase,
-          isNot(closeTo(profile.absorptionDelayBase, 1e-9)));
+      expect(tMax, isNot(closeTo(profile.absorptionDelayBase, 1e-9)));
     });
 
     test('post_meal_30 positive innovation decreases tMax', () async {
@@ -309,11 +405,20 @@ void main() {
         userRepo: mockUserRepo,
       );
 
-      final captured =
-          verify(() => mockUserRepo.saveProfile(captureAny())).captured;
-      final saved = captured.last as UserProfile;
+      final captured = verify(() => mockUserRepo.updateEkfParameters(
+        profileId: any(named: 'profileId'),
+        metabolicClearanceRate: captureAny(named: 'metabolicClearanceRate'),
+        insulinSensitivityFactor: captureAny(named: 'insulinSensitivityFactor'),
+        absorptionDelayBase: captureAny(named: 'absorptionDelayBase'),
+        tuningMealCount: captureAny(named: 'tuningMealCount'),
+        fastingSetpoint: captureAny(named: 'fastingSetpoint'),
+        ekfCovP1: captureAny(named: 'ekfCovP1'),
+        ekfCovISF: captureAny(named: 'ekfCovISF'),
+        ekfCovTMax: captureAny(named: 'ekfCovTMax'),
+      )).captured;
+      final tMax = captured[2] as double;
 
-      expect(saved.absorptionDelayBase,
+      expect(tMax,
           lessThan(_testProfile().absorptionDelayBase),
           reason: 'Positive innovation should decrease tMax '
               '(food absorbed faster than model predicted)');
@@ -333,14 +438,23 @@ void main() {
         userRepo: mockUserRepo,
       );
 
-      final captured =
-          verify(() => mockUserRepo.saveProfile(captureAny())).captured;
-      final saved = captured.last as UserProfile;
+      final captured = verify(() => mockUserRepo.updateEkfParameters(
+        profileId: any(named: 'profileId'),
+        metabolicClearanceRate: captureAny(named: 'metabolicClearanceRate'),
+        insulinSensitivityFactor: captureAny(named: 'insulinSensitivityFactor'),
+        absorptionDelayBase: captureAny(named: 'absorptionDelayBase'),
+        tuningMealCount: captureAny(named: 'tuningMealCount'),
+        fastingSetpoint: captureAny(named: 'fastingSetpoint'),
+        ekfCovP1: captureAny(named: 'ekfCovP1'),
+        ekfCovISF: captureAny(named: 'ekfCovISF'),
+        ekfCovTMax: captureAny(named: 'ekfCovTMax'),
+      )).captured;
+      final ekfCovTMax = captured[7] as double;
 
       // After update: covTMax grows by processNoise (0.1), then shrinks by Kalman gain.
       // Net: new_cov < initial_cov + processNoise
       const processNoise = 0.1;
-      expect(saved.ekfCovTMax,
+      expect(ekfCovTMax,
           lessThan(_testProfile().ekfCovTMax + processNoise),
           reason: 'EKF update should consume some covariance');
     });
@@ -361,7 +475,7 @@ void main() {
       ]);
     });
 
-    test('saveProfile is called once after a post_meal_120 reading', () async {
+    test('updateEkfParameters is called once after a post_meal_120 reading', () async {
       final glucoseLog = _postMealGlucose(
         mealTime: mealTime,
         minutesAfter: 120,
@@ -375,7 +489,17 @@ void main() {
         userRepo: mockUserRepo,
       );
 
-      verify(() => mockUserRepo.saveProfile(any())).called(1);
+      verify(() => mockUserRepo.updateEkfParameters(
+        profileId: any(named: 'profileId'),
+        metabolicClearanceRate: any(named: 'metabolicClearanceRate'),
+        insulinSensitivityFactor: any(named: 'insulinSensitivityFactor'),
+        absorptionDelayBase: any(named: 'absorptionDelayBase'),
+        tuningMealCount: any(named: 'tuningMealCount'),
+        fastingSetpoint: any(named: 'fastingSetpoint'),
+        ekfCovP1: any(named: 'ekfCovP1'),
+        ekfCovISF: any(named: 'ekfCovISF'),
+        ekfCovTMax: any(named: 'ekfCovTMax'),
+      )).called(1);
     });
 
     test('post_meal_120: p1 and ISF change; tMax stays the same', () async {
@@ -393,18 +517,26 @@ void main() {
         userRepo: mockUserRepo,
       );
 
-      final captured =
-          verify(() => mockUserRepo.saveProfile(captureAny())).captured;
-      final saved = captured.last as UserProfile;
+      final captured = verify(() => mockUserRepo.updateEkfParameters(
+        profileId: any(named: 'profileId'),
+        metabolicClearanceRate: captureAny(named: 'metabolicClearanceRate'),
+        insulinSensitivityFactor: captureAny(named: 'insulinSensitivityFactor'),
+        absorptionDelayBase: captureAny(named: 'absorptionDelayBase'),
+        tuningMealCount: captureAny(named: 'tuningMealCount'),
+        fastingSetpoint: captureAny(named: 'fastingSetpoint'),
+        ekfCovP1: captureAny(named: 'ekfCovP1'),
+        ekfCovISF: captureAny(named: 'ekfCovISF'),
+        ekfCovTMax: captureAny(named: 'ekfCovTMax'),
+      )).captured;
+      final mcr = captured[0] as double;
+      final isf = captured[1] as double;
+      final tMax = captured[2] as double;
 
       // tMax must be unchanged for post_meal_120
-      expect(saved.absorptionDelayBase,
-          closeTo(profile.absorptionDelayBase, 1e-9));
+      expect(tMax, closeTo(profile.absorptionDelayBase, 1e-9));
       // p1 and ISF must have changed
-      expect(saved.metabolicClearanceRate,
-          isNot(closeTo(profile.metabolicClearanceRate, 1e-9)));
-      expect(saved.insulinSensitivityFactor,
-          isNot(closeTo(profile.insulinSensitivityFactor, 1e-9)));
+      expect(mcr, isNot(closeTo(profile.metabolicClearanceRate, 1e-9)));
+      expect(isf, isNot(closeTo(profile.insulinSensitivityFactor, 1e-9)));
     });
 
     test('positive innovation: p1 decreases (clearance was overestimated)', () async {
@@ -423,11 +555,20 @@ void main() {
         userRepo: mockUserRepo,
       );
 
-      final captured =
-          verify(() => mockUserRepo.saveProfile(captureAny())).captured;
-      final saved = captured.last as UserProfile;
+      final captured = verify(() => mockUserRepo.updateEkfParameters(
+        profileId: any(named: 'profileId'),
+        metabolicClearanceRate: captureAny(named: 'metabolicClearanceRate'),
+        insulinSensitivityFactor: captureAny(named: 'insulinSensitivityFactor'),
+        absorptionDelayBase: captureAny(named: 'absorptionDelayBase'),
+        tuningMealCount: captureAny(named: 'tuningMealCount'),
+        fastingSetpoint: captureAny(named: 'fastingSetpoint'),
+        ekfCovP1: captureAny(named: 'ekfCovP1'),
+        ekfCovISF: captureAny(named: 'ekfCovISF'),
+        ekfCovTMax: captureAny(named: 'ekfCovTMax'),
+      )).captured;
+      final mcr = captured[0] as double;
 
-      expect(saved.metabolicClearanceRate,
+      expect(mcr,
           lessThan(_testProfile().metabolicClearanceRate),
           reason: 'Positive innovation: body cleared glucose slower than '
               'predicted, so p1 should decrease');
@@ -448,11 +589,20 @@ void main() {
         userRepo: mockUserRepo,
       );
 
-      final captured =
-          verify(() => mockUserRepo.saveProfile(captureAny())).captured;
-      final saved = captured.last as UserProfile;
+      final captured = verify(() => mockUserRepo.updateEkfParameters(
+        profileId: any(named: 'profileId'),
+        metabolicClearanceRate: captureAny(named: 'metabolicClearanceRate'),
+        insulinSensitivityFactor: captureAny(named: 'insulinSensitivityFactor'),
+        absorptionDelayBase: captureAny(named: 'absorptionDelayBase'),
+        tuningMealCount: captureAny(named: 'tuningMealCount'),
+        fastingSetpoint: captureAny(named: 'fastingSetpoint'),
+        ekfCovP1: captureAny(named: 'ekfCovP1'),
+        ekfCovISF: captureAny(named: 'ekfCovISF'),
+        ekfCovTMax: captureAny(named: 'ekfCovTMax'),
+      )).captured;
+      final isf = captured[1] as double;
 
-      expect(saved.insulinSensitivityFactor,
+      expect(isf,
           greaterThan(_testProfile().insulinSensitivityFactor),
           reason: 'Positive innovation: insulin was less effective, '
               'so ISF should increase');
@@ -472,11 +622,20 @@ void main() {
         userRepo: mockUserRepo,
       );
 
-      final captured =
-          verify(() => mockUserRepo.saveProfile(captureAny())).captured;
-      final saved = captured.last as UserProfile;
+      final captured = verify(() => mockUserRepo.updateEkfParameters(
+        profileId: any(named: 'profileId'),
+        metabolicClearanceRate: captureAny(named: 'metabolicClearanceRate'),
+        insulinSensitivityFactor: captureAny(named: 'insulinSensitivityFactor'),
+        absorptionDelayBase: captureAny(named: 'absorptionDelayBase'),
+        tuningMealCount: captureAny(named: 'tuningMealCount'),
+        fastingSetpoint: captureAny(named: 'fastingSetpoint'),
+        ekfCovP1: captureAny(named: 'ekfCovP1'),
+        ekfCovISF: captureAny(named: 'ekfCovISF'),
+        ekfCovTMax: captureAny(named: 'ekfCovTMax'),
+      )).captured;
+      final mealCount = captured[3] as int;
 
-      expect(saved.tuningMealCount, _testProfile().tuningMealCount + 1);
+      expect(mealCount, _testProfile().tuningMealCount + 1);
     });
 
     test('"post_meal" context triggers the same 120-min update path', () async {
@@ -493,13 +652,21 @@ void main() {
         userRepo: mockUserRepo,
       );
 
-      final captured =
-          verify(() => mockUserRepo.saveProfile(captureAny())).captured;
-      final saved = captured.last as UserProfile;
+      final captured = verify(() => mockUserRepo.updateEkfParameters(
+        profileId: any(named: 'profileId'),
+        metabolicClearanceRate: captureAny(named: 'metabolicClearanceRate'),
+        insulinSensitivityFactor: captureAny(named: 'insulinSensitivityFactor'),
+        absorptionDelayBase: captureAny(named: 'absorptionDelayBase'),
+        tuningMealCount: captureAny(named: 'tuningMealCount'),
+        fastingSetpoint: captureAny(named: 'fastingSetpoint'),
+        ekfCovP1: captureAny(named: 'ekfCovP1'),
+        ekfCovISF: captureAny(named: 'ekfCovISF'),
+        ekfCovTMax: captureAny(named: 'ekfCovTMax'),
+      )).captured;
+      final tMax = captured[2] as double;
 
       // tMax must be unchanged (120-min path, not 30-min path)
-      expect(saved.absorptionDelayBase,
-          closeTo(_testProfile().absorptionDelayBase, 1e-9));
+      expect(tMax, closeTo(_testProfile().absorptionDelayBase, 1e-9));
     });
   });
 
@@ -573,11 +740,20 @@ void main() {
         userRepo: mockUserRepo,
       );
 
-      final captured =
-          verify(() => mockUserRepo.saveProfile(captureAny())).captured;
-      final saved = captured.last as UserProfile;
+      final captured = verify(() => mockUserRepo.updateEkfParameters(
+        profileId: any(named: 'profileId'),
+        metabolicClearanceRate: captureAny(named: 'metabolicClearanceRate'),
+        insulinSensitivityFactor: captureAny(named: 'insulinSensitivityFactor'),
+        absorptionDelayBase: captureAny(named: 'absorptionDelayBase'),
+        tuningMealCount: captureAny(named: 'tuningMealCount'),
+        fastingSetpoint: captureAny(named: 'fastingSetpoint'),
+        ekfCovP1: captureAny(named: 'ekfCovP1'),
+        ekfCovISF: captureAny(named: 'ekfCovISF'),
+        ekfCovTMax: captureAny(named: 'ekfCovTMax'),
+      )).captured;
+      final mcr = captured[0] as double;
 
-      expect(saved.metabolicClearanceRate, greaterThanOrEqualTo(0.002));
+      expect(mcr, greaterThanOrEqualTo(0.002));
     });
 
     test('p1 never exceeds 0.020', () async {
@@ -598,11 +774,20 @@ void main() {
         userRepo: mockUserRepo,
       );
 
-      final captured =
-          verify(() => mockUserRepo.saveProfile(captureAny())).captured;
-      final saved = captured.last as UserProfile;
+      final captured = verify(() => mockUserRepo.updateEkfParameters(
+        profileId: any(named: 'profileId'),
+        metabolicClearanceRate: captureAny(named: 'metabolicClearanceRate'),
+        insulinSensitivityFactor: captureAny(named: 'insulinSensitivityFactor'),
+        absorptionDelayBase: captureAny(named: 'absorptionDelayBase'),
+        tuningMealCount: captureAny(named: 'tuningMealCount'),
+        fastingSetpoint: captureAny(named: 'fastingSetpoint'),
+        ekfCovP1: captureAny(named: 'ekfCovP1'),
+        ekfCovISF: captureAny(named: 'ekfCovISF'),
+        ekfCovTMax: captureAny(named: 'ekfCovTMax'),
+      )).captured;
+      final mcr = captured[0] as double;
 
-      expect(saved.metabolicClearanceRate, lessThanOrEqualTo(0.020));
+      expect(mcr, lessThanOrEqualTo(0.020));
     });
 
     test('ISF never falls below 20.0', () async {
@@ -623,11 +808,20 @@ void main() {
         userRepo: mockUserRepo,
       );
 
-      final captured =
-          verify(() => mockUserRepo.saveProfile(captureAny())).captured;
-      final saved = captured.last as UserProfile;
+      final captured = verify(() => mockUserRepo.updateEkfParameters(
+        profileId: any(named: 'profileId'),
+        metabolicClearanceRate: captureAny(named: 'metabolicClearanceRate'),
+        insulinSensitivityFactor: captureAny(named: 'insulinSensitivityFactor'),
+        absorptionDelayBase: captureAny(named: 'absorptionDelayBase'),
+        tuningMealCount: captureAny(named: 'tuningMealCount'),
+        fastingSetpoint: captureAny(named: 'fastingSetpoint'),
+        ekfCovP1: captureAny(named: 'ekfCovP1'),
+        ekfCovISF: captureAny(named: 'ekfCovISF'),
+        ekfCovTMax: captureAny(named: 'ekfCovTMax'),
+      )).captured;
+      final isf = captured[1] as double;
 
-      expect(saved.insulinSensitivityFactor, greaterThanOrEqualTo(20.0));
+      expect(isf, greaterThanOrEqualTo(20.0));
     });
 
     test('ISF never exceeds 150.0', () async {
@@ -647,11 +841,20 @@ void main() {
         userRepo: mockUserRepo,
       );
 
-      final captured =
-          verify(() => mockUserRepo.saveProfile(captureAny())).captured;
-      final saved = captured.last as UserProfile;
+      final captured = verify(() => mockUserRepo.updateEkfParameters(
+        profileId: any(named: 'profileId'),
+        metabolicClearanceRate: captureAny(named: 'metabolicClearanceRate'),
+        insulinSensitivityFactor: captureAny(named: 'insulinSensitivityFactor'),
+        absorptionDelayBase: captureAny(named: 'absorptionDelayBase'),
+        tuningMealCount: captureAny(named: 'tuningMealCount'),
+        fastingSetpoint: captureAny(named: 'fastingSetpoint'),
+        ekfCovP1: captureAny(named: 'ekfCovP1'),
+        ekfCovISF: captureAny(named: 'ekfCovISF'),
+        ekfCovTMax: captureAny(named: 'ekfCovTMax'),
+      )).captured;
+      final isf = captured[1] as double;
 
-      expect(saved.insulinSensitivityFactor, lessThanOrEqualTo(150.0));
+      expect(isf, lessThanOrEqualTo(150.0));
     });
 
     test('tMax never falls below 20.0', () async {
@@ -672,11 +875,20 @@ void main() {
         userRepo: mockUserRepo,
       );
 
-      final captured =
-          verify(() => mockUserRepo.saveProfile(captureAny())).captured;
-      final saved = captured.last as UserProfile;
+      final captured = verify(() => mockUserRepo.updateEkfParameters(
+        profileId: any(named: 'profileId'),
+        metabolicClearanceRate: captureAny(named: 'metabolicClearanceRate'),
+        insulinSensitivityFactor: captureAny(named: 'insulinSensitivityFactor'),
+        absorptionDelayBase: captureAny(named: 'absorptionDelayBase'),
+        tuningMealCount: captureAny(named: 'tuningMealCount'),
+        fastingSetpoint: captureAny(named: 'fastingSetpoint'),
+        ekfCovP1: captureAny(named: 'ekfCovP1'),
+        ekfCovISF: captureAny(named: 'ekfCovISF'),
+        ekfCovTMax: captureAny(named: 'ekfCovTMax'),
+      )).captured;
+      final tMax = captured[2] as double;
 
-      expect(saved.absorptionDelayBase, greaterThanOrEqualTo(20.0));
+      expect(tMax, greaterThanOrEqualTo(20.0));
     });
 
     test('tMax never exceeds 90.0', () async {
@@ -697,11 +909,20 @@ void main() {
         userRepo: mockUserRepo,
       );
 
-      final captured =
-          verify(() => mockUserRepo.saveProfile(captureAny())).captured;
-      final saved = captured.last as UserProfile;
+      final captured = verify(() => mockUserRepo.updateEkfParameters(
+        profileId: any(named: 'profileId'),
+        metabolicClearanceRate: captureAny(named: 'metabolicClearanceRate'),
+        insulinSensitivityFactor: captureAny(named: 'insulinSensitivityFactor'),
+        absorptionDelayBase: captureAny(named: 'absorptionDelayBase'),
+        tuningMealCount: captureAny(named: 'tuningMealCount'),
+        fastingSetpoint: captureAny(named: 'fastingSetpoint'),
+        ekfCovP1: captureAny(named: 'ekfCovP1'),
+        ekfCovISF: captureAny(named: 'ekfCovISF'),
+        ekfCovTMax: captureAny(named: 'ekfCovTMax'),
+      )).captured;
+      final tMax = captured[2] as double;
 
-      expect(saved.absorptionDelayBase, lessThanOrEqualTo(90.0));
+      expect(tMax, lessThanOrEqualTo(90.0));
     });
   });
 }
