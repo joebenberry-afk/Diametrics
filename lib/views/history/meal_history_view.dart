@@ -7,49 +7,170 @@ import '../../models/meal_log.dart';
 import '../../router/route_names.dart';
 import '../../viewmodels/health_data_viewmodel.dart';
 
-void _showMealDeleteSheet(
+void _showMealEditSheet(
   BuildContext context,
   WidgetRef ref,
   MealLog log,
 ) {
+  final nameCtrl = TextEditingController(text: log.name ?? '');
+  final carbsCtrl =
+      TextEditingController(text: log.carbohydrates.toStringAsFixed(1));
+  final proteinCtrl =
+      TextEditingController(text: log.proteins.toStringAsFixed(1));
+  final fatCtrl = TextEditingController(text: log.fats.toStringAsFixed(1));
+  final calCtrl =
+      TextEditingController(text: log.calories.toStringAsFixed(0));
+
   showModalBottomSheet(
     context: context,
-    builder: (_) => SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ListTile(
-            leading: const Icon(Icons.delete_outline, color: AppThemeTokens.error),
-            title: const Text(
-              'Delete this meal',
-              style: TextStyle(color: AppThemeTokens.error),
-            ),
-            onTap: () {
-              Navigator.pop(context);
-              ref.read(mealLogsProvider.notifier).deleteMealLog(log.id);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text('Meal deleted'),
-                  duration: const Duration(seconds: 4),
-                  action: SnackBarAction(
-                    label: 'Undo',
-                    onPressed: () {
-                      ref
-                          .read(healthDataRepositoryProvider)
-                          .addMealLog(log);
-                      ref.invalidate(mealLogsProvider);
-                    },
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(AppThemeTokens.radiusLg),
+      ),
+    ),
+    builder: (ctx) => Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(ctx).viewInsets.bottom,
+      ),
+      child: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(
+            AppThemeTokens.spaceLg,
+            AppThemeTokens.spaceMd,
+            AppThemeTokens.spaceLg,
+            AppThemeTokens.spaceLg,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Edit Meal',
+                      style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppThemeTokens.spaceMd),
+              TextField(
+                controller: nameCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Meal name (optional)',
+                  border: OutlineInputBorder(),
+                ),
+                textCapitalization: TextCapitalization.sentences,
+              ),
+              const SizedBox(height: AppThemeTokens.spaceMd),
+              Row(
+                children: [
+                  Expanded(
+                    child: _MacroField(
+                      controller: carbsCtrl,
+                      label: 'Carbs (g)',
+                    ),
+                  ),
+                  const SizedBox(width: AppThemeTokens.spaceSm),
+                  Expanded(
+                    child: _MacroField(
+                      controller: proteinCtrl,
+                      label: 'Protein (g)',
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppThemeTokens.spaceSm),
+              Row(
+                children: [
+                  Expanded(
+                    child: _MacroField(
+                      controller: fatCtrl,
+                      label: 'Fat (g)',
+                    ),
+                  ),
+                  const SizedBox(width: AppThemeTokens.spaceSm),
+                  Expanded(
+                    child: _MacroField(
+                      controller: calCtrl,
+                      label: 'Calories (kcal)',
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppThemeTokens.spaceLg),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppThemeTokens.brandPrimary,
+                  foregroundColor: AppThemeTokens.textPrimaryInverse,
+                  minimumSize: const Size.fromHeight(AppThemeTokens.minTapTarget),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
                   ),
                 ),
-              );
-            },
+                onPressed: () {
+                  final updated = log.copyWith(
+                    name: nameCtrl.text.trim().isEmpty
+                        ? null
+                        : nameCtrl.text.trim(),
+                    carbohydrates: double.tryParse(carbsCtrl.text) ??
+                        log.carbohydrates,
+                    proteins:
+                        double.tryParse(proteinCtrl.text) ?? log.proteins,
+                    fats: double.tryParse(fatCtrl.text) ?? log.fats,
+                    calories:
+                        double.tryParse(calCtrl.text) ?? log.calories,
+                  );
+                  ref
+                      .read(mealLogsProvider.notifier)
+                      .updateMealLog(updated);
+                  Navigator.pop(ctx);
+                },
+                child: const Text('Save changes'),
+              ),
+              const SizedBox(height: AppThemeTokens.spaceSm),
+              TextButton(
+                style: TextButton.styleFrom(
+                  foregroundColor: AppThemeTokens.error,
+                ),
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  _confirmDeleteMeal(context, ref, log);
+                },
+                child: const Text('Delete this meal'),
+              ),
+            ],
           ),
-          ListTile(
-            leading: const Icon(Icons.close),
-            title: const Text('Cancel'),
-            onTap: () => Navigator.pop(context),
-          ),
-        ],
+        ),
+      ),
+    ),
+  );
+}
+
+void _confirmDeleteMeal(
+  BuildContext context,
+  WidgetRef ref,
+  MealLog log,
+) {
+  ref.read(mealLogsProvider.notifier).deleteMealLog(log.id);
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: const Text('Meal deleted'),
+      duration: const Duration(seconds: 4),
+      action: SnackBarAction(
+        label: 'Undo',
+        onPressed: () {
+          ref.read(healthDataRepositoryProvider).addMealLog(log);
+          ref.invalidate(mealLogsProvider);
+        },
       ),
     ),
   );
@@ -131,7 +252,7 @@ class MealHistoryView extends ConsumerWidget {
             itemBuilder: (context, index) {
               final log = sortedLogs[index];
               return GestureDetector(
-                onLongPress: () => _showMealDeleteSheet(context, ref, log),
+                onTap: () => _showMealEditSheet(context, ref, log),
                 child: Dismissible(
                   key: ValueKey(log.id),
                   direction: DismissDirection.endToStart,
@@ -146,27 +267,7 @@ class MealHistoryView extends ConsumerWidget {
                       color: Colors.white,
                     ),
                   ),
-                  onDismissed: (_) {
-                    final deleted = log;
-                    ref
-                        .read(mealLogsProvider.notifier)
-                        .deleteMealLog(deleted.id);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Text('Meal deleted'),
-                        duration: const Duration(seconds: 4),
-                        action: SnackBarAction(
-                          label: 'Undo',
-                          onPressed: () {
-                            ref
-                                .read(healthDataRepositoryProvider)
-                                .addMealLog(deleted);
-                            ref.invalidate(mealLogsProvider);
-                          },
-                        ),
-                      ),
-                    );
-                  },
+                  onDismissed: (_) => _confirmDeleteMeal(context, ref, log),
                   child: _MealHistoryTile(log: log),
                 ),
               );
@@ -250,12 +351,37 @@ class _MealHistoryTile extends StatelessWidget {
             ),
         ],
       ),
-      trailing: log.calories > 0
-          ? Text(
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (log.calories > 0)
+            Text(
               '${log.calories.toStringAsFixed(0)} kcal',
               style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-            )
-          : null,
+            ),
+          const SizedBox(width: 4),
+          const Icon(Icons.edit_outlined, size: 16, color: AppThemeTokens.textSecondary),
+        ],
+      ),
+    );
+  }
+}
+
+class _MacroField extends StatelessWidget {
+  final TextEditingController controller;
+  final String label;
+
+  const _MacroField({required this.controller, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+      ),
     );
   }
 }

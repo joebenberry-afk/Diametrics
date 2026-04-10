@@ -95,6 +95,24 @@ class HealthDataRepository {
     ));
   }
 
+  Future<void> updateMealLog(domain_models.MealLog log) async {
+    await (db.update(db.mealMacroLogs)..where((t) => t.id.equals(log.id)))
+        .write(MealMacroLogsCompanion(
+          name: Value(log.name),
+          carbohydrates: Value(log.carbohydrates),
+          dietaryFiber: Value(log.dietaryFiber),
+          proteins: Value(log.proteins),
+          fats: Value(log.fats),
+          calories: Value(log.calories),
+          containsAlcohol: Value(log.containsAlcohol),
+          containsCaffeine: Value(log.containsCaffeine),
+          mealType: Value(log.mealType),
+          foodFormFactor: Value(log.foodFormFactor),
+          postExercise: Value(log.postExercise),
+          notes: Value(log.notes),
+        ));
+  }
+
   // ── Deletes ────────────────────────────────────────────────────────────
 
   Future<void> deleteGlucoseLog(String id) async {

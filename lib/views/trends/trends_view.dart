@@ -2,10 +2,13 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:go_router/go_router.dart';
+
 import '../../core/theme/app_tokens.dart';
 import '../../models/glucose_log.dart';
 import '../../models/meal_log.dart';
 import '../../models/medication_log.dart';
+import '../../router/route_names.dart';
 import '../../viewmodels/profile_viewmodel.dart';
 import '../../viewmodels/trends_viewmodel.dart';
 
@@ -27,6 +30,16 @@ class TrendsView extends ConsumerWidget {
         title: const Text('Glucose Trends'),
         backgroundColor: AppThemeTokens.brandPrimary,
         foregroundColor: AppThemeTokens.textPrimaryInverse,
+        actions: [
+          TextButton.icon(
+            onPressed: () => context.push(Routes.glucoseHistory),
+            icon: const Icon(Icons.list_alt, color: AppThemeTokens.textPrimaryInverse, size: 18),
+            label: const Text(
+              'All readings',
+              style: TextStyle(color: AppThemeTokens.textPrimaryInverse),
+            ),
+          ),
+        ],
       ),
       body: SafeArea(
         child: trendsAsync.when(
@@ -164,7 +177,40 @@ class _GlucoseChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (glucoseLogs.isEmpty) {
-      return const Center(child: Text('No glucose readings in this period.'));
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(AppThemeTokens.spaceLg),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.show_chart,
+                size: 56,
+                color: AppThemeTokens.brandPrimary.withValues(alpha: 0.4),
+              ),
+              const SizedBox(height: AppThemeTokens.spaceMd),
+              const Text(
+                'No glucose readings yet',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppThemeTokens.textPrimary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppThemeTokens.spaceSm),
+              Text(
+                'Log a glucose reading from the dashboard to see your trend chart here.',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppThemeTokens.textSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
     // Normalize a log value to the user's preferred unit.
@@ -439,8 +485,12 @@ class _GlucoseLogList extends StatelessWidget {
     final sorted = logs.reversed.toList();
 
     if (sorted.isEmpty) {
-      return const Center(
-        child: Text('No readings logged in this period.'),
+      return Center(
+        child: Text(
+          'No readings logged in this period.',
+          style: TextStyle(color: AppThemeTokens.textSecondary),
+          textAlign: TextAlign.center,
+        ),
       );
     }
 

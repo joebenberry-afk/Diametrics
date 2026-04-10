@@ -69,6 +69,12 @@ class MealLogsViewModel extends AsyncNotifier<List<MealLog>> {
     });
   }
 
+  Future<void> updateMealLog(MealLog log) async {
+    final repo = ref.read(healthDataRepositoryProvider);
+    await repo.updateMealLog(log);
+    ref.invalidate(mealLogsProvider);
+  }
+
   Future<void> deleteMealLog(String id) async {
     final repo = ref.read(healthDataRepositoryProvider);
     await repo.deleteMealLog(id);
