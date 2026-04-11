@@ -153,43 +153,35 @@ class _FoodScannerViewState extends ConsumerState<FoodScannerView> {
   // ── State 1: Source Picker ─────────────────────────────────────────────────
 
   Widget _buildSourcePicker() {
+    final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text(
+          Text(
             'Add Food',
             style: TextStyle(
-              color: Color(0xFFc8cfe0),
+              color: cs.onSurface,
               fontSize: 24,
               fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Choose how to identify your food',
-            style: TextStyle(color: Color(0xFF8892aa), fontSize: 14),
+            style: TextStyle(
+              color: cs.onSurface.withValues(alpha: 0.6),
+              fontSize: 14,
+            ),
           ),
           const SizedBox(height: 40),
-          _SourceButton(
-            icon: LucideIcons.camera,
-            label: 'Take Photo',
-            onTap: _onTakePhoto,
-          ),
+          _SourceButton(icon: LucideIcons.camera, label: 'Take Photo', onTap: _onTakePhoto),
           const SizedBox(height: 12),
-          _SourceButton(
-            icon: LucideIcons.image,
-            label: 'Choose from Gallery',
-            onTap: _onGallery,
-          ),
+          _SourceButton(icon: LucideIcons.image, label: 'Choose from Gallery', onTap: _onGallery),
           const SizedBox(height: 12),
-          _SourceButton(
-            icon: LucideIcons.scan,
-            label: 'Scan Barcode',
-            onTap: _onBarcodePressed,
-          ),
+          _SourceButton(icon: LucideIcons.scan, label: 'Scan Barcode', onTap: _onBarcodePressed),
         ],
       ),
     );
@@ -553,29 +545,30 @@ class _SourceButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Material(
-      color: const Color(0xFF13151f),
-      borderRadius: BorderRadius.circular(12),
+      color: cs.surface,
+      borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
           child: Row(children: [
-            Icon(icon, color: const Color(0xFF4a9eff), size: 20),
+            Icon(icon, color: cs.primary, size: 20),
             const SizedBox(width: 16),
             Text(
               label,
-              style: const TextStyle(
-                color: Color(0xFFc8cfe0),
+              style: TextStyle(
+                color: cs.onSurface,
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
               ),
             ),
             const Spacer(),
-            const Icon(
+            Icon(
               LucideIcons.chevronRight,
-              color: Color(0xFF8892aa),
+              color: cs.onSurface.withValues(alpha: 0.6),
               size: 16,
             ),
           ]),
