@@ -1,35 +1,15 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import '../../config/app_lock_config.dart';
-import '../../config/backend_config.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../repositories/user_repository.dart';
-import '../../src/core/di/injection.dart';
-import '../../src/domain/entities/food_analysis_result.dart';
-import '../../src/domain/entities/food_item.dart';
-import '../../src/domain/repositories/food_analyzer_repository.dart';
+import '../../src/domain/entities/food_scanner_result.dart';
 import '../../viewmodels/logging_wizard_viewmodel.dart';
 import 'package:go_router/go_router.dart';
 import '../../models/projection_result.dart';
 import '../../router/projection_route_args.dart';
 import '../../router/route_names.dart';
-
-/// Maps a FoodItem.source label to a badge colour.
-Color _sourceColor(String source) {
-  return switch (source) {
-    'USDA+N5K'        => const Color(0xFF1565C0),
-    'USDA API'        => const Color(0xFF1976D2),
-    'N5K'             => const Color(0xFF4527A0),
-    'Local DB'        => const Color(0xFF00695C),
-    'Custom Food DB'  => AppThemeTokens.brandPrimary,
-    'Open Food Facts' => const Color(0xFFE65100),
-    _                 => const Color(0xFF546E7A),
-  };
-}
 
 class MealWizardView extends ConsumerStatefulWidget {
   const MealWizardView({super.key});
@@ -39,14 +19,6 @@ class MealWizardView extends ConsumerStatefulWidget {
 }
 
 class _MealWizardViewState extends ConsumerState<MealWizardView> {
-  // Camera / AI state
-  File? _imageFile;
-  bool _awaitingConfirm = false;   // image picked but not yet sent to AI
-  bool _isAnalyzing = false;
-  String? _analysisError;
-  FoodAnalysisResult? _analysisResult;
-  final _picker = ImagePicker();
-
   // User profile weight for projection
   double _weightKg = 70.0;
   String _preferredGlucoseUnit = 'mg/dL';
@@ -88,235 +60,54 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
     }
   }
 
-  // ── Camera Methods ──────────────────────────────────────────────────
-
-  Future<void> _pickImage(ImageSource source) async {
-    AppLockConfig.ignoreNextResume = true;
-    final picked = await _picker.pickImage(
-      source: source,
-      maxWidth: 768,
-      maxHeight: 768,
-      imageQuality: 80,
+  /// Pushes FoodScannerView and applies the confirmed result to the meal form.
+  Future<void> _openFoodScanner() async {
+    final result = await context.push<FoodScannerResult>(
+      Routes.logMealFoodScanner,
     );
-    if (picked == null) return;
+    if (result == null || !mounted) return;
 
-    setState(() {
-      _imageFile = File(picked.path);
-      _awaitingConfirm = true;
-      _isAnalyzing = false;
-      _analysisError = null;
-      _analysisResult = null;
-    });
-    // Analysis is NOT triggered here — user confirms via button.
-  }
+    ref.read(loggingWizardProvider.notifier).updateMealMacros(
+      carbs: result.totalCarbs,
+      proteins: result.totalProtein,
+      fats: result.totalFat,
+      calories: result.totalCalories,
+    );
 
-  /// Called when the user taps "Analyse this photo" after reviewing the preview.
-  Future<void> _runAnalysis() async {
-    final path = _imageFile?.path;
-    if (path == null) return;
+    _carbsCtrl.text = result.totalCarbs.toStringAsFixed(1);
+    _proteinCtrl.text = result.totalProtein.toStringAsFixed(1);
+    _fatsCtrl.text = result.totalFat.toStringAsFixed(1);
 
-    setState(() {
-      _awaitingConfirm = false;
-      _isAnalyzing = true;
-      _analysisError = null;
-      _analysisResult = null;
-    });
-
-    try {
-      final result = await getIt<FoodAnalyzerRepository>().analyzeImage(path);
-
-      final totalProtein =
-          result.items.fold(0.0, (sum, item) => sum + item.proteinGrams);
-      final totalFat =
-          result.items.fold(0.0, (sum, item) => sum + item.fatGrams);
-
-      ref.read(loggingWizardProvider.notifier).updateMealMacros(
-        carbs: result.totalCarbs,
-        fiber: null,
-        proteins: totalProtein,
-        fats: totalFat,
-        calories: result.totalCalories,
-      );
-
-      _carbsCtrl.text = result.totalCarbs.toStringAsFixed(1);
-      _proteinCtrl.text = totalProtein.toStringAsFixed(1);
-      _fatsCtrl.text = totalFat.toStringAsFixed(1);
-      _fiberCtrl.clear();
-
-      setState(() {
-        _analysisResult = result;
-        _isAnalyzing = false;
-      });
-    } catch (e) {
-      final msg =
-          e.toString().split('\n').first.replaceFirst('Exception: ', '');
-      setState(() {
-        _analysisError = msg;
-        _isAnalyzing = false;
-      });
-    }
-  }
-
-  // ── Barcode Scanner ──────────────────────────────────────────────────
-
-  Future<void> _openBarcodeScanner() async {
-    AppLockConfig.ignoreNextResume = true;
-    final FoodItem? result = await context.push<FoodItem>(Routes.logMealBarcode);
-    if (result != null && mounted) {
-      setState(() {
-        _imageFile = null;
-        _awaitingConfirm = false;
-        _analysisResult = null;
-        _analysisError = null;
-      });
-      // Populate viewmodel state
-      ref.read(loggingWizardProvider.notifier).setFromBarcodeResult(
-        carbs: result.carbsGrams,
-        proteins: result.proteinGrams,
-        fats: result.fatGrams,
-        calories: result.calories,
-      );
-      // Populate text controllers so the UI fields update visually
-      _carbsCtrl.text = result.carbsGrams.toStringAsFixed(1);
-      _proteinCtrl.text = result.proteinGrams.toStringAsFixed(1);
-      _fatsCtrl.text = result.fatGrams.toStringAsFixed(1);
-      _fiberCtrl.clear();
-
-      // Show a confirmation snackbar with the source badge
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '${result.name} added (${result.source})',
-              overflow: TextOverflow.ellipsis,
-            ),
-            backgroundColor: AppThemeTokens.brandSuccess,
-            duration: const Duration(seconds: 3),
+    if (mounted) {
+      final itemNames = result.items.map((i) => i.name).join(', ');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${result.items.length} item(s) added: $itemNames',
+            overflow: TextOverflow.ellipsis,
           ),
-        );
-      }
-    }
-  }
-
-  void _showSourceSheet() {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppThemeTokens.radiusLg),
+          backgroundColor: AppThemeTokens.brandSuccess,
+          duration: const Duration(seconds: 3),
         ),
+      );
+    }
+  }
+
+  /// Simple scan-food button — replaces the old camera area widget.
+  Widget _buildFoodScanButton() {
+    return OutlinedButton.icon(
+      icon: const Icon(LucideIcons.scanLine, size: 18),
+      label: const Text('Scan Food'),
+      onPressed: _openFoodScanner,
+      style: OutlinedButton.styleFrom(
+        foregroundColor: AppThemeTokens.brandAccent,
+        side: BorderSide(color: AppThemeTokens.brandAccent.withValues(alpha: 0.7)),
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
+        ),
+        minimumSize: const Size.fromHeight(AppThemeTokens.minTapTarget),
       ),
-      builder: (ctx) {
-        final isDark = Theme.of(ctx).brightness == Brightness.dark;
-        return Container(
-          decoration: BoxDecoration(
-            color: isDark ? AppThemeTokens.bgSurfaceDark : Colors.white,
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(AppThemeTokens.radiusLg),
-            ),
-          ),
-          child: SafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: AppThemeTokens.spaceSm),
-                Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppThemeTokens.brandAccent.withValues(alpha: 0.4),
-                    borderRadius: BorderRadius.circular(AppThemeTokens.radiusFull),
-                  ),
-                ),
-                const SizedBox(height: AppThemeTokens.spaceSm),
-                Text(
-                  'Analyze Food',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: isDark ? Colors.white : AppThemeTokens.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: AppThemeTokens.spaceSm),
-                ListTile(
-                  leading: const Icon(LucideIcons.camera,
-                      color: AppThemeTokens.brandAccent),
-                  title: Text(
-                    'Take Photo',
-                    style: TextStyle(
-                      color: isDark ? Colors.white : AppThemeTokens.textPrimary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  subtitle: Text(
-                    'Point camera at your meal',
-                    style: TextStyle(
-                      color: isDark ? Colors.white54 : AppThemeTokens.textSecondary,
-                      fontSize: 14,
-                    ),
-                  ),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    _pickImage(ImageSource.camera);
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(LucideIcons.image,
-                      color: AppThemeTokens.brandAccent),
-                  title: Text(
-                    'Choose from Gallery',
-                    style: TextStyle(
-                      color: isDark ? Colors.white : AppThemeTokens.textPrimary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  subtitle: Text(
-                    'Select a food photo you already have',
-                    style: TextStyle(
-                      color: isDark ? Colors.white54 : AppThemeTokens.textSecondary,
-                      fontSize: 14,
-                    ),
-                  ),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    _pickImage(ImageSource.gallery);
-                  },
-                ),
-                ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: AppThemeTokens.brandPrimary.withValues(alpha: 0.12),
-                    child: Icon(
-                      Icons.qr_code_scanner,
-                      color: AppThemeTokens.brandPrimary,
-                      size: 20,
-                    ),
-                  ),
-                  title: Text(
-                    'Scan Barcode',
-                    style: TextStyle(
-                      color: isDark ? Colors.white : AppThemeTokens.textPrimary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  subtitle: Text(
-                    'Scan a packaged food label for exact nutrition',
-                    style: TextStyle(
-                      color: isDark ? Colors.white54 : AppThemeTokens.textSecondary,
-                      fontSize: 14,
-                    ),
-                  ),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    _openBarcodeScanner();
-                  },
-                ),
-                const SizedBox(height: AppThemeTokens.spaceMd),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 
@@ -505,460 +296,6 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
     );
   }
 
-  // ── Camera / AI Area ────────────────────────────────────────────────
-
-  Widget _buildCameraArea(ThemeData theme, bool isDark) {
-    final borderColor = isDark
-        ? AppThemeTokens.brandAccent.withValues(alpha: 0.5)
-        : AppThemeTokens.brandPrimary.withValues(alpha: 0.3);
-    final bgColor = isDark
-        ? AppThemeTokens.brandSecondary.withValues(alpha: 0.15)
-        : AppThemeTokens.brandPrimary.withValues(alpha: 0.05);
-
-    final base = BoxDecoration(
-      color: bgColor,
-      borderRadius: BorderRadius.circular(AppThemeTokens.radiusLg),
-      border: Border.all(color: borderColor, width: 2),
-    );
-
-    // Confirm before analysis — user reviews the photo first
-    if (_awaitingConfirm && _imageFile != null) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
-            child: Image.file(
-              _imageFile!,
-              height: 200,
-              fit: BoxFit.cover,
-            ),
-          ),
-          const SizedBox(height: AppThemeTokens.spaceSm),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => setState(() {
-                    _imageFile = null;
-                    _awaitingConfirm = false;
-                  }),
-                  icon: const Icon(Icons.close, size: 18),
-                  label: const Text('Discard'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppThemeTokens.error,
-                    side: BorderSide(
-                      color: AppThemeTokens.error.withValues(alpha: 0.6),
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
-                    ),
-                    minimumSize: const Size.fromHeight(AppThemeTokens.minTapTarget),
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppThemeTokens.spaceSm),
-              Expanded(
-                flex: 2,
-                child: ElevatedButton.icon(
-                  onPressed: _runAnalysis,
-                  icon: const Icon(Icons.auto_awesome, size: 18),
-                  label: const Text('Analyse this photo'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppThemeTokens.brandPrimary,
-                    foregroundColor: AppThemeTokens.textPrimaryInverse,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
-                    ),
-                    minimumSize: const Size.fromHeight(AppThemeTokens.minTapTarget),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      );
-    }
-
-    // Analyzing
-    if (_isAnalyzing) {
-      return Container(
-        height: 130,
-        decoration: base,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const SizedBox(
-              width: 34,
-              height: 34,
-              child: CircularProgressIndicator(
-                strokeWidth: 3,
-                color: AppThemeTokens.brandAccent,
-              ),
-            ),
-            const SizedBox(height: AppThemeTokens.spaceSm),
-            Text(
-              'Analyzing with Gemini AI…',
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: isDark ? Colors.white70 : AppThemeTokens.brandSecondary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Identifying foods and estimating nutrition',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: isDark ? Colors.white38 : AppThemeTokens.textSecondary,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    // Error
-    if (_analysisError != null) {
-      return InkWell(
-        borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
-        onTap: _showSourceSheet,
-        child: Container(
-          padding: const EdgeInsets.all(AppThemeTokens.spaceMd),
-          decoration: base.copyWith(
-            border: Border.all(
-              color: AppThemeTokens.error.withValues(alpha: 0.6),
-              width: 2,
-            ),
-          ),
-          child: Row(
-            children: [
-              const Icon(LucideIcons.alertCircle,
-                  color: AppThemeTokens.error, size: 22),
-              const SizedBox(width: AppThemeTokens.spaceSm),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Analysis failed',
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: AppThemeTokens.error,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      _analysisError!,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: isDark ? Colors.white54 : AppThemeTokens.textSecondary,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              TextButton.icon(
-                onPressed: _showSourceSheet,
-                icon: const Icon(LucideIcons.refreshCw, size: 14),
-                label: const Text('Retry'),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppThemeTokens.brandAccent,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    // AI result shown
-    if (_analysisResult != null && _imageFile != null) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Result header with image thumbnail
-          Container(
-            padding: const EdgeInsets.all(AppThemeTokens.spaceMd),
-            decoration: base.copyWith(
-              border: Border.all(
-                color: AppThemeTokens.brandSuccessLight.withValues(alpha: 0.6),
-                width: 2,
-              ),
-              color: isDark
-                  ? AppThemeTokens.brandSuccess.withValues(alpha: 0.12)
-                  : AppThemeTokens.brandSuccess.withValues(alpha: 0.05),
-            ),
-            child: Row(
-              children: [
-                ClipRRect(
-                  borderRadius:
-                      BorderRadius.circular(AppThemeTokens.radiusMd),
-                  child: Image.file(_imageFile!,
-                      width: 72, height: 72, fit: BoxFit.cover),
-                ),
-                const SizedBox(width: AppThemeTokens.spaceMd),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(LucideIcons.checkCircle,
-                              color: AppThemeTokens.brandSuccessLight, size: 16),
-                          const SizedBox(width: 4),
-                          Text(
-                            'AI Analysis Complete',
-                            style: theme.textTheme.labelMedium?.copyWith(
-                              color: AppThemeTokens.brandSuccessLight,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _analysisResult!.summary,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: isDark ? Colors.white60 : AppThemeTokens.textSecondary,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'Values filled in below — review and adjust if needed',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: isDark ? Colors.white38 : AppThemeTokens.textSecondary,
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                TextButton(
-                  onPressed: _showSourceSheet,
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppThemeTokens.brandAccent,
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                  ),
-                  child: const Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(LucideIcons.refreshCw, size: 14),
-                      SizedBox(height: 2),
-                      Text('Redo', style: TextStyle(fontSize: 14)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Food item list
-          if (_analysisResult!.items.isNotEmpty) ...[
-            const SizedBox(height: AppThemeTokens.spaceSm),
-            Container(
-              decoration: BoxDecoration(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.05)
-                    : Colors.white,
-                borderRadius:
-                    BorderRadius.circular(AppThemeTokens.radiusMd),
-                border: Border.all(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.1)
-                      : AppThemeTokens.brandPrimary.withValues(alpha: 0.1),
-                ),
-              ),
-              child: Column(
-                children: _analysisResult!.items.asMap().entries.map((entry) {
-                  final i = entry.key;
-                  final item = entry.value;
-                  return Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppThemeTokens.spaceMd,
-                          vertical: AppThemeTokens.spaceSm,
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 6,
-                              height: 6,
-                              decoration: BoxDecoration(
-                                color: AppThemeTokens.brandAccent,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: AppThemeTokens.spaceSm),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    item.name,
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: isDark
-                                          ? Colors.white
-                                          : AppThemeTokens.textPrimary,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Row(
-                                    children: [
-                                      if (item.weightG > 0)
-                                        Text(
-                                          '${item.weightG.toStringAsFixed(0)}g',
-                                          style: theme.textTheme.bodySmall?.copyWith(
-                                            color: isDark
-                                                ? Colors.white54
-                                                : AppThemeTokens.textSecondary,
-                                          ),
-                                        )
-                                      else
-                                        Text(
-                                          item.portion,
-                                          style: theme.textTheme.bodySmall?.copyWith(
-                                            color: isDark
-                                                ? Colors.white54
-                                                : AppThemeTokens.textSecondary,
-                                          ),
-                                        ),
-                                      const SizedBox(width: 6),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                                        decoration: BoxDecoration(
-                                          color: _sourceColor(item.source).withValues(alpha: 0.15),
-                                          borderRadius: BorderRadius.circular(4),
-                                          border: Border.all(
-                                            color: _sourceColor(item.source).withValues(alpha: 0.5),
-                                            width: 0.8,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          item.source,
-                                          style: TextStyle(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w600,
-                                            color: _sourceColor(item.source),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  '${item.carbsGrams.toStringAsFixed(1)}g C',
-                                  style: TextStyle(
-                                    color: AppThemeTokens.brandAccent,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                                Text(
-                                  '${item.proteinGrams.toStringAsFixed(1)}g P  '
-                                  '${item.fatGrams.toStringAsFixed(1)}g F',
-                                  style: TextStyle(
-                                    color: isDark ? Colors.white38 : AppThemeTokens.textSecondary,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (i < _analysisResult!.items.length - 1)
-                        Divider(
-                          height: 1,
-                          color: isDark
-                              ? Colors.white.withValues(alpha: 0.08)
-                              : Colors.grey.shade200,
-                        ),
-                    ],
-                  );
-                }).toList(),
-              ),
-            ),
-          ],
-        ],
-      );
-    }
-
-    // Default: tap to analyze (or disabled state when AI not available)
-    final bool aiAvailable =
-        BackendConfig.isConfigured || BackendConfig.isDirectGeminiEnabled;
-
-    if (!aiAvailable) {
-      return Container(
-        height: 130,
-        padding: const EdgeInsets.all(AppThemeTokens.spaceMd),
-        decoration: base,
-        child: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.cloud_off, color: Colors.white38, size: 28),
-            SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'AI analysis not available.\nBuild with --dart-define=GEMINI_API_KEY=your_key',
-                style: TextStyle(color: Colors.white38, fontSize: 13),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return InkWell(
-      borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
-      onTap: _showSourceSheet,
-      child: Container(
-        height: 130,
-        decoration: base,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(AppThemeTokens.spaceMd),
-              decoration: BoxDecoration(
-                color: AppThemeTokens.brandAccent.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(LucideIcons.camera,
-                  size: 32, color: AppThemeTokens.brandAccent),
-            ),
-            const SizedBox(height: AppThemeTokens.spaceSm),
-            Text(
-              'Tap to analyze food with AI',
-              style: theme.textTheme.titleSmall?.copyWith(
-                color: isDark ? Colors.white : AppThemeTokens.brandSecondary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              'Camera or gallery — Gemini identifies nutrients',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: isDark ? Colors.white38 : AppThemeTokens.textSecondary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   // ── Main Build ──────────────────────────────────────────────────────
 
   @override
@@ -1026,7 +363,7 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                 isDark: isDark,
               ),
               const SizedBox(height: AppThemeTokens.spaceSm),
-              _buildCameraArea(theme, isDark),
+              _buildFoodScanButton(),
               const SizedBox(height: AppThemeTokens.spaceLg),
 
               // ── Macronutrients ────────────────────────────────────
