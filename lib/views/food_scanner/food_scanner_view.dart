@@ -322,6 +322,7 @@ class _FoodScannerViewState extends ConsumerState<FoodScannerView> {
             label: const Text('Take a Photo Instead'),
             onPressed: _onTakePhoto,
             style: OutlinedButton.styleFrom(
+              foregroundColor: cs.onSurface,
               side: BorderSide(color: borderColor),
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
@@ -478,6 +479,7 @@ class _FoodScannerViewState extends ConsumerState<FoodScannerView> {
             OutlinedButton(
               onPressed: () => ref.read(foodScannerProvider.notifier).reset(),
               style: OutlinedButton.styleFrom(
+                foregroundColor: cs.onSurface,
                 side: BorderSide(color: borderColor),
               ),
               child: const Text('Try Again'),
