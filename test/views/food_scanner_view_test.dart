@@ -17,12 +17,14 @@ Widget _wrap(Widget child, {List<Override> overrides = const []}) =>
       child: MaterialApp(home: child),
     );
 
-Widget _wrapThemed(Widget child, ThemeData theme,
-    {List<Override> overrides = const []}) =>
-    ProviderScope(
-      overrides: overrides,
-      child: MaterialApp(theme: theme, home: child),
-    );
+Widget _wrapThemed(
+  Widget child,
+  ThemeData theme, {
+  List<Override> overrides = const [],
+}) => ProviderScope(
+  overrides: overrides,
+  child: MaterialApp(theme: theme, home: child),
+);
 
 void main() {
   late MockFoodAnalyzerRepository mockRepo;
@@ -30,24 +32,29 @@ void main() {
   setUp(() => mockRepo = MockFoodAnalyzerRepository());
 
   testWidgets('State 1: shows source picker buttons', (tester) async {
-    await tester.pumpWidget(_wrap(const FoodScannerView(),
-        overrides: [
-          foodAnalyzerRepositoryProvider.overrideWithValue(mockRepo)
-        ]));
+    await tester.pumpWidget(
+      _wrap(
+        const FoodScannerView(),
+        overrides: [foodAnalyzerRepositoryProvider.overrideWithValue(mockRepo)],
+      ),
+    );
     expect(find.text('Take Photo'), findsOneWidget);
     expect(find.text('Choose from Gallery'), findsOneWidget);
     expect(find.text('Scan Barcode'), findsOneWidget);
   });
 
-  testWidgets('State 2: shows progress indicator and status text',
-      (tester) async {
-    await tester.pumpWidget(ProviderScope(
-      overrides: [
-        foodAnalyzerRepositoryProvider.overrideWithValue(mockRepo),
-        foodScannerProvider.overrideWith(() => _AnalysingStateNotifier()),
-      ],
-      child: const MaterialApp(home: FoodScannerView()),
-    ));
+  testWidgets('State 2: shows progress indicator and status text', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          foodAnalyzerRepositoryProvider.overrideWithValue(mockRepo),
+          foodScannerProvider.overrideWith(() => _AnalysingStateNotifier()),
+        ],
+        child: const MaterialApp(home: FoodScannerView()),
+      ),
+    );
     await tester.pump();
 
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
@@ -66,15 +73,16 @@ void main() {
       source: 'USDA+N5K',
     );
 
-    await tester.pumpWidget(ProviderScope(
-      overrides: [
-        foodAnalyzerRepositoryProvider.overrideWithValue(mockRepo),
-      ],
-      child: const MaterialApp(home: FoodScannerView()),
-    ));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [foodAnalyzerRepositoryProvider.overrideWithValue(mockRepo)],
+        child: const MaterialApp(home: FoodScannerView()),
+      ),
+    );
 
     final container = ProviderScope.containerOf(
-        tester.element(find.byType(FoodScannerView)));
+      tester.element(find.byType(FoodScannerView)),
+    );
     container.read(foodScannerProvider.notifier).submitBarcodeResult(item);
     await tester.pump();
 
@@ -82,17 +90,19 @@ void main() {
     expect(find.text('Confirm & Add to Meal'), findsOneWidget);
   });
 
-  testWidgets('State 5: shows not-found message and recovery options',
-      (tester) async {
-    await tester.pumpWidget(ProviderScope(
-      overrides: [
-        foodAnalyzerRepositoryProvider.overrideWithValue(mockRepo),
-      ],
-      child: const MaterialApp(home: FoodScannerView()),
-    ));
+  testWidgets('State 5: shows not-found message and recovery options', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [foodAnalyzerRepositoryProvider.overrideWithValue(mockRepo)],
+        child: const MaterialApp(home: FoodScannerView()),
+      ),
+    );
 
     final container = ProviderScope.containerOf(
-        tester.element(find.byType(FoodScannerView)));
+      tester.element(find.byType(FoodScannerView)),
+    );
     container.read(foodScannerProvider.notifier).handleBarcodeNotFound();
     await tester.pump();
 
@@ -102,24 +112,34 @@ void main() {
   });
 
   group('theme rendering', () {
-    testWidgets('renders under AppTheme.lightTheme without error',
-        (tester) async {
-      await tester.pumpWidget(_wrapThemed(
-        const FoodScannerView(),
-        AppTheme.lightTheme,
-        overrides: [foodAnalyzerRepositoryProvider.overrideWithValue(mockRepo)],
-      ));
+    testWidgets('renders under AppTheme.lightTheme without error', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrapThemed(
+          const FoodScannerView(),
+          AppTheme.lightTheme,
+          overrides: [
+            foodAnalyzerRepositoryProvider.overrideWithValue(mockRepo),
+          ],
+        ),
+      );
       expect(tester.takeException(), isNull);
       expect(find.byType(FoodScannerView), findsOneWidget);
     });
 
-    testWidgets('renders under AppTheme.darkTheme without error',
-        (tester) async {
-      await tester.pumpWidget(_wrapThemed(
-        const FoodScannerView(),
-        AppTheme.darkTheme,
-        overrides: [foodAnalyzerRepositoryProvider.overrideWithValue(mockRepo)],
-      ));
+    testWidgets('renders under AppTheme.darkTheme without error', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrapThemed(
+          const FoodScannerView(),
+          AppTheme.darkTheme,
+          overrides: [
+            foodAnalyzerRepositoryProvider.overrideWithValue(mockRepo),
+          ],
+        ),
+      );
       expect(tester.takeException(), isNull);
       expect(find.byType(FoodScannerView), findsOneWidget);
     });

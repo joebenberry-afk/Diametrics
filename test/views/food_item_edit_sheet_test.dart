@@ -17,11 +17,13 @@ void main() {
   );
 
   testWidgets('displays item values in text fields', (tester) async {
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: FoodItemEditSheet(item: item, onSave: (_) {}),
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: FoodItemEditSheet(item: item, onSave: (_) {}),
+        ),
       ),
-    ));
+    );
 
     expect(find.widgetWithText(TextFormField, 'Chicken Curry'), findsOneWidget);
     expect(find.widgetWithText(TextFormField, '45.0'), findsOneWidget);
@@ -32,20 +34,19 @@ void main() {
   testWidgets('onSave callback receives updated values', (tester) async {
     FoodItem? savedItem;
 
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: FoodItemEditSheet(
-          item: item,
-          onSave: (updated) => savedItem = updated,
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: FoodItemEditSheet(
+            item: item,
+            onSave: (updated) => savedItem = updated,
+          ),
         ),
       ),
-    ));
+    );
 
     // Edit the carbs field
-    await tester.enterText(
-      find.widgetWithText(TextFormField, '45.0'),
-      '55.0',
-    );
+    await tester.enterText(find.widgetWithText(TextFormField, '45.0'), '55.0');
 
     await tester.tap(find.text('Save Changes'));
     await tester.pump();
@@ -57,21 +58,31 @@ void main() {
   });
 
   group('theme rendering', () {
-    testWidgets('renders under AppTheme.lightTheme without error',
-        (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        theme: AppTheme.lightTheme,
-        home: Scaffold(body: FoodItemEditSheet(item: item, onSave: (_) {})),
-      ));
+    testWidgets('renders under AppTheme.lightTheme without error', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: Scaffold(
+            body: FoodItemEditSheet(item: item, onSave: (_) {}),
+          ),
+        ),
+      );
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('renders under AppTheme.darkTheme without error',
-        (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        theme: AppTheme.darkTheme,
-        home: Scaffold(body: FoodItemEditSheet(item: item, onSave: (_) {})),
-      ));
+    testWidgets('renders under AppTheme.darkTheme without error', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.darkTheme,
+          home: Scaffold(
+            body: FoodItemEditSheet(item: item, onSave: (_) {}),
+          ),
+        ),
+      );
       expect(tester.takeException(), isNull);
     });
   });
