@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_tokens.dart';
 import '../../src/domain/entities/food_item.dart';
 
 class FoodItemEditSheet extends StatefulWidget {
@@ -77,7 +78,7 @@ class _FoodItemEditSheetState extends State<FoodItemEditSheet> {
                 height: 4,
                 margin: const EdgeInsets.only(bottom: 20),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF2a2d3a),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -135,8 +136,10 @@ class _FoodItemEditSheetState extends State<FoodItemEditSheet> {
             FilledButton(
               onPressed: _onSave,
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF4a9eff),
                 padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
+                ),
               ),
               child: const Text('Save Changes'),
             ),
@@ -176,36 +179,17 @@ class _MacroSummaryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF13151f),
-        borderRadius: BorderRadius.circular(8),
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(AppThemeTokens.radiusSm),
       ),
       child: Row(children: [
-        _MacroCell(
-          label: 'Carbs',
-          value: item.carbsGrams.toStringAsFixed(1),
-          unit: 'g',
-          color: const Color(0xFF4a9eff),
-        ),
-        _MacroCell(
-          label: 'Protein',
-          value: item.proteinGrams.toStringAsFixed(1),
-          unit: 'g',
-          color: const Color(0xFFc8cfe0),
-        ),
-        _MacroCell(
-          label: 'Fat',
-          value: item.fatGrams.toStringAsFixed(1),
-          unit: 'g',
-          color: const Color(0xFFc8cfe0),
-        ),
-        _MacroCell(
-          label: 'kcal',
-          value: item.calories.toStringAsFixed(0),
-          unit: '',
-          color: const Color(0xFFc8cfe0),
-        ),
+        _MacroCell(label: 'Carbs', value: item.carbsGrams.toStringAsFixed(1), unit: 'g', isCarbs: true),
+        _MacroCell(label: 'Protein', value: item.proteinGrams.toStringAsFixed(1), unit: 'g', isCarbs: false),
+        _MacroCell(label: 'Fat', value: item.fatGrams.toStringAsFixed(1), unit: 'g', isCarbs: false),
+        _MacroCell(label: 'kcal', value: item.calories.toStringAsFixed(0), unit: '', isCarbs: false),
       ]),
     );
   }
@@ -215,53 +199,41 @@ class _MacroCell extends StatelessWidget {
   final String label;
   final String value;
   final String unit;
-  final Color color;
+  final bool isCarbs;
 
   const _MacroCell({
     required this.label,
     required this.value,
     required this.unit,
-    required this.color,
+    required this.isCarbs,
   });
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final valueColor = isCarbs ? cs.primary : cs.onSurface;
+    final labelColor = isCarbs ? cs.primary : cs.onSurface.withValues(alpha: 0.6);
+
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
         child: Column(children: [
           Text(
             label,
-            style: TextStyle(
-              color: color == const Color(0xFF4a9eff)
-                  ? color
-                  : const Color(0xFF8892aa),
-              fontSize: 8,
-              fontWeight: FontWeight.w700,
-            ),
+            style: TextStyle(color: labelColor, fontSize: 8, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 4),
-          Text.rich(
-            TextSpan(children: [
+          Text.rich(TextSpan(children: [
+            TextSpan(
+              text: value,
+              style: TextStyle(color: valueColor, fontSize: 14, fontWeight: FontWeight.w800),
+            ),
+            if (unit.isNotEmpty)
               TextSpan(
-                text: value,
-                style: TextStyle(
-                  color: color,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                ),
+                text: unit,
+                style: TextStyle(color: valueColor, fontSize: 8, fontWeight: FontWeight.w500),
               ),
-              if (unit.isNotEmpty)
-                TextSpan(
-                  text: unit,
-                  style: TextStyle(
-                    color: color,
-                    fontSize: 8,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-            ]),
-          ),
+          ])),
         ]),
       ),
     );
@@ -281,29 +253,35 @@ class _EditField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = cs.brightness == Brightness.dark;
+    final borderColor = isDark
+        ? AppThemeTokens.brandSecondary.withValues(alpha: 0.3)
+        : const Color(0xFFD1D5DB);
+    final inputFill = isDark ? AppThemeTokens.bgBackgroundDark : AppThemeTokens.bgBackground;
+
     return TextFormField(
       controller: ctrl,
       keyboardType: keyboardType,
-      style: const TextStyle(color: Color(0xFFc8cfe0), fontSize: 14),
+      style: TextStyle(color: cs.onSurface, fontSize: 14),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: Color(0xFF8892aa), fontSize: 12),
+        labelStyle: TextStyle(color: cs.onSurface.withValues(alpha: 0.6), fontSize: 12),
         filled: true,
-        fillColor: const Color(0xFF1a1d27),
+        fillColor: inputFill,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Color(0xFF2a2d3a)),
+          borderRadius: BorderRadius.circular(AppThemeTokens.radiusSm),
+          borderSide: BorderSide(color: borderColor),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Color(0xFF2a2d3a)),
+          borderRadius: BorderRadius.circular(AppThemeTokens.radiusSm),
+          borderSide: BorderSide(color: borderColor),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Color(0xFF4a9eff)),
+          borderRadius: BorderRadius.circular(AppThemeTokens.radiusSm),
+          borderSide: BorderSide(color: cs.primary),
         ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       ),
     );
   }
