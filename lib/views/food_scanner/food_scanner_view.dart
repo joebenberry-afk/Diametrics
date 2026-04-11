@@ -421,6 +421,12 @@ class _FoodScannerViewState extends ConsumerState<FoodScannerView> {
                     const TextStyle(color: Color(0xFFc8cfe0), fontSize: 14),
                 decoration:
                     inputDecoration.copyWith(labelText: 'Carbs (g)'),
+                validator: (v) {
+                  if (v != null && v.isNotEmpty && double.tryParse(v) == null) {
+                    return 'Enter a number';
+                  }
+                  return null;
+                },
               ),
             ),
             const SizedBox(width: 8),
@@ -432,6 +438,12 @@ class _FoodScannerViewState extends ConsumerState<FoodScannerView> {
                     const TextStyle(color: Color(0xFFc8cfe0), fontSize: 14),
                 decoration:
                     inputDecoration.copyWith(labelText: 'Protein (g)'),
+                validator: (v) {
+                  if (v != null && v.isNotEmpty && double.tryParse(v) == null) {
+                    return 'Enter a number';
+                  }
+                  return null;
+                },
               ),
             ),
           ]),
@@ -444,6 +456,12 @@ class _FoodScannerViewState extends ConsumerState<FoodScannerView> {
                 style:
                     const TextStyle(color: Color(0xFFc8cfe0), fontSize: 14),
                 decoration: inputDecoration.copyWith(labelText: 'Fat (g)'),
+                validator: (v) {
+                  if (v != null && v.isNotEmpty && double.tryParse(v) == null) {
+                    return 'Enter a number';
+                  }
+                  return null;
+                },
               ),
             ),
             const SizedBox(width: 8),
@@ -455,6 +473,12 @@ class _FoodScannerViewState extends ConsumerState<FoodScannerView> {
                     const TextStyle(color: Color(0xFFc8cfe0), fontSize: 14),
                 decoration:
                     inputDecoration.copyWith(labelText: 'kcal'),
+                validator: (v) {
+                  if (v != null && v.isNotEmpty && double.tryParse(v) == null) {
+                    return 'Enter a number';
+                  }
+                  return null;
+                },
               ),
             ),
           ]),

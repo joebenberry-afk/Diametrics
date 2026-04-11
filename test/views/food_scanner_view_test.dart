@@ -36,17 +36,10 @@ void main() {
     await tester.pumpWidget(ProviderScope(
       overrides: [
         foodAnalyzerRepositoryProvider.overrideWithValue(mockRepo),
+        foodScannerProvider.overrideWith(() => _AnalysingStateNotifier()),
       ],
       child: const MaterialApp(home: FoodScannerView()),
     ));
-
-    final container = ProviderScope.containerOf(
-        tester.element(find.byType(FoodScannerView)));
-    container.read(foodScannerProvider.notifier).state =
-        const FoodScannerState(
-      status: FoodScannerStatus.analysing,
-      analysisStatus: 'Sending to Gemini…',
-    );
     await tester.pump();
 
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
@@ -99,4 +92,13 @@ void main() {
     expect(find.text('Take a Photo Instead'), findsOneWidget);
     expect(find.text('Add to Meal'), findsOneWidget);
   });
+}
+
+/// Test notifier that immediately enters the analysing state.
+class _AnalysingStateNotifier extends FoodScannerNotifier {
+  @override
+  FoodScannerState build() => const FoodScannerState(
+    status: FoodScannerStatus.analysing,
+    analysisStatus: 'Sending to Gemini…',
+  );
 }

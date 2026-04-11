@@ -72,7 +72,7 @@ class FoodScannerNotifier extends AutoDisposeNotifier<FoodScannerState> {
   /// Subscribes to [FoodRagService.progressStream] to update the progress
   /// label shown in State 2 of [FoodScannerView].
   Future<void> analyseImage(String imagePath) async {
-    state = state.copyWith(
+    state = FoodScannerState(
       status: FoodScannerStatus.analysing,
       analysisStatus: 'Sending to Gemini…',
       imagePath: imagePath,
@@ -102,7 +102,7 @@ class FoodScannerNotifier extends AutoDisposeNotifier<FoodScannerState> {
 
   /// Called when [BarcodeScannerView] returns a found [FoodItem].
   void submitBarcodeResult(FoodItem item) {
-    state = state.copyWith(
+    state = FoodScannerState(
       status: FoodScannerStatus.results,
       items: [item],
     );
@@ -110,7 +110,7 @@ class FoodScannerNotifier extends AutoDisposeNotifier<FoodScannerState> {
 
   /// Called when [BarcodeScannerView] returns null (product not found).
   void handleBarcodeNotFound() {
-    state = state.copyWith(status: FoodScannerStatus.barcodeNotFound);
+    state = FoodScannerState(status: FoodScannerStatus.barcodeNotFound);
   }
 
   /// Replaces the item at [index] and recomputes totals (via computed getters).
@@ -122,7 +122,7 @@ class FoodScannerNotifier extends AutoDisposeNotifier<FoodScannerState> {
 
   /// Builds a single-item result from the manual-entry form in State 5.
   void submitManualEntry(FoodItem item) {
-    state = state.copyWith(
+    state = FoodScannerState(
       status: FoodScannerStatus.results,
       items: [item],
     );
