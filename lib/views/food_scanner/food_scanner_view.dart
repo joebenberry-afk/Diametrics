@@ -291,31 +291,29 @@ class _FoodScannerViewState extends ConsumerState<FoodScannerView> {
   // ── State 5: Barcode Not Found ─────────────────────────────────────────────
 
   Widget _buildBarcodeNotFound() {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = cs.brightness == Brightness.dark;
+    final borderColor = isDark
+        ? AppThemeTokens.brandSecondary.withValues(alpha: 0.3)
+        : const Color(0xFFD1D5DB);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const SizedBox(height: 16),
-          const Icon(
-            LucideIcons.scanLine,
-            color: Color(0xFF8892aa),
-            size: 48,
-          ),
+          Icon(LucideIcons.scanLine, color: cs.onSurface.withValues(alpha: 0.6), size: 48),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'Product not found',
-            style: TextStyle(
-              color: Color(0xFFc8cfe0),
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-            ),
+            style: TextStyle(color: cs.onSurface, fontSize: 20, fontWeight: FontWeight.w700),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'This product isn\'t in our database yet.',
-            style: TextStyle(color: Color(0xFF8892aa), fontSize: 13),
+            style: TextStyle(color: cs.onSurface.withValues(alpha: 0.6), fontSize: 13),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 32),
@@ -324,18 +322,17 @@ class _FoodScannerViewState extends ConsumerState<FoodScannerView> {
             label: const Text('Take a Photo Instead'),
             onPressed: _onTakePhoto,
             style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFFc8cfe0),
-              side: const BorderSide(color: Color(0xFF2a2d3a)),
+              side: BorderSide(color: borderColor),
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
               ),
             ),
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             '— or enter manually —',
-            style: TextStyle(color: Color(0xFF8892aa), fontSize: 11),
+            style: TextStyle(color: cs.onSurface.withValues(alpha: 0.4), fontSize: 11),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
@@ -346,25 +343,30 @@ class _FoodScannerViewState extends ConsumerState<FoodScannerView> {
   }
 
   Widget _buildManualEntryForm() {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = cs.brightness == Brightness.dark;
+    final borderColor = isDark
+        ? AppThemeTokens.brandSecondary.withValues(alpha: 0.3)
+        : const Color(0xFFD1D5DB);
+    final inputFill = isDark ? AppThemeTokens.bgBackgroundDark : AppThemeTokens.bgBackground;
+
     final inputDecoration = InputDecoration(
       filled: true,
-      fillColor: const Color(0xFF1a1d27),
+      fillColor: inputFill,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFF2a2d3a)),
+        borderRadius: BorderRadius.circular(AppThemeTokens.radiusSm),
+        borderSide: BorderSide(color: borderColor),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFF2a2d3a)),
+        borderRadius: BorderRadius.circular(AppThemeTokens.radiusSm),
+        borderSide: BorderSide(color: borderColor),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFF4a9eff)),
+        borderRadius: BorderRadius.circular(AppThemeTokens.radiusSm),
+        borderSide: BorderSide(color: cs.primary),
       ),
-      labelStyle:
-          const TextStyle(color: Color(0xFF8892aa), fontSize: 12),
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      labelStyle: TextStyle(color: cs.onSurface.withValues(alpha: 0.6), fontSize: 12),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
     );
 
     return Form(
@@ -374,11 +376,9 @@ class _FoodScannerViewState extends ConsumerState<FoodScannerView> {
         children: [
           TextFormField(
             controller: _manualNameCtrl,
-            style: const TextStyle(color: Color(0xFFc8cfe0), fontSize: 14),
-            decoration:
-                inputDecoration.copyWith(labelText: 'Food Name'),
-            validator: (v) =>
-                (v == null || v.trim().isEmpty) ? 'Required' : null,
+            style: TextStyle(color: cs.onSurface, fontSize: 14),
+            decoration: inputDecoration.copyWith(labelText: 'Food Name'),
+            validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
           ),
           const SizedBox(height: 8),
           Row(children: [
@@ -386,14 +386,10 @@ class _FoodScannerViewState extends ConsumerState<FoodScannerView> {
               child: TextFormField(
                 controller: _manualCarbsCtrl,
                 keyboardType: TextInputType.number,
-                style:
-                    const TextStyle(color: Color(0xFFc8cfe0), fontSize: 14),
-                decoration:
-                    inputDecoration.copyWith(labelText: 'Carbs (g)'),
+                style: TextStyle(color: cs.onSurface, fontSize: 14),
+                decoration: inputDecoration.copyWith(labelText: 'Carbs (g)'),
                 validator: (v) {
-                  if (v != null && v.isNotEmpty && double.tryParse(v) == null) {
-                    return 'Enter a number';
-                  }
+                  if (v != null && v.isNotEmpty && double.tryParse(v) == null) return 'Enter a number';
                   return null;
                 },
               ),
@@ -403,14 +399,10 @@ class _FoodScannerViewState extends ConsumerState<FoodScannerView> {
               child: TextFormField(
                 controller: _manualProteinCtrl,
                 keyboardType: TextInputType.number,
-                style:
-                    const TextStyle(color: Color(0xFFc8cfe0), fontSize: 14),
-                decoration:
-                    inputDecoration.copyWith(labelText: 'Protein (g)'),
+                style: TextStyle(color: cs.onSurface, fontSize: 14),
+                decoration: inputDecoration.copyWith(labelText: 'Protein (g)'),
                 validator: (v) {
-                  if (v != null && v.isNotEmpty && double.tryParse(v) == null) {
-                    return 'Enter a number';
-                  }
+                  if (v != null && v.isNotEmpty && double.tryParse(v) == null) return 'Enter a number';
                   return null;
                 },
               ),
@@ -422,13 +414,10 @@ class _FoodScannerViewState extends ConsumerState<FoodScannerView> {
               child: TextFormField(
                 controller: _manualFatCtrl,
                 keyboardType: TextInputType.number,
-                style:
-                    const TextStyle(color: Color(0xFFc8cfe0), fontSize: 14),
+                style: TextStyle(color: cs.onSurface, fontSize: 14),
                 decoration: inputDecoration.copyWith(labelText: 'Fat (g)'),
                 validator: (v) {
-                  if (v != null && v.isNotEmpty && double.tryParse(v) == null) {
-                    return 'Enter a number';
-                  }
+                  if (v != null && v.isNotEmpty && double.tryParse(v) == null) return 'Enter a number';
                   return null;
                 },
               ),
@@ -438,14 +427,10 @@ class _FoodScannerViewState extends ConsumerState<FoodScannerView> {
               child: TextFormField(
                 controller: _manualKcalCtrl,
                 keyboardType: TextInputType.number,
-                style:
-                    const TextStyle(color: Color(0xFFc8cfe0), fontSize: 14),
-                decoration:
-                    inputDecoration.copyWith(labelText: 'kcal'),
+                style: TextStyle(color: cs.onSurface, fontSize: 14),
+                decoration: inputDecoration.copyWith(labelText: 'kcal'),
                 validator: (v) {
-                  if (v != null && v.isNotEmpty && double.tryParse(v) == null) {
-                    return 'Enter a number';
-                  }
+                  if (v != null && v.isNotEmpty && double.tryParse(v) == null) return 'Enter a number';
                   return null;
                 },
               ),
@@ -455,10 +440,9 @@ class _FoodScannerViewState extends ConsumerState<FoodScannerView> {
           FilledButton(
             onPressed: _submitManualEntry,
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF4a9eff),
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
               ),
             ),
             child: const Text('Add to Meal'),
@@ -471,31 +455,30 @@ class _FoodScannerViewState extends ConsumerState<FoodScannerView> {
   // ── Error state ────────────────────────────────────────────────────────────
 
   Widget _buildError(FoodScannerState state) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = cs.brightness == Brightness.dark;
+    final borderColor = isDark
+        ? AppThemeTokens.brandSecondary.withValues(alpha: 0.3)
+        : const Color(0xFFD1D5DB);
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              LucideIcons.alertCircle,
-              color: Color(0xFFef5350),
-              size: 48,
-            ),
+            Icon(LucideIcons.alertCircle, color: cs.error, size: 48),
             const SizedBox(height: 16),
             Text(
               state.errorMessage ?? 'Something went wrong.',
-              style:
-                  const TextStyle(color: Color(0xFFc8cfe0), fontSize: 14),
+              style: TextStyle(color: cs.onSurface, fontSize: 14),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
             OutlinedButton(
-              onPressed: () =>
-                  ref.read(foodScannerProvider.notifier).reset(),
+              onPressed: () => ref.read(foodScannerProvider.notifier).reset(),
               style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFFc8cfe0),
-                side: const BorderSide(color: Color(0xFF2a2d3a)),
+                side: BorderSide(color: borderColor),
               ),
               child: const Text('Try Again'),
             ),
