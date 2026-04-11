@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$FoodAnalysisResult {
 
- List<FoodItem> get items; double get totalCarbs; double get totalCalories; String get summary;
+ List<FoodItem> get items; double get totalCarbs; double get totalCalories; String get summary; double get totalProtein; double get totalFat; Map<String, double> get confidenceScore;
 /// Create a copy of FoodAnalysisResult
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $FoodAnalysisResultCopyWith<FoodAnalysisResult> get copyWith => _$FoodAnalysisRe
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FoodAnalysisResult&&const DeepCollectionEquality().equals(other.items, items)&&(identical(other.totalCarbs, totalCarbs) || other.totalCarbs == totalCarbs)&&(identical(other.totalCalories, totalCalories) || other.totalCalories == totalCalories)&&(identical(other.summary, summary) || other.summary == summary));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FoodAnalysisResult&&const DeepCollectionEquality().equals(other.items, items)&&(identical(other.totalCarbs, totalCarbs) || other.totalCarbs == totalCarbs)&&(identical(other.totalCalories, totalCalories) || other.totalCalories == totalCalories)&&(identical(other.summary, summary) || other.summary == summary)&&(identical(other.totalProtein, totalProtein) || other.totalProtein == totalProtein)&&(identical(other.totalFat, totalFat) || other.totalFat == totalFat)&&const DeepCollectionEquality().equals(other.confidenceScore, confidenceScore));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(items),totalCarbs,totalCalories,summary);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(items),totalCarbs,totalCalories,summary,totalProtein,totalFat,const DeepCollectionEquality().hash(confidenceScore));
 
 @override
 String toString() {
-  return 'FoodAnalysisResult(items: $items, totalCarbs: $totalCarbs, totalCalories: $totalCalories, summary: $summary)';
+  return 'FoodAnalysisResult(items: $items, totalCarbs: $totalCarbs, totalCalories: $totalCalories, summary: $summary, totalProtein: $totalProtein, totalFat: $totalFat, confidenceScore: $confidenceScore)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $FoodAnalysisResultCopyWith<$Res>  {
   factory $FoodAnalysisResultCopyWith(FoodAnalysisResult value, $Res Function(FoodAnalysisResult) _then) = _$FoodAnalysisResultCopyWithImpl;
 @useResult
 $Res call({
- List<FoodItem> items, double totalCarbs, double totalCalories, String summary
+ List<FoodItem> items, double totalCarbs, double totalCalories, String summary, double totalProtein, double totalFat, Map<String, double> confidenceScore
 });
 
 
@@ -65,13 +65,16 @@ class _$FoodAnalysisResultCopyWithImpl<$Res>
 
 /// Create a copy of FoodAnalysisResult
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? items = null,Object? totalCarbs = null,Object? totalCalories = null,Object? summary = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? items = null,Object? totalCarbs = null,Object? totalCalories = null,Object? summary = null,Object? totalProtein = null,Object? totalFat = null,Object? confidenceScore = null,}) {
   return _then(_self.copyWith(
 items: null == items ? _self.items : items // ignore: cast_nullable_to_non_nullable
 as List<FoodItem>,totalCarbs: null == totalCarbs ? _self.totalCarbs : totalCarbs // ignore: cast_nullable_to_non_nullable
 as double,totalCalories: null == totalCalories ? _self.totalCalories : totalCalories // ignore: cast_nullable_to_non_nullable
 as double,summary: null == summary ? _self.summary : summary // ignore: cast_nullable_to_non_nullable
-as String,
+as String,totalProtein: null == totalProtein ? _self.totalProtein : totalProtein // ignore: cast_nullable_to_non_nullable
+as double,totalFat: null == totalFat ? _self.totalFat : totalFat // ignore: cast_nullable_to_non_nullable
+as double,confidenceScore: null == confidenceScore ? _self.confidenceScore : confidenceScore // ignore: cast_nullable_to_non_nullable
+as Map<String, double>,
   ));
 }
 
@@ -156,10 +159,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<FoodItem> items,  double totalCarbs,  double totalCalories,  String summary)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<FoodItem> items,  double totalCarbs,  double totalCalories,  String summary,  double totalProtein,  double totalFat,  Map<String, double> confidenceScore)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _FoodAnalysisResult() when $default != null:
-return $default(_that.items,_that.totalCarbs,_that.totalCalories,_that.summary);case _:
+return $default(_that.items,_that.totalCarbs,_that.totalCalories,_that.summary,_that.totalProtein,_that.totalFat,_that.confidenceScore);case _:
   return orElse();
 
 }
@@ -177,10 +180,10 @@ return $default(_that.items,_that.totalCarbs,_that.totalCalories,_that.summary);
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<FoodItem> items,  double totalCarbs,  double totalCalories,  String summary)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<FoodItem> items,  double totalCarbs,  double totalCalories,  String summary,  double totalProtein,  double totalFat,  Map<String, double> confidenceScore)  $default,) {final _that = this;
 switch (_that) {
 case _FoodAnalysisResult():
-return $default(_that.items,_that.totalCarbs,_that.totalCalories,_that.summary);case _:
+return $default(_that.items,_that.totalCarbs,_that.totalCalories,_that.summary,_that.totalProtein,_that.totalFat,_that.confidenceScore);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -197,10 +200,10 @@ return $default(_that.items,_that.totalCarbs,_that.totalCalories,_that.summary);
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<FoodItem> items,  double totalCarbs,  double totalCalories,  String summary)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<FoodItem> items,  double totalCarbs,  double totalCalories,  String summary,  double totalProtein,  double totalFat,  Map<String, double> confidenceScore)?  $default,) {final _that = this;
 switch (_that) {
 case _FoodAnalysisResult() when $default != null:
-return $default(_that.items,_that.totalCarbs,_that.totalCalories,_that.summary);case _:
+return $default(_that.items,_that.totalCarbs,_that.totalCalories,_that.summary,_that.totalProtein,_that.totalFat,_that.confidenceScore);case _:
   return null;
 
 }
@@ -212,7 +215,7 @@ return $default(_that.items,_that.totalCarbs,_that.totalCalories,_that.summary);
 @JsonSerializable()
 
 class _FoodAnalysisResult implements FoodAnalysisResult {
-  const _FoodAnalysisResult({required final  List<FoodItem> items, required this.totalCarbs, required this.totalCalories, required this.summary}): _items = items;
+  const _FoodAnalysisResult({required final  List<FoodItem> items, required this.totalCarbs, required this.totalCalories, required this.summary, this.totalProtein = 0.0, this.totalFat = 0.0, final  Map<String, double> confidenceScore = const {}}): _items = items,_confidenceScore = confidenceScore;
   factory _FoodAnalysisResult.fromJson(Map<String, dynamic> json) => _$FoodAnalysisResultFromJson(json);
 
  final  List<FoodItem> _items;
@@ -225,6 +228,15 @@ class _FoodAnalysisResult implements FoodAnalysisResult {
 @override final  double totalCarbs;
 @override final  double totalCalories;
 @override final  String summary;
+@override@JsonKey() final  double totalProtein;
+@override@JsonKey() final  double totalFat;
+ final  Map<String, double> _confidenceScore;
+@override@JsonKey() Map<String, double> get confidenceScore {
+  if (_confidenceScore is EqualUnmodifiableMapView) return _confidenceScore;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_confidenceScore);
+}
+
 
 /// Create a copy of FoodAnalysisResult
 /// with the given fields replaced by the non-null parameter values.
@@ -239,16 +251,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FoodAnalysisResult&&const DeepCollectionEquality().equals(other._items, _items)&&(identical(other.totalCarbs, totalCarbs) || other.totalCarbs == totalCarbs)&&(identical(other.totalCalories, totalCalories) || other.totalCalories == totalCalories)&&(identical(other.summary, summary) || other.summary == summary));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FoodAnalysisResult&&const DeepCollectionEquality().equals(other._items, _items)&&(identical(other.totalCarbs, totalCarbs) || other.totalCarbs == totalCarbs)&&(identical(other.totalCalories, totalCalories) || other.totalCalories == totalCalories)&&(identical(other.summary, summary) || other.summary == summary)&&(identical(other.totalProtein, totalProtein) || other.totalProtein == totalProtein)&&(identical(other.totalFat, totalFat) || other.totalFat == totalFat)&&const DeepCollectionEquality().equals(other._confidenceScore, _confidenceScore));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_items),totalCarbs,totalCalories,summary);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_items),totalCarbs,totalCalories,summary,totalProtein,totalFat,const DeepCollectionEquality().hash(_confidenceScore));
 
 @override
 String toString() {
-  return 'FoodAnalysisResult(items: $items, totalCarbs: $totalCarbs, totalCalories: $totalCalories, summary: $summary)';
+  return 'FoodAnalysisResult(items: $items, totalCarbs: $totalCarbs, totalCalories: $totalCalories, summary: $summary, totalProtein: $totalProtein, totalFat: $totalFat, confidenceScore: $confidenceScore)';
 }
 
 
@@ -259,7 +271,7 @@ abstract mixin class _$FoodAnalysisResultCopyWith<$Res> implements $FoodAnalysis
   factory _$FoodAnalysisResultCopyWith(_FoodAnalysisResult value, $Res Function(_FoodAnalysisResult) _then) = __$FoodAnalysisResultCopyWithImpl;
 @override @useResult
 $Res call({
- List<FoodItem> items, double totalCarbs, double totalCalories, String summary
+ List<FoodItem> items, double totalCarbs, double totalCalories, String summary, double totalProtein, double totalFat, Map<String, double> confidenceScore
 });
 
 
@@ -276,13 +288,16 @@ class __$FoodAnalysisResultCopyWithImpl<$Res>
 
 /// Create a copy of FoodAnalysisResult
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? items = null,Object? totalCarbs = null,Object? totalCalories = null,Object? summary = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? items = null,Object? totalCarbs = null,Object? totalCalories = null,Object? summary = null,Object? totalProtein = null,Object? totalFat = null,Object? confidenceScore = null,}) {
   return _then(_FoodAnalysisResult(
 items: null == items ? _self._items : items // ignore: cast_nullable_to_non_nullable
 as List<FoodItem>,totalCarbs: null == totalCarbs ? _self.totalCarbs : totalCarbs // ignore: cast_nullable_to_non_nullable
 as double,totalCalories: null == totalCalories ? _self.totalCalories : totalCalories // ignore: cast_nullable_to_non_nullable
 as double,summary: null == summary ? _self.summary : summary // ignore: cast_nullable_to_non_nullable
-as String,
+as String,totalProtein: null == totalProtein ? _self.totalProtein : totalProtein // ignore: cast_nullable_to_non_nullable
+as double,totalFat: null == totalFat ? _self.totalFat : totalFat // ignore: cast_nullable_to_non_nullable
+as double,confidenceScore: null == confidenceScore ? _self._confidenceScore : confidenceScore // ignore: cast_nullable_to_non_nullable
+as Map<String, double>,
   ));
 }
 

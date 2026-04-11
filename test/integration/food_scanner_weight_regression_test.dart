@@ -1,0 +1,120 @@
+import 'package:diametrics/src/domain/entities/food_item.dart';
+import 'package:diametrics/src/domain/entities/food_scanner_result.dart';
+import 'package:diametrics/src/domain/entities/food_analysis_result.dart';
+import 'package:diametrics/src/domain/repositories/food_analyzer_repository.dart';
+import 'package:diametrics/viewmodels/food_scanner_viewmodel.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+
+class MockFoodAnalyzerRepository extends Mock
+    implements FoodAnalyzerRepository {}
+
+void main() {
+  group('weightG regression —', () {
+    late ProviderContainer container;
+    late MockFoodAnalyzerRepository mockRepo;
+
+    setUp(() {
+      mockRepo = MockFoodAnalyzerRepository();
+      container = ProviderContainer(overrides: [
+        foodAnalyzerRepositoryProvider.overrideWithValue(mockRepo),
+      ]);
+      addTearDown(container.dispose);
+    });
+
+    const itemWithWeight = FoodItem(
+      name: 'Basmati Rice',
+      portion: '1 cup cooked',
+      carbsGrams: 45.6,
+      proteinGrams: 4.2,
+      fatGrams: 0.4,
+      calories: 202.0,
+      weightG: 186.0, // ← this must survive the full flow
+      source: 'USDA+N5K',
+    );
+
+    test('weightG is preserved when item arrives via barcode result', () {
+      container
+          .read(foodScannerProvider.notifier)
+          .submitBarcodeResult(itemWithWeight);
+
+      final state = container.read(foodScannerProvider);
+      expect(state.status, FoodScannerStatus.results);
+      expect(state.items.first.weightG, 186.0,
+          reason: 'weightG must not be dropped when wrapping barcode result');
+    });
+
+    test('weightG is preserved after updateItem edit', () {
+      container
+          .read(foodScannerProvider.notifier)
+          .submitBarcodeResult(itemWithWeight);
+
+      // User edits carbs in FoodItemEditSheet
+      final edited = itemWithWeight.copyWith(carbsGrams: 50.0);
+      container.read(foodScannerProvider.notifier).updateItem(0, edited);
+
+      final state = container.read(foodScannerProvider);
+      expect(state.items.first.carbsGrams, 50.0);
+      expect(state.items.first.weightG, 186.0,
+          reason: 'weightG must survive FoodItemEditSheet save');
+    });
+
+    test('FoodScannerResult carries items list with weightG intact', () {
+      container
+          .read(foodScannerProvider.notifier)
+          .submitBarcodeResult(itemWithWeight);
+
+      final state = container.read(foodScannerProvider);
+      final result = FoodScannerResult(
+        items: state.items,
+        totalCarbs: state.totalCarbs,
+        totalProtein: state.totalProtein,
+        totalFat: state.totalFat,
+        totalCalories: state.totalCalories,
+      );
+
+      expect(result.items.first.weightG, 186.0,
+          reason:
+              'weightG must be present in FoodScannerResult handed to MealWizardView');
+    });
+
+    test('totals computed correctly from multi-item photo analysis result',
+        () async {
+      final secondItem = itemWithWeight.copyWith(
+        name: 'Chicken',
+        carbsGrams: 0.0,
+        proteinGrams: 31.0,
+        fatGrams: 3.6,
+        calories: 165.0,
+        weightG: 100.0,
+        source: 'USDA API',
+      );
+
+      when(() => mockRepo.analyzeImage(any())).thenAnswer(
+        (_) async => FoodAnalysisResult(
+          items: [itemWithWeight, secondItem],
+          totalCarbs: 45.6,
+          totalCalories: 367.0,
+          totalProtein: 35.2,
+          totalFat: 4.0,
+          summary: 'Rice and Chicken',
+        ),
+      );
+
+      await container
+          .read(foodScannerProvider.notifier)
+          .analyseImage('/fake/photo.jpg');
+
+      final state = container.read(foodScannerProvider);
+      expect(state.status, FoodScannerStatus.results);
+      expect(state.totalCarbs, closeTo(45.6, 0.01));
+      expect(state.totalProtein, closeTo(35.2, 0.01));
+      expect(state.totalCalories, closeTo(367.0, 0.01));
+      expect(state.items[0].weightG, 186.0,
+          reason: 'weightG preserved for item 0');
+      expect(state.items[1].weightG, 100.0,
+          reason: 'weightG preserved for item 1');
+    });
+  });
+}

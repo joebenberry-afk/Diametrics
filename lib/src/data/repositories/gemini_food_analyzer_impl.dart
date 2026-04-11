@@ -10,6 +10,7 @@ import '../../../config/backend_config.dart';
 import '../../../services/backend_food_service.dart';
 import '../../../services/food_rag_service.dart';
 import '../../domain/entities/food_analysis_result.dart';
+import '../../domain/entities/food_item.dart';
 import '../../domain/repositories/food_analyzer_repository.dart';
 
 // Re-export RateLimitException so callers that previously imported it from
@@ -80,16 +81,23 @@ class GeminiFoodAnalyzerImpl implements FoodAnalyzerRepository {
 
     double newTotalCarbs = 0;
     double newTotalCalories = 0;
+    double newTotalProtein = 0;
+    double newTotalFat = 0;
     for (final item in enrichedItems) {
       newTotalCarbs += item.carbsGrams;
       newTotalCalories += item.calories;
+      newTotalProtein += item.proteinGrams;
+      newTotalFat += item.fatGrams;
     }
 
     final enrichedResult = FoodAnalysisResult(
       items: enrichedItems,
       totalCarbs: newTotalCarbs,
       totalCalories: newTotalCalories,
+      totalProtein: newTotalProtein,
+      totalFat: newTotalFat,
       summary: result.summary,
+      confidenceScore: _computeConfidence(enrichedItems),
     );
 
     // Cache the enriched result (limit to last 20 to prevent memory bloat)
@@ -127,6 +135,27 @@ class GeminiFoodAnalyzerImpl implements FoodAnalyzerRepository {
 
   /// Clears the in-memory analysis cache.
   void clearCache() => _cache.clear();
+
+  /// Computes an average confidence score across all items based on their
+  /// data source tier. Higher tier = more reliable = higher score (0.0–1.0).
+  Map<String, double> _computeConfidence(List<FoodItem> items) {
+    if (items.isEmpty) return {};
+    const sourceTiers = <String, double>{
+      'Custom Food DB': 1.0,
+      'USDA+N5K': 0.9,
+      'USDA API': 0.9,
+      'Open Food Facts': 0.9,
+      'N5K': 0.85,
+      'Local DB': 0.8,
+      'AI Estimate': 0.4,
+    };
+    double total = 0;
+    for (final item in items) {
+      total += sourceTiers[item.source] ?? 0.4;
+    }
+    final avg = (total / items.length).clamp(0.0, 1.0);
+    return {'carbs': avg, 'protein': avg, 'fat': avg, 'calories': avg};
+  }
 
   Future<FoodAnalysisResult> _analyzeImageLocally(List<int> imageBytes) async {
     // Load the system prompt from assets (editable without a rebuild)

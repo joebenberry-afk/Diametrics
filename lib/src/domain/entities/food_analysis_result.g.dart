@@ -14,6 +14,13 @@ _FoodAnalysisResult _$FoodAnalysisResultFromJson(Map<String, dynamic> json) =>
       totalCarbs: (json['totalCarbs'] as num).toDouble(),
       totalCalories: (json['totalCalories'] as num).toDouble(),
       summary: json['summary'] as String,
+      totalProtein: (json['totalProtein'] as num?)?.toDouble() ?? 0.0,
+      totalFat: (json['totalFat'] as num?)?.toDouble() ?? 0.0,
+      confidenceScore:
+          (json['confidenceScore'] as Map<String, dynamic>?)?.map(
+            (k, e) => MapEntry(k, (e as num).toDouble()),
+          ) ??
+          const {},
     );
 
 Map<String, dynamic> _$FoodAnalysisResultToJson(_FoodAnalysisResult instance) =>
@@ -22,4 +29,7 @@ Map<String, dynamic> _$FoodAnalysisResultToJson(_FoodAnalysisResult instance) =>
       'totalCarbs': instance.totalCarbs,
       'totalCalories': instance.totalCalories,
       'summary': instance.summary,
+      'totalProtein': instance.totalProtein,
+      'totalFat': instance.totalFat,
+      'confidenceScore': instance.confidenceScore,
     };
