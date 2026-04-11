@@ -12,6 +12,9 @@ abstract class FoodAnalysisResult with _$FoodAnalysisResult {
     required double totalCarbs,
     required double totalCalories,
     required String summary,
+    @Default(0.0) double totalProtein,
+    @Default(0.0) double totalFat,
+    @Default({}) Map<String, double> confidenceScore,
   }) = _FoodAnalysisResult;
 
   factory FoodAnalysisResult.fromJson(Map<String, dynamic> json) =>
