@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../core/theme/app_tokens.dart';
 import '../../router/route_names.dart';
 import '../../src/domain/entities/food_item.dart';
 import '../../src/domain/entities/food_scanner_result.dart';
@@ -68,9 +69,11 @@ class _FoodScannerViewState extends ConsumerState<FoodScannerView> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF13151f),
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppThemeTokens.radiusLg),
+        ),
       ),
       builder: (_) => FoodItemEditSheet(
         item: item,
@@ -112,19 +115,9 @@ class _FoodScannerViewState extends ConsumerState<FoodScannerView> {
     final state = ref.watch(foodScannerProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0F1A),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0D0F1A),
-        foregroundColor: const Color(0xFFc8cfe0),
         elevation: 0,
-        title: const Text(
-          'Food Scanner',
-          style: TextStyle(
-            color: Color(0xFFc8cfe0),
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        title: const Text('Food Scanner'),
         leading: IconButton(
           icon: const Icon(LucideIcons.arrowLeft),
           onPressed: () => context.pop(null),
@@ -134,9 +127,15 @@ class _FoodScannerViewState extends ConsumerState<FoodScannerView> {
             TextButton(
               onPressed: () =>
                   ref.read(foodScannerProvider.notifier).reset(),
-              child: const Text(
+              child: Text(
                 'Start Over',
-                style: TextStyle(color: Color(0xFF8892aa), fontSize: 13),
+                style: TextStyle(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.6),
+                  fontSize: 13,
+                ),
               ),
             ),
         ],
