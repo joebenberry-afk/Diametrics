@@ -190,14 +190,15 @@ class _FoodScannerViewState extends ConsumerState<FoodScannerView> {
   // ── State 2: Analysing ─────────────────────────────────────────────────────
 
   Widget _buildAnalysing(FoodScannerState state) {
+    final cs = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const CircularProgressIndicator(
-              color: Color(0xFF4a9eff),
+            CircularProgressIndicator(
+              color: cs.primary,
               strokeWidth: 2,
             ),
             const SizedBox(height: 32),
@@ -206,8 +207,8 @@ class _FoodScannerViewState extends ConsumerState<FoodScannerView> {
               child: Text(
                 state.analysisStatus,
                 key: ValueKey(state.analysisStatus),
-                style: const TextStyle(
-                  color: Color(0xFF8892aa),
+                style: TextStyle(
+                  color: cs.onSurface.withValues(alpha: 0.6),
                   fontSize: 13,
                 ),
                 textAlign: TextAlign.center,
@@ -252,36 +253,17 @@ class _FoodScannerViewState extends ConsumerState<FoodScannerView> {
   }
 
   Widget _buildTotalsFooter(FoodScannerState state) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
-      color: const Color(0xFF13151f),
+      color: cs.surface,
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Column(
         children: [
           Row(children: [
-            _TotalCell(
-              label: 'Total Carbs',
-              value: state.totalCarbs.toStringAsFixed(1),
-              unit: 'g',
-              isCarbs: true,
-            ),
-            _TotalCell(
-              label: 'Total Protein',
-              value: state.totalProtein.toStringAsFixed(1),
-              unit: 'g',
-              isCarbs: false,
-            ),
-            _TotalCell(
-              label: 'Total Fat',
-              value: state.totalFat.toStringAsFixed(1),
-              unit: 'g',
-              isCarbs: false,
-            ),
-            _TotalCell(
-              label: 'kcal',
-              value: state.totalCalories.toStringAsFixed(0),
-              unit: '',
-              isCarbs: false,
-            ),
+            _TotalCell(label: 'Total Carbs', value: state.totalCarbs.toStringAsFixed(1), unit: 'g', isCarbs: true),
+            _TotalCell(label: 'Total Protein', value: state.totalProtein.toStringAsFixed(1), unit: 'g', isCarbs: false),
+            _TotalCell(label: 'Total Fat', value: state.totalFat.toStringAsFixed(1), unit: 'g', isCarbs: false),
+            _TotalCell(label: 'kcal', value: state.totalCalories.toStringAsFixed(0), unit: '', isCarbs: false),
           ]),
           const SizedBox(height: 12),
           SizedBox(
@@ -289,18 +271,14 @@ class _FoodScannerViewState extends ConsumerState<FoodScannerView> {
             child: FilledButton(
               onPressed: () => _confirm(state),
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF4a9eff),
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
                 ),
               ),
               child: const Text(
                 'Confirm & Add to Meal',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 15,
-                ),
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
               ),
             ),
           ),
