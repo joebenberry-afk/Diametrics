@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import '../database/db_instance.dart';
 import '../src/domain/entities/food_item.dart';
@@ -15,6 +17,12 @@ import 'usda_food_service.dart';
 /// Also applies portion-quantity scaling: if Gemini says "6 doubles",
 /// the enriched values are multiplied by 6.
 class FoodRagService {
+  static final _progressController = StreamController<String>.broadcast();
+
+  /// Emits a status string at the start of each enrichment tier.
+  /// Listen to this from [FoodScannerNotifier] to show live progress in State 2.
+  static Stream<String> get progressStream => _progressController.stream;
+
   /// Enriches a list of AI-generated [FoodItem]s with verified nutrition data.
   static Future<List<FoodItem>> enrichWithLocalData(
     List<FoodItem> items,
@@ -35,6 +43,7 @@ class FoodRagService {
       debugPrint('RAG: enriching "${item.name}" qty=$qty search="$searchName"');
 
       // Tier 1: Custom Foods (user overrides)
+      _progressController.add('Checking custom foods…');
       final customMatch = await db.searchCustomFood(searchName);
       if (customMatch != null) {
         debugPrint('RAG: Tier1 CustomFood -> ${customMatch.userDefinedName}');
@@ -52,6 +61,7 @@ class FoodRagService {
       }
 
       // Tier 2: Local USDA CSV (carbs) + N5K (full macros if match)
+      _progressController.add('Enriching from local database…');
       final localMatch = await db.searchLocalFood(searchName);
       if (localMatch != null) {
         debugPrint('RAG: Tier2 LocalFood -> ${localMatch.name}');
@@ -109,6 +119,7 @@ class FoodRagService {
       }
 
       // Tier 3: USDA API (internet, full macros)
+      _progressController.add('Fetching USDA data…');
       final usdaData = await UsdaFoodService.search(searchName);
       if (usdaData != null) {
         debugPrint('RAG: Tier3 USDA API for "$searchName"');
@@ -130,6 +141,7 @@ class FoodRagService {
       }
 
       // Tier 4: AI Estimate (quantity-scaled fallback)
+      _progressController.add('Finalising…');
       debugPrint('RAG: Tier4 AI fallback for "${item.name}"');
       enrichedItems.add(item.copyWith(
         carbsGrams: (item.carbsGrams * qty).clamp(0.0, 500.0),
