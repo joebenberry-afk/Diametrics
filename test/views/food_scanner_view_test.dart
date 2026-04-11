@@ -1,3 +1,4 @@
+import 'package:diametrics/core/theme/app_theme.dart';
 import 'package:diametrics/src/domain/entities/food_item.dart';
 import 'package:diametrics/src/domain/repositories/food_analyzer_repository.dart';
 import 'package:diametrics/viewmodels/food_scanner_viewmodel.dart';
@@ -14,6 +15,13 @@ Widget _wrap(Widget child, {List<Override> overrides = const []}) =>
     ProviderScope(
       overrides: overrides,
       child: MaterialApp(home: child),
+    );
+
+Widget _wrapThemed(Widget child, ThemeData theme,
+    {List<Override> overrides = const []}) =>
+    ProviderScope(
+      overrides: overrides,
+      child: MaterialApp(theme: theme, home: child),
     );
 
 void main() {
@@ -91,6 +99,30 @@ void main() {
     expect(find.text('Product not found'), findsOneWidget);
     expect(find.text('Take a Photo Instead'), findsOneWidget);
     expect(find.text('Add to Meal'), findsOneWidget);
+  });
+
+  group('theme rendering', () {
+    testWidgets('renders under AppTheme.lightTheme without error',
+        (tester) async {
+      await tester.pumpWidget(_wrapThemed(
+        const FoodScannerView(),
+        AppTheme.lightTheme,
+        overrides: [foodAnalyzerRepositoryProvider.overrideWithValue(mockRepo)],
+      ));
+      expect(tester.takeException(), isNull);
+      expect(find.byType(FoodScannerView), findsOneWidget);
+    });
+
+    testWidgets('renders under AppTheme.darkTheme without error',
+        (tester) async {
+      await tester.pumpWidget(_wrapThemed(
+        const FoodScannerView(),
+        AppTheme.darkTheme,
+        overrides: [foodAnalyzerRepositoryProvider.overrideWithValue(mockRepo)],
+      ));
+      expect(tester.takeException(), isNull);
+      expect(find.byType(FoodScannerView), findsOneWidget);
+    });
   });
 }
 

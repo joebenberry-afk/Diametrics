@@ -1,3 +1,4 @@
+import 'package:diametrics/core/theme/app_theme.dart';
 import 'package:diametrics/src/domain/entities/food_item.dart';
 import 'package:diametrics/views/food_scanner/food_item_edit_sheet.dart';
 import 'package:flutter/material.dart';
@@ -53,5 +54,25 @@ void main() {
     expect(savedItem!.carbsGrams, 55.0);
     expect(savedItem!.weightG, 300.0); // weightG preserved
     expect(savedItem!.name, 'Chicken Curry'); // unchanged fields preserved
+  });
+
+  group('theme rendering', () {
+    testWidgets('renders under AppTheme.lightTheme without error',
+        (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        theme: AppTheme.lightTheme,
+        home: Scaffold(body: FoodItemEditSheet(item: item, onSave: (_) {})),
+      ));
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('renders under AppTheme.darkTheme without error',
+        (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        theme: AppTheme.darkTheme,
+        home: Scaffold(body: FoodItemEditSheet(item: item, onSave: (_) {})),
+      ));
+      expect(tester.takeException(), isNull);
+    });
   });
 }
