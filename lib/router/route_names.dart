@@ -11,6 +11,7 @@ abstract final class Routes {
   static const logGlucose         = '/log/glucose';
   static const logMeal            = '/log/meal';
   static const logMealBarcode     = '/log/meal/barcode';
+  static const logMealFoodScanner = '/log/meal/food-scanner';
   static const logMealProjection  = '/log/meal/projection';
   static const logMedication      = '/log/medication';
   static const settings                  = '/settings';
