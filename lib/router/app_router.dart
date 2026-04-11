@@ -8,6 +8,7 @@ import '../views/history/glucose_history_view.dart';
 import '../views/trends/trends_view.dart';
 import '../views/history/meal_history_view.dart';
 import '../views/history/medication_history_view.dart';
+import '../views/food_scanner/food_scanner_view.dart';
 import '../views/logging/barcode_scanner_view.dart';
 import '../views/logging/glucose_wizard_view.dart';
 import '../views/logging/meal_wizard_view.dart';
@@ -99,6 +100,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'barcode',
             builder: (_, _) => const BarcodeScannerView(),
+          ),
+          GoRoute(
+            path: 'food-scanner',
+            builder: (_, _) => const FoodScannerView(),
           ),
           GoRoute(
             path: 'projection',
