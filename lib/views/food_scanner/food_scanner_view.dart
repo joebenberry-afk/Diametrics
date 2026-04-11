@@ -549,26 +549,31 @@ class _FoodItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = cs.brightness == Brightness.dark;
+    final borderColor = isDark
+        ? AppThemeTokens.brandSecondary.withValues(alpha: 0.3)
+        : const Color(0xFFD1D5DB);
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: const Color(0xFF13151f),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFF1e2130)),
+          color: cs.surface,
+          borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
+          border: Border.all(color: borderColor),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Name row + source badge + edit icon
             Row(children: [
               Expanded(
                 child: Text(
                   item.name,
-                  style: const TextStyle(
-                    color: Color(0xFFc8cfe0),
+                  style: TextStyle(
+                    color: cs.onSurface,
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
                   ),
@@ -576,54 +581,25 @@ class _FoodItemCard extends StatelessWidget {
               ),
               _SourceBadge(source: item.source),
               const SizedBox(width: 8),
-              const Icon(
-                LucideIcons.pencil,
-                color: Color(0xFF8892aa),
-                size: 14,
-              ),
+              Icon(LucideIcons.pencil, color: cs.onSurface.withValues(alpha: 0.6), size: 14),
             ]),
             const SizedBox(height: 4),
-            // Portion + weight
             Text(
               item.weightG > 0
                   ? '${item.portion} · ${item.weightG.toStringAsFixed(0)}g'
                   : item.portion,
-              style: const TextStyle(
-                color: Color(0xFF8892aa),
-                fontSize: 11,
-              ),
+              style: TextStyle(color: cs.onSurface.withValues(alpha: 0.6), fontSize: 11),
             ),
             const SizedBox(height: 10),
-            // Macro inline row (horizontally scrollable)
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               physics: const BouncingScrollPhysics(),
               child: IntrinsicHeight(
                 child: Row(children: [
-                  _MacroInlineCell(
-                    label: 'Carbs',
-                    value: item.carbsGrams.toStringAsFixed(1),
-                    unit: 'g',
-                    isCarbs: true,
-                  ),
-                  _MacroInlineCell(
-                    label: 'Protein',
-                    value: item.proteinGrams.toStringAsFixed(1),
-                    unit: 'g',
-                    isCarbs: false,
-                  ),
-                  _MacroInlineCell(
-                    label: 'Fat',
-                    value: item.fatGrams.toStringAsFixed(1),
-                    unit: 'g',
-                    isCarbs: false,
-                  ),
-                  _MacroInlineCell(
-                    label: 'kcal',
-                    value: item.calories.toStringAsFixed(0),
-                    unit: '',
-                    isCarbs: false,
-                  ),
+                  _MacroInlineCell(label: 'Carbs', value: item.carbsGrams.toStringAsFixed(1), unit: 'g', isCarbs: true),
+                  _MacroInlineCell(label: 'Protein', value: item.proteinGrams.toStringAsFixed(1), unit: 'g', isCarbs: false),
+                  _MacroInlineCell(label: 'Fat', value: item.fatGrams.toStringAsFixed(1), unit: 'g', isCarbs: false),
+                  _MacroInlineCell(label: 'kcal', value: item.calories.toStringAsFixed(0), unit: '', isCarbs: false),
                 ]),
               ),
             ),
@@ -649,10 +625,13 @@ class _MacroInlineCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color =
-        isCarbs ? const Color(0xFF4a9eff) : const Color(0xFFc8cfe0);
-    final labelColor =
-        isCarbs ? const Color(0xFF4a9eff) : const Color(0xFF8892aa);
+    final cs = Theme.of(context).colorScheme;
+    final isDark = cs.brightness == Brightness.dark;
+    final borderColor = isDark
+        ? AppThemeTokens.brandSecondary.withValues(alpha: 0.3)
+        : const Color(0xFFD1D5DB);
+    final valueColor = isCarbs ? cs.primary : cs.onSurface;
+    final labelColor = isCarbs ? cs.primary : cs.onSurface.withValues(alpha: 0.6);
 
     return Container(
       constraints: const BoxConstraints(minWidth: 64),
@@ -660,44 +639,26 @@ class _MacroInlineCell extends StatelessWidget {
       decoration: BoxDecoration(
         border: Border(
           left: BorderSide(
-            color: const Color(0xFF1e2130),
-            width: label == 'Carbs' ? 0 : 1,
+            color: label == 'Carbs' ? Colors.transparent : borderColor,
+            width: 1,
           ),
         ),
       ),
       child: Column(
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              color: labelColor,
-              fontSize: 8,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
+          Text(label, style: TextStyle(color: labelColor, fontSize: 8, fontWeight: FontWeight.w700)),
           const SizedBox(height: 4),
-          Text.rich(
-            TextSpan(children: [
+          Text.rich(TextSpan(children: [
+            TextSpan(
+              text: value,
+              style: TextStyle(color: valueColor, fontSize: 14, fontWeight: FontWeight.w800, height: 1),
+            ),
+            if (unit.isNotEmpty)
               TextSpan(
-                text: value,
-                style: TextStyle(
-                  color: color,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  height: 1,
-                ),
+                text: unit,
+                style: TextStyle(color: valueColor, fontSize: 8, fontWeight: FontWeight.w500),
               ),
-              if (unit.isNotEmpty)
-                TextSpan(
-                  text: unit,
-                  style: TextStyle(
-                    color: color,
-                    fontSize: 8,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-            ]),
-          ),
+          ])),
         ],
       ),
     );
@@ -719,10 +680,9 @@ class _TotalCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color =
-        isCarbs ? const Color(0xFF4a9eff) : const Color(0xFFc8cfe0);
-    final labelColor =
-        isCarbs ? const Color(0xFF4a9eff) : const Color(0xFF8892aa);
+    final cs = Theme.of(context).colorScheme;
+    final valueColor = isCarbs ? cs.primary : cs.onSurface;
+    final labelColor = isCarbs ? cs.primary : cs.onSurface.withValues(alpha: 0.6);
 
     return Expanded(
       child: Column(
@@ -730,36 +690,26 @@ class _TotalCell extends StatelessWidget {
         children: [
           Text(
             label,
-            style: TextStyle(
-              color: labelColor,
-              fontSize: 8,
-              fontWeight: FontWeight.w600,
-            ),
+            style: TextStyle(color: labelColor, fontSize: 8, fontWeight: FontWeight.w600),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 4),
-          Text.rich(
-            TextSpan(children: [
-              TextSpan(
-                text: value,
-                style: TextStyle(
-                  color: color,
-                  fontSize: isCarbs ? 22 : 16,
-                  fontWeight: FontWeight.w800,
-                  height: 1,
-                ),
+          Text.rich(TextSpan(children: [
+            TextSpan(
+              text: value,
+              style: TextStyle(
+                color: valueColor,
+                fontSize: isCarbs ? 22 : 16,
+                fontWeight: FontWeight.w800,
+                height: 1,
               ),
-              if (unit.isNotEmpty)
-                TextSpan(
-                  text: unit,
-                  style: TextStyle(
-                    color: color,
-                    fontSize: 9,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-            ]),
-          ),
+            ),
+            if (unit.isNotEmpty)
+              TextSpan(
+                text: unit,
+                style: TextStyle(color: valueColor, fontSize: 9, fontWeight: FontWeight.w500),
+              ),
+          ])),
         ],
       ),
     );
@@ -772,17 +722,24 @@ class _SourceBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = cs.brightness == Brightness.dark;
+    final bgColor = isDark ? AppThemeTokens.bgBackgroundDark : AppThemeTokens.bgBackground;
+    final borderColor = isDark
+        ? AppThemeTokens.brandSecondary.withValues(alpha: 0.3)
+        : const Color(0xFFD1D5DB);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: const Color(0xFF1a1d27),
+        color: bgColor,
         borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: const Color(0xFF2a2d3a)),
+        border: Border.all(color: borderColor),
       ),
       child: Text(
         source,
-        style: const TextStyle(
-          color: Color(0xFF8892aa),
+        style: TextStyle(
+          color: cs.onSurface.withValues(alpha: 0.6),
           fontSize: 8,
           fontWeight: FontWeight.w600,
         ),
