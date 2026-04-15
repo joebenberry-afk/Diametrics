@@ -158,15 +158,29 @@ class FoodRagService {
   // ── Portion parsing helpers ──────────────────────────────────────────────
 
   /// Extracts a numeric quantity from a portion string.
-  /// "6 doubles" -> 6.0,  "2 cups" -> 2.0,  "1/2 cup" -> 0.5
+  /// "6 doubles" -> 6.0,  "2 cups" -> 2.0,  "1 1/2 cups" -> 1.5, "1/2 cup" -> 0.5
   static double _extractQuantity(String portion) {
     final t = portion.trim();
+    
+    // 1. Matches mixed fractions eg "1 1/2" or "1 3/4"
+    final mixedFrac = RegExp(r'^(\d+)\s+(\d+)/(\d+)').firstMatch(t);
+    if (mixedFrac != null) {
+      final whole = double.tryParse(mixedFrac.group(1)!) ?? 0;
+      final numerator = double.tryParse(mixedFrac.group(2)!) ?? 0;
+      final denominator = double.tryParse(mixedFrac.group(3)!) ?? 1;
+      final fraction = denominator > 0 ? (numerator / denominator) : 0;
+      return (whole + fraction).clamp(0.25, 20.0);
+    }
+    
+    // 2. Matches exact fractions eg "1/2"
     final frac = RegExp(r'^(\d+)/(\d+)').firstMatch(t);
     if (frac != null) {
       final n = double.tryParse(frac.group(1)!) ?? 1;
       final d = double.tryParse(frac.group(2)!) ?? 1;
       return d > 0 ? (n / d).clamp(0.25, 20.0) : 1.0;
     }
+    
+    // 3. Matches decimal or integer eg "1.5" or "1"
     final num = RegExp(r'^(\d+(?:\.\d+)?)').firstMatch(t);
     if (num != null) {
       return (double.tryParse(num.group(1)!) ?? 1.0).clamp(0.25, 20.0);

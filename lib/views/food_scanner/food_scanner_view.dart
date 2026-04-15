@@ -390,7 +390,8 @@ class _FoodScannerViewState extends ConsumerState<FoodScannerView> {
                 style: TextStyle(color: cs.onSurface, fontSize: 14),
                 decoration: inputDecoration.copyWith(labelText: 'Carbs (g)'),
                 validator: (v) {
-                  if (v != null && v.isNotEmpty && double.tryParse(v) == null) return 'Enter a number';
+                  if (v == null || v.trim().isEmpty) return 'Required';
+                  if (double.tryParse(v) == null) return 'Enter a number';
                   return null;
                 },
               ),
@@ -403,7 +404,8 @@ class _FoodScannerViewState extends ConsumerState<FoodScannerView> {
                 style: TextStyle(color: cs.onSurface, fontSize: 14),
                 decoration: inputDecoration.copyWith(labelText: 'Protein (g)'),
                 validator: (v) {
-                  if (v != null && v.isNotEmpty && double.tryParse(v) == null) return 'Enter a number';
+                  if (v == null || v.trim().isEmpty) return 'Required';
+                  if (double.tryParse(v) == null) return 'Enter a number';
                   return null;
                 },
               ),
@@ -418,7 +420,8 @@ class _FoodScannerViewState extends ConsumerState<FoodScannerView> {
                 style: TextStyle(color: cs.onSurface, fontSize: 14),
                 decoration: inputDecoration.copyWith(labelText: 'Fat (g)'),
                 validator: (v) {
-                  if (v != null && v.isNotEmpty && double.tryParse(v) == null) return 'Enter a number';
+                  if (v == null || v.trim().isEmpty) return 'Required';
+                  if (double.tryParse(v) == null) return 'Enter a number';
                   return null;
                 },
               ),
@@ -431,7 +434,8 @@ class _FoodScannerViewState extends ConsumerState<FoodScannerView> {
                 style: TextStyle(color: cs.onSurface, fontSize: 14),
                 decoration: inputDecoration.copyWith(labelText: 'kcal'),
                 validator: (v) {
-                  if (v != null && v.isNotEmpty && double.tryParse(v) == null) return 'Enter a number';
+                  if (v == null || v.trim().isEmpty) return 'Required';
+                  if (double.tryParse(v) == null) return 'Enter a number';
                   return null;
                 },
               ),
