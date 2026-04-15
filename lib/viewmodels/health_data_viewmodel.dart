@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../repositories/health_data_repository.dart';
 import 'package:flutter/material.dart';
+import '../database/database.dart' as drift_db;
 import '../models/glucose_log.dart';
 import '../models/meal_log.dart';
 import '../models/medication_log.dart';
@@ -114,6 +115,19 @@ class MedicationLogsViewModel extends AsyncNotifier<List<MedicationLog>> {
   }
 }
 
+final projectionLogsProvider =
+    AsyncNotifierProvider<ProjectionLogsViewModel, List<drift_db.ProjectionLogRow>>(
+      ProjectionLogsViewModel.new,
+    );
+
+class ProjectionLogsViewModel extends AsyncNotifier<List<drift_db.ProjectionLogRow>> {
+  @override
+  FutureOr<List<drift_db.ProjectionLogRow>> build() async {
+    final repo = ref.read(healthDataRepositoryProvider);
+    return repo.getProjectionLogs();
+  }
+}
+
 /// Latest glucose reading (most recent GlucoseLog, any context).
 final latestGlucoseProvider = Provider<AsyncValue<GlucoseLog?>>((ref) {
   return ref.watch(glucoseLogsProvider).whenData((logs) {
@@ -188,7 +202,8 @@ final recentActivityProvider = Provider<AsyncValue<List<Map<String, dynamic>>>>(
   glucoseAsync.valueOrNull?.forEach(
     (g) => entries.add({
       'type': 'glucose',
-      'label': '${g.value.toStringAsFixed(0)} ${g.unit}',
+      'label':
+          '${g.value.toStringAsFixed(g.unit == 'mmol/L' ? 1 : 0)} ${g.unit}',
       'subtitle': g.context.replaceAll('_', ' '),
       'timestamp': g.timestamp,
       'icon': Icons.bloodtype_outlined,
@@ -278,8 +293,7 @@ final dailySummaryProvider = Provider<AsyncValue<DailySummary>>((ref) {
   double toMgdl(dynamic g) => g.unit == 'mmol/L' ? g.value * 18.0182 : g.value;
   final avgGlucose = todayGlucose.isEmpty
       ? 0.0
-      : todayGlucose.map(toMgdl).reduce((a, b) => a + b) /
-            todayGlucose.length;
+      : todayGlucose.map(toMgdl).reduce((a, b) => a + b) / todayGlucose.length;
   final inRange = todayGlucose
       .where((g) => toMgdl(g) >= targetMin && toMgdl(g) <= targetMax)
       .length;

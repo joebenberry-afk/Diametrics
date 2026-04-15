@@ -5018,6 +5018,849 @@ class UserProfilesCompanion extends UpdateCompanion<UserProfileRow> {
   }
 }
 
+class $ProjectionLogsTable extends ProjectionLogs
+    with TableInfo<$ProjectionLogsTable, ProjectionLogRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ProjectionLogsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _mealLogIdMeta = const VerificationMeta(
+    'mealLogId',
+  );
+  @override
+  late final GeneratedColumn<String> mealLogId = GeneratedColumn<String>(
+    'meal_log_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _timestampMeta = const VerificationMeta(
+    'timestamp',
+  );
+  @override
+  late final GeneratedColumn<DateTime> timestamp = GeneratedColumn<DateTime>(
+    'timestamp',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _baselineGlucoseMeta = const VerificationMeta(
+    'baselineGlucose',
+  );
+  @override
+  late final GeneratedColumn<double> baselineGlucose = GeneratedColumn<double>(
+    'baseline_glucose',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _peakGlucoseMeta = const VerificationMeta(
+    'peakGlucose',
+  );
+  @override
+  late final GeneratedColumn<double> peakGlucose = GeneratedColumn<double>(
+    'peak_glucose',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _peakTimeMinutesMeta = const VerificationMeta(
+    'peakTimeMinutes',
+  );
+  @override
+  late final GeneratedColumn<int> peakTimeMinutes = GeneratedColumn<int>(
+    'peak_time_minutes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _twoHourGlucoseMeta = const VerificationMeta(
+    'twoHourGlucose',
+  );
+  @override
+  late final GeneratedColumn<double> twoHourGlucose = GeneratedColumn<double>(
+    'two_hour_glucose',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _riskLevelMeta = const VerificationMeta(
+    'riskLevel',
+  );
+  @override
+  late final GeneratedColumn<String> riskLevel = GeneratedColumn<String>(
+    'risk_level',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _summaryMeta = const VerificationMeta(
+    'summary',
+  );
+  @override
+  late final GeneratedColumn<String> summary = GeneratedColumn<String>(
+    'summary',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _pointsJsonMeta = const VerificationMeta(
+    'pointsJson',
+  );
+  @override
+  late final GeneratedColumn<String> pointsJson = GeneratedColumn<String>(
+    'points_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _upperBandJsonMeta = const VerificationMeta(
+    'upperBandJson',
+  );
+  @override
+  late final GeneratedColumn<String> upperBandJson = GeneratedColumn<String>(
+    'upper_band_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  );
+  static const VerificationMeta _lowerBandJsonMeta = const VerificationMeta(
+    'lowerBandJson',
+  );
+  @override
+  late final GeneratedColumn<String> lowerBandJson = GeneratedColumn<String>(
+    'lower_band_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  );
+  static const VerificationMeta _confidenceWidthMeta = const VerificationMeta(
+    'confidenceWidth',
+  );
+  @override
+  late final GeneratedColumn<double> confidenceWidth = GeneratedColumn<double>(
+    'confidence_width',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(25.0),
+  );
+  static const VerificationMeta _totalAvailableGlucoseMeta =
+      const VerificationMeta('totalAvailableGlucose');
+  @override
+  late final GeneratedColumn<double> totalAvailableGlucose =
+      GeneratedColumn<double>(
+        'total_available_glucose',
+        aliasedName,
+        false,
+        type: DriftSqlType.double,
+        requiredDuringInsert: true,
+      );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    mealLogId,
+    timestamp,
+    baselineGlucose,
+    peakGlucose,
+    peakTimeMinutes,
+    twoHourGlucose,
+    riskLevel,
+    summary,
+    pointsJson,
+    upperBandJson,
+    lowerBandJson,
+    confidenceWidth,
+    totalAvailableGlucose,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'projection_logs';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ProjectionLogRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('meal_log_id')) {
+      context.handle(
+        _mealLogIdMeta,
+        mealLogId.isAcceptableOrUnknown(data['meal_log_id']!, _mealLogIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_mealLogIdMeta);
+    }
+    if (data.containsKey('timestamp')) {
+      context.handle(
+        _timestampMeta,
+        timestamp.isAcceptableOrUnknown(data['timestamp']!, _timestampMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_timestampMeta);
+    }
+    if (data.containsKey('baseline_glucose')) {
+      context.handle(
+        _baselineGlucoseMeta,
+        baselineGlucose.isAcceptableOrUnknown(
+          data['baseline_glucose']!,
+          _baselineGlucoseMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_baselineGlucoseMeta);
+    }
+    if (data.containsKey('peak_glucose')) {
+      context.handle(
+        _peakGlucoseMeta,
+        peakGlucose.isAcceptableOrUnknown(
+          data['peak_glucose']!,
+          _peakGlucoseMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_peakGlucoseMeta);
+    }
+    if (data.containsKey('peak_time_minutes')) {
+      context.handle(
+        _peakTimeMinutesMeta,
+        peakTimeMinutes.isAcceptableOrUnknown(
+          data['peak_time_minutes']!,
+          _peakTimeMinutesMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_peakTimeMinutesMeta);
+    }
+    if (data.containsKey('two_hour_glucose')) {
+      context.handle(
+        _twoHourGlucoseMeta,
+        twoHourGlucose.isAcceptableOrUnknown(
+          data['two_hour_glucose']!,
+          _twoHourGlucoseMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_twoHourGlucoseMeta);
+    }
+    if (data.containsKey('risk_level')) {
+      context.handle(
+        _riskLevelMeta,
+        riskLevel.isAcceptableOrUnknown(data['risk_level']!, _riskLevelMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_riskLevelMeta);
+    }
+    if (data.containsKey('summary')) {
+      context.handle(
+        _summaryMeta,
+        summary.isAcceptableOrUnknown(data['summary']!, _summaryMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_summaryMeta);
+    }
+    if (data.containsKey('points_json')) {
+      context.handle(
+        _pointsJsonMeta,
+        pointsJson.isAcceptableOrUnknown(data['points_json']!, _pointsJsonMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_pointsJsonMeta);
+    }
+    if (data.containsKey('upper_band_json')) {
+      context.handle(
+        _upperBandJsonMeta,
+        upperBandJson.isAcceptableOrUnknown(
+          data['upper_band_json']!,
+          _upperBandJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('lower_band_json')) {
+      context.handle(
+        _lowerBandJsonMeta,
+        lowerBandJson.isAcceptableOrUnknown(
+          data['lower_band_json']!,
+          _lowerBandJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('confidence_width')) {
+      context.handle(
+        _confidenceWidthMeta,
+        confidenceWidth.isAcceptableOrUnknown(
+          data['confidence_width']!,
+          _confidenceWidthMeta,
+        ),
+      );
+    }
+    if (data.containsKey('total_available_glucose')) {
+      context.handle(
+        _totalAvailableGlucoseMeta,
+        totalAvailableGlucose.isAcceptableOrUnknown(
+          data['total_available_glucose']!,
+          _totalAvailableGlucoseMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_totalAvailableGlucoseMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ProjectionLogRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ProjectionLogRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      mealLogId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}meal_log_id'],
+      )!,
+      timestamp: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}timestamp'],
+      )!,
+      baselineGlucose: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}baseline_glucose'],
+      )!,
+      peakGlucose: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}peak_glucose'],
+      )!,
+      peakTimeMinutes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}peak_time_minutes'],
+      )!,
+      twoHourGlucose: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}two_hour_glucose'],
+      )!,
+      riskLevel: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}risk_level'],
+      )!,
+      summary: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}summary'],
+      )!,
+      pointsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}points_json'],
+      )!,
+      upperBandJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}upper_band_json'],
+      )!,
+      lowerBandJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}lower_band_json'],
+      )!,
+      confidenceWidth: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}confidence_width'],
+      )!,
+      totalAvailableGlucose: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}total_available_glucose'],
+      )!,
+    );
+  }
+
+  @override
+  $ProjectionLogsTable createAlias(String alias) {
+    return $ProjectionLogsTable(attachedDatabase, alias);
+  }
+}
+
+class ProjectionLogRow extends DataClass
+    implements Insertable<ProjectionLogRow> {
+  final String id;
+  final String mealLogId;
+  final DateTime timestamp;
+  final double baselineGlucose;
+  final double peakGlucose;
+  final int peakTimeMinutes;
+  final double twoHourGlucose;
+  final String riskLevel;
+  final String summary;
+  final String pointsJson;
+  final String upperBandJson;
+  final String lowerBandJson;
+  final double confidenceWidth;
+  final double totalAvailableGlucose;
+  const ProjectionLogRow({
+    required this.id,
+    required this.mealLogId,
+    required this.timestamp,
+    required this.baselineGlucose,
+    required this.peakGlucose,
+    required this.peakTimeMinutes,
+    required this.twoHourGlucose,
+    required this.riskLevel,
+    required this.summary,
+    required this.pointsJson,
+    required this.upperBandJson,
+    required this.lowerBandJson,
+    required this.confidenceWidth,
+    required this.totalAvailableGlucose,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['meal_log_id'] = Variable<String>(mealLogId);
+    map['timestamp'] = Variable<DateTime>(timestamp);
+    map['baseline_glucose'] = Variable<double>(baselineGlucose);
+    map['peak_glucose'] = Variable<double>(peakGlucose);
+    map['peak_time_minutes'] = Variable<int>(peakTimeMinutes);
+    map['two_hour_glucose'] = Variable<double>(twoHourGlucose);
+    map['risk_level'] = Variable<String>(riskLevel);
+    map['summary'] = Variable<String>(summary);
+    map['points_json'] = Variable<String>(pointsJson);
+    map['upper_band_json'] = Variable<String>(upperBandJson);
+    map['lower_band_json'] = Variable<String>(lowerBandJson);
+    map['confidence_width'] = Variable<double>(confidenceWidth);
+    map['total_available_glucose'] = Variable<double>(totalAvailableGlucose);
+    return map;
+  }
+
+  ProjectionLogsCompanion toCompanion(bool nullToAbsent) {
+    return ProjectionLogsCompanion(
+      id: Value(id),
+      mealLogId: Value(mealLogId),
+      timestamp: Value(timestamp),
+      baselineGlucose: Value(baselineGlucose),
+      peakGlucose: Value(peakGlucose),
+      peakTimeMinutes: Value(peakTimeMinutes),
+      twoHourGlucose: Value(twoHourGlucose),
+      riskLevel: Value(riskLevel),
+      summary: Value(summary),
+      pointsJson: Value(pointsJson),
+      upperBandJson: Value(upperBandJson),
+      lowerBandJson: Value(lowerBandJson),
+      confidenceWidth: Value(confidenceWidth),
+      totalAvailableGlucose: Value(totalAvailableGlucose),
+    );
+  }
+
+  factory ProjectionLogRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ProjectionLogRow(
+      id: serializer.fromJson<String>(json['id']),
+      mealLogId: serializer.fromJson<String>(json['mealLogId']),
+      timestamp: serializer.fromJson<DateTime>(json['timestamp']),
+      baselineGlucose: serializer.fromJson<double>(json['baselineGlucose']),
+      peakGlucose: serializer.fromJson<double>(json['peakGlucose']),
+      peakTimeMinutes: serializer.fromJson<int>(json['peakTimeMinutes']),
+      twoHourGlucose: serializer.fromJson<double>(json['twoHourGlucose']),
+      riskLevel: serializer.fromJson<String>(json['riskLevel']),
+      summary: serializer.fromJson<String>(json['summary']),
+      pointsJson: serializer.fromJson<String>(json['pointsJson']),
+      upperBandJson: serializer.fromJson<String>(json['upperBandJson']),
+      lowerBandJson: serializer.fromJson<String>(json['lowerBandJson']),
+      confidenceWidth: serializer.fromJson<double>(json['confidenceWidth']),
+      totalAvailableGlucose: serializer.fromJson<double>(
+        json['totalAvailableGlucose'],
+      ),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'mealLogId': serializer.toJson<String>(mealLogId),
+      'timestamp': serializer.toJson<DateTime>(timestamp),
+      'baselineGlucose': serializer.toJson<double>(baselineGlucose),
+      'peakGlucose': serializer.toJson<double>(peakGlucose),
+      'peakTimeMinutes': serializer.toJson<int>(peakTimeMinutes),
+      'twoHourGlucose': serializer.toJson<double>(twoHourGlucose),
+      'riskLevel': serializer.toJson<String>(riskLevel),
+      'summary': serializer.toJson<String>(summary),
+      'pointsJson': serializer.toJson<String>(pointsJson),
+      'upperBandJson': serializer.toJson<String>(upperBandJson),
+      'lowerBandJson': serializer.toJson<String>(lowerBandJson),
+      'confidenceWidth': serializer.toJson<double>(confidenceWidth),
+      'totalAvailableGlucose': serializer.toJson<double>(totalAvailableGlucose),
+    };
+  }
+
+  ProjectionLogRow copyWith({
+    String? id,
+    String? mealLogId,
+    DateTime? timestamp,
+    double? baselineGlucose,
+    double? peakGlucose,
+    int? peakTimeMinutes,
+    double? twoHourGlucose,
+    String? riskLevel,
+    String? summary,
+    String? pointsJson,
+    String? upperBandJson,
+    String? lowerBandJson,
+    double? confidenceWidth,
+    double? totalAvailableGlucose,
+  }) => ProjectionLogRow(
+    id: id ?? this.id,
+    mealLogId: mealLogId ?? this.mealLogId,
+    timestamp: timestamp ?? this.timestamp,
+    baselineGlucose: baselineGlucose ?? this.baselineGlucose,
+    peakGlucose: peakGlucose ?? this.peakGlucose,
+    peakTimeMinutes: peakTimeMinutes ?? this.peakTimeMinutes,
+    twoHourGlucose: twoHourGlucose ?? this.twoHourGlucose,
+    riskLevel: riskLevel ?? this.riskLevel,
+    summary: summary ?? this.summary,
+    pointsJson: pointsJson ?? this.pointsJson,
+    upperBandJson: upperBandJson ?? this.upperBandJson,
+    lowerBandJson: lowerBandJson ?? this.lowerBandJson,
+    confidenceWidth: confidenceWidth ?? this.confidenceWidth,
+    totalAvailableGlucose: totalAvailableGlucose ?? this.totalAvailableGlucose,
+  );
+  ProjectionLogRow copyWithCompanion(ProjectionLogsCompanion data) {
+    return ProjectionLogRow(
+      id: data.id.present ? data.id.value : this.id,
+      mealLogId: data.mealLogId.present ? data.mealLogId.value : this.mealLogId,
+      timestamp: data.timestamp.present ? data.timestamp.value : this.timestamp,
+      baselineGlucose: data.baselineGlucose.present
+          ? data.baselineGlucose.value
+          : this.baselineGlucose,
+      peakGlucose: data.peakGlucose.present
+          ? data.peakGlucose.value
+          : this.peakGlucose,
+      peakTimeMinutes: data.peakTimeMinutes.present
+          ? data.peakTimeMinutes.value
+          : this.peakTimeMinutes,
+      twoHourGlucose: data.twoHourGlucose.present
+          ? data.twoHourGlucose.value
+          : this.twoHourGlucose,
+      riskLevel: data.riskLevel.present ? data.riskLevel.value : this.riskLevel,
+      summary: data.summary.present ? data.summary.value : this.summary,
+      pointsJson: data.pointsJson.present
+          ? data.pointsJson.value
+          : this.pointsJson,
+      upperBandJson: data.upperBandJson.present
+          ? data.upperBandJson.value
+          : this.upperBandJson,
+      lowerBandJson: data.lowerBandJson.present
+          ? data.lowerBandJson.value
+          : this.lowerBandJson,
+      confidenceWidth: data.confidenceWidth.present
+          ? data.confidenceWidth.value
+          : this.confidenceWidth,
+      totalAvailableGlucose: data.totalAvailableGlucose.present
+          ? data.totalAvailableGlucose.value
+          : this.totalAvailableGlucose,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProjectionLogRow(')
+          ..write('id: $id, ')
+          ..write('mealLogId: $mealLogId, ')
+          ..write('timestamp: $timestamp, ')
+          ..write('baselineGlucose: $baselineGlucose, ')
+          ..write('peakGlucose: $peakGlucose, ')
+          ..write('peakTimeMinutes: $peakTimeMinutes, ')
+          ..write('twoHourGlucose: $twoHourGlucose, ')
+          ..write('riskLevel: $riskLevel, ')
+          ..write('summary: $summary, ')
+          ..write('pointsJson: $pointsJson, ')
+          ..write('upperBandJson: $upperBandJson, ')
+          ..write('lowerBandJson: $lowerBandJson, ')
+          ..write('confidenceWidth: $confidenceWidth, ')
+          ..write('totalAvailableGlucose: $totalAvailableGlucose')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    mealLogId,
+    timestamp,
+    baselineGlucose,
+    peakGlucose,
+    peakTimeMinutes,
+    twoHourGlucose,
+    riskLevel,
+    summary,
+    pointsJson,
+    upperBandJson,
+    lowerBandJson,
+    confidenceWidth,
+    totalAvailableGlucose,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ProjectionLogRow &&
+          other.id == this.id &&
+          other.mealLogId == this.mealLogId &&
+          other.timestamp == this.timestamp &&
+          other.baselineGlucose == this.baselineGlucose &&
+          other.peakGlucose == this.peakGlucose &&
+          other.peakTimeMinutes == this.peakTimeMinutes &&
+          other.twoHourGlucose == this.twoHourGlucose &&
+          other.riskLevel == this.riskLevel &&
+          other.summary == this.summary &&
+          other.pointsJson == this.pointsJson &&
+          other.upperBandJson == this.upperBandJson &&
+          other.lowerBandJson == this.lowerBandJson &&
+          other.confidenceWidth == this.confidenceWidth &&
+          other.totalAvailableGlucose == this.totalAvailableGlucose);
+}
+
+class ProjectionLogsCompanion extends UpdateCompanion<ProjectionLogRow> {
+  final Value<String> id;
+  final Value<String> mealLogId;
+  final Value<DateTime> timestamp;
+  final Value<double> baselineGlucose;
+  final Value<double> peakGlucose;
+  final Value<int> peakTimeMinutes;
+  final Value<double> twoHourGlucose;
+  final Value<String> riskLevel;
+  final Value<String> summary;
+  final Value<String> pointsJson;
+  final Value<String> upperBandJson;
+  final Value<String> lowerBandJson;
+  final Value<double> confidenceWidth;
+  final Value<double> totalAvailableGlucose;
+  final Value<int> rowid;
+  const ProjectionLogsCompanion({
+    this.id = const Value.absent(),
+    this.mealLogId = const Value.absent(),
+    this.timestamp = const Value.absent(),
+    this.baselineGlucose = const Value.absent(),
+    this.peakGlucose = const Value.absent(),
+    this.peakTimeMinutes = const Value.absent(),
+    this.twoHourGlucose = const Value.absent(),
+    this.riskLevel = const Value.absent(),
+    this.summary = const Value.absent(),
+    this.pointsJson = const Value.absent(),
+    this.upperBandJson = const Value.absent(),
+    this.lowerBandJson = const Value.absent(),
+    this.confidenceWidth = const Value.absent(),
+    this.totalAvailableGlucose = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ProjectionLogsCompanion.insert({
+    required String id,
+    required String mealLogId,
+    required DateTime timestamp,
+    required double baselineGlucose,
+    required double peakGlucose,
+    required int peakTimeMinutes,
+    required double twoHourGlucose,
+    required String riskLevel,
+    required String summary,
+    required String pointsJson,
+    this.upperBandJson = const Value.absent(),
+    this.lowerBandJson = const Value.absent(),
+    this.confidenceWidth = const Value.absent(),
+    required double totalAvailableGlucose,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       mealLogId = Value(mealLogId),
+       timestamp = Value(timestamp),
+       baselineGlucose = Value(baselineGlucose),
+       peakGlucose = Value(peakGlucose),
+       peakTimeMinutes = Value(peakTimeMinutes),
+       twoHourGlucose = Value(twoHourGlucose),
+       riskLevel = Value(riskLevel),
+       summary = Value(summary),
+       pointsJson = Value(pointsJson),
+       totalAvailableGlucose = Value(totalAvailableGlucose);
+  static Insertable<ProjectionLogRow> custom({
+    Expression<String>? id,
+    Expression<String>? mealLogId,
+    Expression<DateTime>? timestamp,
+    Expression<double>? baselineGlucose,
+    Expression<double>? peakGlucose,
+    Expression<int>? peakTimeMinutes,
+    Expression<double>? twoHourGlucose,
+    Expression<String>? riskLevel,
+    Expression<String>? summary,
+    Expression<String>? pointsJson,
+    Expression<String>? upperBandJson,
+    Expression<String>? lowerBandJson,
+    Expression<double>? confidenceWidth,
+    Expression<double>? totalAvailableGlucose,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (mealLogId != null) 'meal_log_id': mealLogId,
+      if (timestamp != null) 'timestamp': timestamp,
+      if (baselineGlucose != null) 'baseline_glucose': baselineGlucose,
+      if (peakGlucose != null) 'peak_glucose': peakGlucose,
+      if (peakTimeMinutes != null) 'peak_time_minutes': peakTimeMinutes,
+      if (twoHourGlucose != null) 'two_hour_glucose': twoHourGlucose,
+      if (riskLevel != null) 'risk_level': riskLevel,
+      if (summary != null) 'summary': summary,
+      if (pointsJson != null) 'points_json': pointsJson,
+      if (upperBandJson != null) 'upper_band_json': upperBandJson,
+      if (lowerBandJson != null) 'lower_band_json': lowerBandJson,
+      if (confidenceWidth != null) 'confidence_width': confidenceWidth,
+      if (totalAvailableGlucose != null)
+        'total_available_glucose': totalAvailableGlucose,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ProjectionLogsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? mealLogId,
+    Value<DateTime>? timestamp,
+    Value<double>? baselineGlucose,
+    Value<double>? peakGlucose,
+    Value<int>? peakTimeMinutes,
+    Value<double>? twoHourGlucose,
+    Value<String>? riskLevel,
+    Value<String>? summary,
+    Value<String>? pointsJson,
+    Value<String>? upperBandJson,
+    Value<String>? lowerBandJson,
+    Value<double>? confidenceWidth,
+    Value<double>? totalAvailableGlucose,
+    Value<int>? rowid,
+  }) {
+    return ProjectionLogsCompanion(
+      id: id ?? this.id,
+      mealLogId: mealLogId ?? this.mealLogId,
+      timestamp: timestamp ?? this.timestamp,
+      baselineGlucose: baselineGlucose ?? this.baselineGlucose,
+      peakGlucose: peakGlucose ?? this.peakGlucose,
+      peakTimeMinutes: peakTimeMinutes ?? this.peakTimeMinutes,
+      twoHourGlucose: twoHourGlucose ?? this.twoHourGlucose,
+      riskLevel: riskLevel ?? this.riskLevel,
+      summary: summary ?? this.summary,
+      pointsJson: pointsJson ?? this.pointsJson,
+      upperBandJson: upperBandJson ?? this.upperBandJson,
+      lowerBandJson: lowerBandJson ?? this.lowerBandJson,
+      confidenceWidth: confidenceWidth ?? this.confidenceWidth,
+      totalAvailableGlucose:
+          totalAvailableGlucose ?? this.totalAvailableGlucose,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (mealLogId.present) {
+      map['meal_log_id'] = Variable<String>(mealLogId.value);
+    }
+    if (timestamp.present) {
+      map['timestamp'] = Variable<DateTime>(timestamp.value);
+    }
+    if (baselineGlucose.present) {
+      map['baseline_glucose'] = Variable<double>(baselineGlucose.value);
+    }
+    if (peakGlucose.present) {
+      map['peak_glucose'] = Variable<double>(peakGlucose.value);
+    }
+    if (peakTimeMinutes.present) {
+      map['peak_time_minutes'] = Variable<int>(peakTimeMinutes.value);
+    }
+    if (twoHourGlucose.present) {
+      map['two_hour_glucose'] = Variable<double>(twoHourGlucose.value);
+    }
+    if (riskLevel.present) {
+      map['risk_level'] = Variable<String>(riskLevel.value);
+    }
+    if (summary.present) {
+      map['summary'] = Variable<String>(summary.value);
+    }
+    if (pointsJson.present) {
+      map['points_json'] = Variable<String>(pointsJson.value);
+    }
+    if (upperBandJson.present) {
+      map['upper_band_json'] = Variable<String>(upperBandJson.value);
+    }
+    if (lowerBandJson.present) {
+      map['lower_band_json'] = Variable<String>(lowerBandJson.value);
+    }
+    if (confidenceWidth.present) {
+      map['confidence_width'] = Variable<double>(confidenceWidth.value);
+    }
+    if (totalAvailableGlucose.present) {
+      map['total_available_glucose'] = Variable<double>(
+        totalAvailableGlucose.value,
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProjectionLogsCompanion(')
+          ..write('id: $id, ')
+          ..write('mealLogId: $mealLogId, ')
+          ..write('timestamp: $timestamp, ')
+          ..write('baselineGlucose: $baselineGlucose, ')
+          ..write('peakGlucose: $peakGlucose, ')
+          ..write('peakTimeMinutes: $peakTimeMinutes, ')
+          ..write('twoHourGlucose: $twoHourGlucose, ')
+          ..write('riskLevel: $riskLevel, ')
+          ..write('summary: $summary, ')
+          ..write('pointsJson: $pointsJson, ')
+          ..write('upperBandJson: $upperBandJson, ')
+          ..write('lowerBandJson: $lowerBandJson, ')
+          ..write('confidenceWidth: $confidenceWidth, ')
+          ..write('totalAvailableGlucose: $totalAvailableGlucose, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -5029,6 +5872,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $MealMacroLogsTable mealMacroLogs = $MealMacroLogsTable(this);
   late final $MedicationLogsTable medicationLogs = $MedicationLogsTable(this);
   late final $UserProfilesTable userProfiles = $UserProfilesTable(this);
+  late final $ProjectionLogsTable projectionLogs = $ProjectionLogsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -5042,6 +5886,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     mealMacroLogs,
     medicationLogs,
     userProfiles,
+    projectionLogs,
   ];
 }
 
@@ -7473,6 +8318,401 @@ typedef $$UserProfilesTableProcessedTableManager =
       UserProfileRow,
       PrefetchHooks Function()
     >;
+typedef $$ProjectionLogsTableCreateCompanionBuilder =
+    ProjectionLogsCompanion Function({
+      required String id,
+      required String mealLogId,
+      required DateTime timestamp,
+      required double baselineGlucose,
+      required double peakGlucose,
+      required int peakTimeMinutes,
+      required double twoHourGlucose,
+      required String riskLevel,
+      required String summary,
+      required String pointsJson,
+      Value<String> upperBandJson,
+      Value<String> lowerBandJson,
+      Value<double> confidenceWidth,
+      required double totalAvailableGlucose,
+      Value<int> rowid,
+    });
+typedef $$ProjectionLogsTableUpdateCompanionBuilder =
+    ProjectionLogsCompanion Function({
+      Value<String> id,
+      Value<String> mealLogId,
+      Value<DateTime> timestamp,
+      Value<double> baselineGlucose,
+      Value<double> peakGlucose,
+      Value<int> peakTimeMinutes,
+      Value<double> twoHourGlucose,
+      Value<String> riskLevel,
+      Value<String> summary,
+      Value<String> pointsJson,
+      Value<String> upperBandJson,
+      Value<String> lowerBandJson,
+      Value<double> confidenceWidth,
+      Value<double> totalAvailableGlucose,
+      Value<int> rowid,
+    });
+
+class $$ProjectionLogsTableFilterComposer
+    extends Composer<_$AppDatabase, $ProjectionLogsTable> {
+  $$ProjectionLogsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get mealLogId => $composableBuilder(
+    column: $table.mealLogId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get timestamp => $composableBuilder(
+    column: $table.timestamp,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get baselineGlucose => $composableBuilder(
+    column: $table.baselineGlucose,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get peakGlucose => $composableBuilder(
+    column: $table.peakGlucose,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get peakTimeMinutes => $composableBuilder(
+    column: $table.peakTimeMinutes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get twoHourGlucose => $composableBuilder(
+    column: $table.twoHourGlucose,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get riskLevel => $composableBuilder(
+    column: $table.riskLevel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get summary => $composableBuilder(
+    column: $table.summary,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get pointsJson => $composableBuilder(
+    column: $table.pointsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get upperBandJson => $composableBuilder(
+    column: $table.upperBandJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lowerBandJson => $composableBuilder(
+    column: $table.lowerBandJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get confidenceWidth => $composableBuilder(
+    column: $table.confidenceWidth,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get totalAvailableGlucose => $composableBuilder(
+    column: $table.totalAvailableGlucose,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ProjectionLogsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ProjectionLogsTable> {
+  $$ProjectionLogsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get mealLogId => $composableBuilder(
+    column: $table.mealLogId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get timestamp => $composableBuilder(
+    column: $table.timestamp,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get baselineGlucose => $composableBuilder(
+    column: $table.baselineGlucose,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get peakGlucose => $composableBuilder(
+    column: $table.peakGlucose,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get peakTimeMinutes => $composableBuilder(
+    column: $table.peakTimeMinutes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get twoHourGlucose => $composableBuilder(
+    column: $table.twoHourGlucose,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get riskLevel => $composableBuilder(
+    column: $table.riskLevel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get summary => $composableBuilder(
+    column: $table.summary,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get pointsJson => $composableBuilder(
+    column: $table.pointsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get upperBandJson => $composableBuilder(
+    column: $table.upperBandJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lowerBandJson => $composableBuilder(
+    column: $table.lowerBandJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get confidenceWidth => $composableBuilder(
+    column: $table.confidenceWidth,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get totalAvailableGlucose => $composableBuilder(
+    column: $table.totalAvailableGlucose,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ProjectionLogsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ProjectionLogsTable> {
+  $$ProjectionLogsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get mealLogId =>
+      $composableBuilder(column: $table.mealLogId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get timestamp =>
+      $composableBuilder(column: $table.timestamp, builder: (column) => column);
+
+  GeneratedColumn<double> get baselineGlucose => $composableBuilder(
+    column: $table.baselineGlucose,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get peakGlucose => $composableBuilder(
+    column: $table.peakGlucose,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get peakTimeMinutes => $composableBuilder(
+    column: $table.peakTimeMinutes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get twoHourGlucose => $composableBuilder(
+    column: $table.twoHourGlucose,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get riskLevel =>
+      $composableBuilder(column: $table.riskLevel, builder: (column) => column);
+
+  GeneratedColumn<String> get summary =>
+      $composableBuilder(column: $table.summary, builder: (column) => column);
+
+  GeneratedColumn<String> get pointsJson => $composableBuilder(
+    column: $table.pointsJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get upperBandJson => $composableBuilder(
+    column: $table.upperBandJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get lowerBandJson => $composableBuilder(
+    column: $table.lowerBandJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get confidenceWidth => $composableBuilder(
+    column: $table.confidenceWidth,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get totalAvailableGlucose => $composableBuilder(
+    column: $table.totalAvailableGlucose,
+    builder: (column) => column,
+  );
+}
+
+class $$ProjectionLogsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ProjectionLogsTable,
+          ProjectionLogRow,
+          $$ProjectionLogsTableFilterComposer,
+          $$ProjectionLogsTableOrderingComposer,
+          $$ProjectionLogsTableAnnotationComposer,
+          $$ProjectionLogsTableCreateCompanionBuilder,
+          $$ProjectionLogsTableUpdateCompanionBuilder,
+          (
+            ProjectionLogRow,
+            BaseReferences<
+              _$AppDatabase,
+              $ProjectionLogsTable,
+              ProjectionLogRow
+            >,
+          ),
+          ProjectionLogRow,
+          PrefetchHooks Function()
+        > {
+  $$ProjectionLogsTableTableManager(
+    _$AppDatabase db,
+    $ProjectionLogsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ProjectionLogsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ProjectionLogsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ProjectionLogsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> mealLogId = const Value.absent(),
+                Value<DateTime> timestamp = const Value.absent(),
+                Value<double> baselineGlucose = const Value.absent(),
+                Value<double> peakGlucose = const Value.absent(),
+                Value<int> peakTimeMinutes = const Value.absent(),
+                Value<double> twoHourGlucose = const Value.absent(),
+                Value<String> riskLevel = const Value.absent(),
+                Value<String> summary = const Value.absent(),
+                Value<String> pointsJson = const Value.absent(),
+                Value<String> upperBandJson = const Value.absent(),
+                Value<String> lowerBandJson = const Value.absent(),
+                Value<double> confidenceWidth = const Value.absent(),
+                Value<double> totalAvailableGlucose = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ProjectionLogsCompanion(
+                id: id,
+                mealLogId: mealLogId,
+                timestamp: timestamp,
+                baselineGlucose: baselineGlucose,
+                peakGlucose: peakGlucose,
+                peakTimeMinutes: peakTimeMinutes,
+                twoHourGlucose: twoHourGlucose,
+                riskLevel: riskLevel,
+                summary: summary,
+                pointsJson: pointsJson,
+                upperBandJson: upperBandJson,
+                lowerBandJson: lowerBandJson,
+                confidenceWidth: confidenceWidth,
+                totalAvailableGlucose: totalAvailableGlucose,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String mealLogId,
+                required DateTime timestamp,
+                required double baselineGlucose,
+                required double peakGlucose,
+                required int peakTimeMinutes,
+                required double twoHourGlucose,
+                required String riskLevel,
+                required String summary,
+                required String pointsJson,
+                Value<String> upperBandJson = const Value.absent(),
+                Value<String> lowerBandJson = const Value.absent(),
+                Value<double> confidenceWidth = const Value.absent(),
+                required double totalAvailableGlucose,
+                Value<int> rowid = const Value.absent(),
+              }) => ProjectionLogsCompanion.insert(
+                id: id,
+                mealLogId: mealLogId,
+                timestamp: timestamp,
+                baselineGlucose: baselineGlucose,
+                peakGlucose: peakGlucose,
+                peakTimeMinutes: peakTimeMinutes,
+                twoHourGlucose: twoHourGlucose,
+                riskLevel: riskLevel,
+                summary: summary,
+                pointsJson: pointsJson,
+                upperBandJson: upperBandJson,
+                lowerBandJson: lowerBandJson,
+                confidenceWidth: confidenceWidth,
+                totalAvailableGlucose: totalAvailableGlucose,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ProjectionLogsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ProjectionLogsTable,
+      ProjectionLogRow,
+      $$ProjectionLogsTableFilterComposer,
+      $$ProjectionLogsTableOrderingComposer,
+      $$ProjectionLogsTableAnnotationComposer,
+      $$ProjectionLogsTableCreateCompanionBuilder,
+      $$ProjectionLogsTableUpdateCompanionBuilder,
+      (
+        ProjectionLogRow,
+        BaseReferences<_$AppDatabase, $ProjectionLogsTable, ProjectionLogRow>,
+      ),
+      ProjectionLogRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -7493,4 +8733,6 @@ class $AppDatabaseManager {
       $$MedicationLogsTableTableManager(_db, _db.medicationLogs);
   $$UserProfilesTableTableManager get userProfiles =>
       $$UserProfilesTableTableManager(_db, _db.userProfiles);
+  $$ProjectionLogsTableTableManager get projectionLogs =>
+      $$ProjectionLogsTableTableManager(_db, _db.projectionLogs);
 }

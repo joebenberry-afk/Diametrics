@@ -1,9 +1,11 @@
+import 'dart:convert';
 import 'package:drift/drift.dart';
 import '../database/database.dart';
 import '../database/db_instance.dart';
 import '../models/glucose_log.dart';
 import '../models/meal_log.dart' as domain_models;
 import '../models/medication_log.dart';
+import '../models/projection_result.dart';
 
 class HealthDataRepository {
   // ── Glucose ────────────────────────────────────────────────────────────
@@ -98,6 +100,7 @@ class HealthDataRepository {
   Future<void> updateMealLog(domain_models.MealLog log) async {
     await (db.update(db.mealMacroLogs)..where((t) => t.id.equals(log.id)))
         .write(MealMacroLogsCompanion(
+          timestamp: Value(log.timestamp),
           name: Value(log.name),
           carbohydrates: Value(log.carbohydrates),
           dietaryFiber: Value(log.dietaryFiber),
@@ -111,6 +114,39 @@ class HealthDataRepository {
           postExercise: Value(log.postExercise),
           notes: Value(log.notes),
         ));
+  }
+
+  // ── Projections ────────────────────────────────────────────────────────
+
+  Future<void> addProjectionLog({
+    required String id,
+    required String mealLogId,
+    required DateTime timestamp,
+    required double baselineGlucose,
+    required ProjectionResult result,
+  }) async {
+    await db.into(db.projectionLogs).insert(ProjectionLogsCompanion(
+      id: Value(id),
+      mealLogId: Value(mealLogId),
+      timestamp: Value(timestamp),
+      baselineGlucose: Value(baselineGlucose),
+      peakGlucose: Value(result.peakGlucose),
+      peakTimeMinutes: Value(result.peakTimeMinutes),
+      twoHourGlucose: Value(result.twoHourGlucose),
+      riskLevel: Value(result.riskLevel),
+      summary: Value(result.summary),
+      pointsJson: Value(jsonEncode(result.points.map((p) => p.toJson()).toList())),
+      upperBandJson: Value(jsonEncode(result.upperBand.map((p) => p.toJson()).toList())),
+      lowerBandJson: Value(jsonEncode(result.lowerBand.map((p) => p.toJson()).toList())),
+      confidenceWidth: Value(result.confidenceWidth),
+      totalAvailableGlucose: Value(result.totalAvailableGlucose),
+    ));
+  }
+
+  Future<List<ProjectionLogRow>> getProjectionLogs() async {
+    return (db.select(db.projectionLogs)
+      ..orderBy([(t) => OrderingTerm.desc(t.timestamp)]))
+      .get();
   }
 
   // ── Deletes ────────────────────────────────────────────────────────────

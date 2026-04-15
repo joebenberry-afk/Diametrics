@@ -130,9 +130,31 @@ class UserProfiles extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+@DataClassName('ProjectionLogRow')
+class ProjectionLogs extends Table {
+  TextColumn get id => text()();
+  TextColumn get mealLogId => text()();
+  DateTimeColumn get timestamp => dateTime()();
+  RealColumn get baselineGlucose => real()();
+  RealColumn get peakGlucose => real()();
+  IntColumn get peakTimeMinutes => integer()();
+  RealColumn get twoHourGlucose => real()();
+  TextColumn get riskLevel => text()();
+  TextColumn get summary => text()();
+  TextColumn get pointsJson => text()();
+  TextColumn get upperBandJson => text().withDefault(const Constant('[]'))();
+  TextColumn get lowerBandJson => text().withDefault(const Constant('[]'))();
+  RealColumn get confidenceWidth => real().withDefault(const Constant(25.0))();
+  RealColumn get totalAvailableGlucose => real()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 @DriftDatabase(tables: [
   LocalFoods, CustomFoods, MealLogs, N5kIngredients,
   GlucoseLogs, MealMacroLogs, MedicationLogs, UserProfiles,
+  ProjectionLogs,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
@@ -141,7 +163,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -167,6 +189,9 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(mealMacroLogs);
         await m.createTable(medicationLogs);
         await m.createTable(userProfiles);
+      }
+      if (from <= 5) {
+        await m.createTable(projectionLogs);
       }
     },
   );
