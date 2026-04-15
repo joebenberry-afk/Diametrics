@@ -116,10 +116,10 @@ class ProjectionResultView extends ConsumerWidget {
                         width: 12,
                         height: 12,
                         decoration: BoxDecoration(
-                          color: AppThemeTokens.brandPrimary.withValues(alpha: 0.15),
+                          color: const Color(0xFF00E5FF).withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(2),
                           border: Border.all(
-                            color: AppThemeTokens.brandPrimary.withValues(alpha: 0.3),
+                            color: const Color(0xFF00E5FF).withValues(alpha: 0.4),
                           ),
                         ),
                       ),
@@ -347,8 +347,8 @@ class ProjectionResultView extends ConsumerWidget {
       LineChartBarData(
         spots: spots,
         isCurved: true,
-        color: AppThemeTokens.brandPrimary,
-        barWidth: 3,
+        color: const Color(0xFF00E5FF), // Vivid electric cyan — high visibility on both light and dark
+        barWidth: 3.5,
         isStrokeCapRound: true,
         dotData: FlDotData(
           show: true,
@@ -358,7 +358,7 @@ class ProjectionResultView extends ConsumerWidget {
           },
           getDotPainter: (spot, percent, barData, index) {
             return FlDotCirclePainter(
-              radius: 4,
+              radius: 5,
               color: riskColor,
               strokeWidth: 2,
               strokeColor: Colors.white,
@@ -371,8 +371,8 @@ class ProjectionResultView extends ConsumerWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              AppThemeTokens.brandPrimary.withValues(alpha: 0.3),
-              AppThemeTokens.brandPrimary.withValues(alpha: 0.0),
+              const Color(0xFF00E5FF).withValues(alpha: 0.25),
+              const Color(0xFF00E5FF).withValues(alpha: 0.0),
             ],
           ),
         ),
@@ -386,7 +386,7 @@ class ProjectionResultView extends ConsumerWidget {
         BetweenBarsData(
           fromIndex: 0, // upper band line index
           toIndex: 1, // lower band line index
-          color: AppThemeTokens.brandPrimary.withValues(alpha: 0.12),
+          color: const Color(0xFF00E5FF).withValues(alpha: 0.15),
         ),
       );
     }

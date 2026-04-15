@@ -1,5 +1,4 @@
 import 'package:diametrics/models/user_profile.dart';
-import 'package:diametrics/repositories/user_repository.dart';
 import 'package:diametrics/viewmodels/profile_viewmodel.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -93,7 +92,11 @@ class OnboardingViewModel extends Notifier<UserProfile> {
       targetGlucoseMax: maxTarget,
     );
     state = updated;
-    await UserRepository().saveProfile(updated);
-    ref.invalidate(userProfileProvider);
+    // Use updateProfile() instead of invalidate() so the provider transitions
+    // directly to AsyncData(profile) without passing through a loading state.
+    // invalidate() would re-run build(), putting the provider back into loading
+    // which causes the router redirect to send the user to the splash screen
+    // instead of the dashboard.
+    await ref.read(userProfileProvider.notifier).updateProfile(updated);
   }
 }
