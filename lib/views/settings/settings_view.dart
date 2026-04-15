@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -66,7 +68,8 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
   DateTime? _lastPopulatedAt;
 
   bool _reminderEnabled = false;
-  TimeOfDay? _reminderTime;
+  List<TimeOfDay> _reminderTimes = [];
+  double _textScale = 1.0;
 
   @override
   void initState() {
@@ -146,10 +149,27 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
     final enabled = prefs.getBool('medication_reminder_enabled') ?? false;
     final hour = prefs.getInt('medication_reminder_hour') ?? 8;
     final minute = prefs.getInt('medication_reminder_minute') ?? 0;
+    final textScale = prefs.getDouble('text_scale_factor') ?? 1.0;
+
+    // Load multi-time reminders (or migrate single time)
+    List<TimeOfDay> times = [];
+    final timesJson = prefs.getString('medication_reminder_times');
+    if (timesJson != null) {
+      try {
+        final List<dynamic> decoded = jsonDecode(timesJson);
+        times = decoded.map((e) => TimeOfDay(hour: e['h'] as int, minute: e['m'] as int)).toList();
+      } catch (_) {
+        times = [TimeOfDay(hour: hour, minute: minute)];
+      }
+    } else if (enabled) {
+      times = [TimeOfDay(hour: hour, minute: minute)];
+    }
+
     if (mounted) {
       setState(() {
         _reminderEnabled = enabled;
-        _reminderTime = TimeOfDay(hour: hour, minute: minute);
+        _reminderTimes = times;
+        _textScale = textScale;
       });
     }
   }
@@ -361,17 +381,28 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
       return; // Don't proceed to reminder scheduling if profile save failed.
     }
 
-    // Handle Reminders — in a separate try/catch so a notification-plugin
+    // Handle Reminders + Display — in a separate try/catch so a notification-plugin
     // failure doesn't prevent the profile from being saved.
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('medication_reminder_enabled', _reminderEnabled);
-      if (_reminderTime != null) {
-        await prefs.setInt('medication_reminder_hour', _reminderTime!.hour);
-        await prefs.setInt('medication_reminder_minute', _reminderTime!.minute);
+
+      // Persist multi-time reminders
+      final timesJson = jsonEncode(
+        _reminderTimes.map((t) => {'h': t.hour, 'm': t.minute}).toList(),
+      );
+      await prefs.setString('medication_reminder_times', timesJson);
+
+      // Persist text scale
+      await prefs.setDouble('text_scale_factor', _textScale);
+
+      // Legacy single-time keys (for backwards compat)
+      if (_reminderTimes.isNotEmpty) {
+        await prefs.setInt('medication_reminder_hour', _reminderTimes.first.hour);
+        await prefs.setInt('medication_reminder_minute', _reminderTimes.first.minute);
       }
 
-      if (_reminderEnabled && _reminderTime != null) {
+      if (_reminderEnabled && _reminderTimes.isNotEmpty) {
         // Ensure the notification plugin is initialized and permission is
         // granted before attempting to schedule.
         final ready = await ReminderService.initialize();
@@ -387,15 +418,19 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
             ),
           );
         }
-        await ReminderService.scheduleDailyReminder(
-          id: 1, // Single medication reminder
-          title: 'Medication Reminder',
-          body: 'It is time to take your scheduled medication.',
-          hour: _reminderTime!.hour,
-          minute: _reminderTime!.minute,
-        );
+        // Cancel all existing reminders, then reschedule
+        await ReminderService.cancelAllReminders();
+        for (int i = 0; i < _reminderTimes.length; i++) {
+          await ReminderService.scheduleDailyReminder(
+            id: 1000 + i,
+            title: 'Medication Reminder',
+            body: 'Time to take your medication',
+            hour: _reminderTimes[i].hour,
+            minute: _reminderTimes[i].minute,
+          );
+        }
       } else {
-        await ReminderService.cancelReminder(1);
+        await ReminderService.cancelAllReminders();
       }
     } catch (e) {
       debugPrint('Reminder scheduling failed: $e');
@@ -933,55 +968,109 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
             isDark: isDark,
             children: [
               _SettingsSwitch(
-                label: 'Enable Daily Reminder',
-                subtitle: 'Get a notification to log your medication',
+                label: 'Enable Daily Reminders',
+                subtitle: 'Get notifications to log your medication',
                 value: _reminderEnabled,
                 onChanged: (v) {
-                  setState(() => _reminderEnabled = v);
-                  if (v && _reminderTime == null) {
-                    _reminderTime = const TimeOfDay(hour: 8, minute: 0);
-                  }
+                  setState(() {
+                    _reminderEnabled = v;
+                    if (v && _reminderTimes.isEmpty) {
+                      _reminderTimes = [const TimeOfDay(hour: 8, minute: 0)];
+                    }
+                  });
                   _markDirty();
                 },
               ),
-              if (_reminderEnabled && _reminderTime != null) ...[
+              if (_reminderEnabled) ...[
                 const Divider(height: 1),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(
-                    'Reminder Time',
-                    style: TextStyle(
-                      color: isDark ? Colors.white : AppThemeTokens.textPrimary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15,
+                ..._reminderTimes.asMap().entries.map((entry) {
+                  final idx = entry.key;
+                  final time = entry.value;
+                  return ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.alarm, size: 20, color: AppThemeTokens.brandPrimary),
+                    title: Text(
+                      time.format(context),
+                      style: TextStyle(
+                        color: isDark ? Colors.white : AppThemeTokens.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.close, size: 18),
+                      onPressed: () {
+                        setState(() => _reminderTimes.removeAt(idx));
+                        _markDirty();
+                      },
+                    ),
+                    onTap: () async {
+                      final picked = await showTimePicker(context: context, initialTime: time);
+                      if (picked != null) {
+                        setState(() => _reminderTimes[idx] = picked);
+                        _markDirty();
+                      }
+                    },
+                  );
+                }),
+                if (_reminderTimes.length < 4)
+                  Padding(
+                    padding: const EdgeInsets.only(top: AppThemeTokens.spaceSm),
+                    child: TextButton.icon(
+                      onPressed: () async {
+                        final picked = await showTimePicker(
+                          context: context,
+                          initialTime: const TimeOfDay(hour: 12, minute: 0),
+                        );
+                        if (picked != null) {
+                          setState(() => _reminderTimes.add(picked));
+                          _markDirty();
+                        }
+                      },
+                      icon: const Icon(Icons.add, size: 18),
+                      label: const Text('Add Reminder Time'),
                     ),
                   ),
-                  subtitle: Text(
-                    _reminderTime!.format(context),
-                    style: TextStyle(
-                      color: isDark
-                          ? Colors.white60
-                          : AppThemeTokens.textSecondary,
-                      fontSize: 14,
-                    ),
-                  ),
-                  trailing: const Icon(
-                    Icons.edit_calendar_rounded,
-                    color: AppThemeTokens.brandPrimary,
-                    size: 20,
-                  ),
-                  onTap: () async {
-                    final newTime = await showTimePicker(
-                      context: context,
-                      initialTime: _reminderTime!,
-                    );
-                    if (newTime != null) {
-                      setState(() => _reminderTime = newTime);
-                      _markDirty();
-                    }
-                  },
-                ),
               ],
+            ],
+          ),
+
+          const SizedBox(height: AppThemeTokens.spaceMd),
+
+          // ── Display Settings ──────────────────────────────────────────
+          _SectionCard(
+            title: 'Display',
+            icon: Icons.text_fields_rounded,
+            isDark: isDark,
+            children: [
+              Text(
+                'Text Size',
+                style: TextStyle(
+                  color: isDark ? Colors.white : AppThemeTokens.textPrimary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Adjust text size for readability',
+                style: TextStyle(
+                  color: isDark ? Colors.white54 : AppThemeTokens.textSecondary,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: AppThemeTokens.spaceMd),
+              SegmentedButton<double>(
+                segments: const [
+                  ButtonSegment(value: 1.0, label: Text('Standard')),
+                  ButtonSegment(value: 1.15, label: Text('Large')),
+                  ButtonSegment(value: 1.3, label: Text('Extra Large')),
+                ],
+                selected: {_textScale},
+                onSelectionChanged: (values) {
+                  setState(() => _textScale = values.first);
+                  _markDirty();
+                },
+              ),
             ],
           ),
 

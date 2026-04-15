@@ -9,6 +9,7 @@ import '../models/projection_result.dart';
 import '../repositories/user_repository.dart';
 import '../services/ekf_tuning_service.dart';
 import '../services/glucose_projection_service.dart';
+import '../services/reminder_service.dart';
 import 'health_data_viewmodel.dart';
 
 /// Sentinel used to explicitly set a nullable [copyWith] field to `null`.
@@ -46,6 +47,8 @@ class LoggingWizardState {
   final String medicationType;
 
   final bool postExercise; // Track exercise flag for meal wizard
+  final List<String> glucoseTags; // Context tags for glucose readings
+  final List<String> mealTags; // Context tags for meals
 
   final bool isSubmitting;
   final String? error;
@@ -69,6 +72,8 @@ class LoggingWizardState {
     this.pendingMedicationUnits,
     this.medicationType = 'rapid_acting_insulin',
     this.postExercise = false,
+    this.glucoseTags = const [],
+    this.mealTags = const [],
     this.isSubmitting = false,
     this.error,
   });
@@ -96,6 +101,8 @@ class LoggingWizardState {
     double? pendingMedicationUnits,
     String? medicationType,
     bool? postExercise,
+    List<String>? glucoseTags,
+    List<String>? mealTags,
     bool? isSubmitting,
     String? error,
   }) {
@@ -120,6 +127,8 @@ class LoggingWizardState {
           pendingMedicationUnits ?? this.pendingMedicationUnits,
       medicationType: medicationType ?? this.medicationType,
       postExercise: postExercise ?? this.postExercise,
+      glucoseTags: glucoseTags ?? this.glucoseTags,
+      mealTags: mealTags ?? this.mealTags,
       isSubmitting: isSubmitting ?? this.isSubmitting,
       // Sentinel pattern: pass _clearValue to explicitly clear error to null.
       error: error == _clearValue ? null : (error ?? this.error),
@@ -193,6 +202,26 @@ class LoggingWizardViewModel extends Notifier<LoggingWizardState> {
   void togglePostExercise(bool val) =>
       state = state.copyWith(postExercise: val);
 
+  void toggleGlucoseTag(String tag) {
+    final tags = List<String>.from(state.glucoseTags);
+    if (tags.contains(tag)) {
+      tags.remove(tag);
+    } else {
+      tags.add(tag);
+    }
+    state = state.copyWith(glucoseTags: tags);
+  }
+
+  void toggleMealTag(String tag) {
+    final tags = List<String>.from(state.mealTags);
+    if (tags.contains(tag)) {
+      tags.remove(tag);
+    } else {
+      tags.add(tag);
+    }
+    state = state.copyWith(mealTags: tags);
+  }
+
   /// Populates meal macro fields from a barcode scan result (FoodItem).
   /// Called after the user successfully scans a packaged food barcode.
   void setFromBarcodeResult({
@@ -263,6 +292,7 @@ class LoggingWizardViewModel extends Notifier<LoggingWizardState> {
         value: state.pendingGlucoseValue!,
         unit: state.glucoseUnit,
         context: state.glucoseContext,
+        tags: state.glucoseTags,
       );
 
       final dataRepo = ref.read(healthDataRepositoryProvider);
@@ -406,6 +436,7 @@ class LoggingWizardViewModel extends Notifier<LoggingWizardState> {
         mealType: state.mealType,
         foodFormFactor: state.foodFormFactor,
         postExercise: state.postExercise,
+        tags: state.mealTags,
         projectionPeakMgDl: result.peakGlucose,
         projectionTwoHourMgDl: result.twoHourGlucose,
       );
@@ -422,6 +453,16 @@ class LoggingWizardViewModel extends Notifier<LoggingWizardState> {
       );
       ref.invalidate(projectionLogsProvider);
 
+      // 5. Schedule post-meal glucose reminder 2 hours from now
+      final mealDisplayName = state.mealName ??
+          '${state.mealType[0].toUpperCase()}${state.mealType.substring(1)}';
+      unawaited(ReminderService.scheduleOneShot(
+        id: mealLog.id.hashCode,
+        title: 'Post-Meal Glucose Check',
+        body: 'Time to log your post-meal glucose for $mealDisplayName',
+        fireAt: DateTime.now().add(const Duration(hours: 2)),
+      ));
+
       // Reset wizard state
       state = LoggingWizardState();
       return {'result': result, 'unit': unit, 'mealCount': mealCount};
@@ -436,6 +477,23 @@ class LoggingWizardViewModel extends Notifier<LoggingWizardState> {
   /// stale values from a previously opened (but cancelled) wizard are cleared.
   void reset() {
     state = LoggingWizardState();
+  }
+
+  /// Pre-populates wizard state from a previously logged meal for quick re-logging.
+  void initFromMeal(MealLog meal) {
+    state = LoggingWizardState(
+      pendingCarbs: meal.carbohydrates,
+      pendingFiber: meal.dietaryFiber,
+      pendingProteins: meal.proteins,
+      pendingFats: meal.fats,
+      pendingCalories: meal.calories,
+      containsAlcohol: meal.containsAlcohol,
+      containsCaffeine: meal.containsCaffeine,
+      mealType: meal.mealType,
+      foodFormFactor: meal.foodFormFactor,
+      postExercise: meal.postExercise,
+      mealName: meal.name,
+    );
   }
 
   // --- EKF Background Tuning ---

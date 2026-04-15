@@ -65,6 +65,8 @@ dependencies:
   url_launcher: ^6.3.1
   pedometer: ^4.2.0
   google_generative_ai: ^0.4.7
+  pdf: ^3.11.2
+  printing: ^5.13.4
 
 dev_dependencies:
   flutter_test:

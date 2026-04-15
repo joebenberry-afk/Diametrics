@@ -9,6 +9,8 @@ import '../../models/glucose_log.dart';
 import '../../models/meal_log.dart';
 import '../../models/medication_log.dart';
 import '../../router/route_names.dart';
+import '../../services/export_service.dart';
+import '../../viewmodels/health_data_viewmodel.dart';
 import '../../viewmodels/profile_viewmodel.dart';
 import '../../viewmodels/trends_viewmodel.dart';
 
@@ -41,7 +43,35 @@ class TrendsView extends ConsumerWidget {
               )
             : null,
         actions: [
-          if (selectedDay == null)
+          if (selectedDay == null) ...[
+            IconButton(
+              icon: const Icon(Icons.share_outlined),
+              tooltip: 'Export PDF Report',
+              onPressed: () async {
+                final glucoseLogs =
+                    ref.read(glucoseLogsProvider).valueOrNull ?? [];
+                final mealLogs =
+                    ref.read(mealLogsProvider).valueOrNull ?? [];
+                final medLogs =
+                    ref.read(medicationLogsProvider).valueOrNull ?? [];
+                final now = DateTime.now();
+                final rangeStart =
+                    now.subtract(Duration(days: selectedDays));
+
+                await ExportService.generateAndShareReport(
+                  patientName: profile?.name ?? 'Patient',
+                  diabetesType: profile?.diabetesType ?? '',
+                  preferredUnit: unit,
+                  targetMin: targetMin,
+                  targetMax: targetMax,
+                  glucoseLogs: glucoseLogs,
+                  mealLogs: mealLogs,
+                  medicationLogs: medLogs,
+                  rangeStart: rangeStart,
+                  rangeEnd: now,
+                );
+              },
+            ),
             TextButton.icon(
               onPressed: () => context.push(Routes.glucoseHistory),
               icon: const Icon(
@@ -54,6 +84,7 @@ class TrendsView extends ConsumerWidget {
                 style: TextStyle(color: AppThemeTokens.textPrimaryInverse),
               ),
             ),
+          ],
         ],
       ),
       body: SafeArea(

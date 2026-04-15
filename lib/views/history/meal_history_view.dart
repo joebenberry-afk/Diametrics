@@ -672,7 +672,17 @@ class _MealHistoryTile extends ConsumerWidget {
               '${log.calories.toStringAsFixed(0)} kcal',
               style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
             ),
-          const SizedBox(width: 4),
+          IconButton(
+            icon: const Icon(Icons.replay_outlined, size: 18),
+            tooltip: 'Log similar meal',
+            color: AppThemeTokens.brandSuccess,
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            padding: EdgeInsets.zero,
+            onPressed: () {
+              ref.read(loggingWizardProvider.notifier).initFromMeal(log);
+              if (context.mounted) context.push(Routes.logMeal);
+            },
+          ),
           const Icon(Icons.edit_outlined, size: 16, color: AppThemeTokens.textSecondary),
         ],
       ),

@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'core/auth/auth_wrapper.dart';
 import 'core/theme/app_theme.dart';
 import 'core/widgets/database_error_screen.dart';
@@ -66,11 +68,30 @@ void main() async {
   });
 }
 
-class DiametricsApp extends ConsumerWidget {
+class DiametricsApp extends ConsumerStatefulWidget {
   const DiametricsApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DiametricsApp> createState() => _DiametricsAppState();
+}
+
+class _DiametricsAppState extends ConsumerState<DiametricsApp> {
+  double _textScale = 1.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTextScale();
+  }
+
+  Future<void> _loadTextScale() async {
+    final prefs = await SharedPreferences.getInstance();
+    final scale = prefs.getDouble('text_scale_factor') ?? 1.0;
+    if (mounted) setState(() => _textScale = scale);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
 
     return MaterialApp.router(
@@ -80,6 +101,14 @@ class DiametricsApp extends ConsumerWidget {
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
       routerConfig: router,
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.linear(_textScale),
+          ),
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
     );
   }
 }

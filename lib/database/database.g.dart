@@ -1833,6 +1833,16 @@ class $GlucoseLogsTable extends GlucoseLogs
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _tagsMeta = const VerificationMeta('tags');
+  @override
+  late final GeneratedColumn<String> tags = GeneratedColumn<String>(
+    'tags',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1842,6 +1852,7 @@ class $GlucoseLogsTable extends GlucoseLogs
     timestamp,
     notes,
     linkedMealId,
+    tags,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1907,6 +1918,12 @@ class $GlucoseLogsTable extends GlucoseLogs
         ),
       );
     }
+    if (data.containsKey('tags')) {
+      context.handle(
+        _tagsMeta,
+        tags.isAcceptableOrUnknown(data['tags']!, _tagsMeta),
+      );
+    }
     return context;
   }
 
@@ -1944,6 +1961,10 @@ class $GlucoseLogsTable extends GlucoseLogs
         DriftSqlType.string,
         data['${effectivePrefix}linked_meal_id'],
       ),
+      tags: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tags'],
+      )!,
     );
   }
 
@@ -1961,6 +1982,7 @@ class GlucoseLogRow extends DataClass implements Insertable<GlucoseLogRow> {
   final DateTime timestamp;
   final String? notes;
   final String? linkedMealId;
+  final String tags;
   const GlucoseLogRow({
     required this.id,
     required this.value,
@@ -1969,6 +1991,7 @@ class GlucoseLogRow extends DataClass implements Insertable<GlucoseLogRow> {
     required this.timestamp,
     this.notes,
     this.linkedMealId,
+    required this.tags,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1984,6 +2007,7 @@ class GlucoseLogRow extends DataClass implements Insertable<GlucoseLogRow> {
     if (!nullToAbsent || linkedMealId != null) {
       map['linked_meal_id'] = Variable<String>(linkedMealId);
     }
+    map['tags'] = Variable<String>(tags);
     return map;
   }
 
@@ -2000,6 +2024,7 @@ class GlucoseLogRow extends DataClass implements Insertable<GlucoseLogRow> {
       linkedMealId: linkedMealId == null && nullToAbsent
           ? const Value.absent()
           : Value(linkedMealId),
+      tags: Value(tags),
     );
   }
 
@@ -2016,6 +2041,7 @@ class GlucoseLogRow extends DataClass implements Insertable<GlucoseLogRow> {
       timestamp: serializer.fromJson<DateTime>(json['timestamp']),
       notes: serializer.fromJson<String?>(json['notes']),
       linkedMealId: serializer.fromJson<String?>(json['linkedMealId']),
+      tags: serializer.fromJson<String>(json['tags']),
     );
   }
   @override
@@ -2029,6 +2055,7 @@ class GlucoseLogRow extends DataClass implements Insertable<GlucoseLogRow> {
       'timestamp': serializer.toJson<DateTime>(timestamp),
       'notes': serializer.toJson<String?>(notes),
       'linkedMealId': serializer.toJson<String?>(linkedMealId),
+      'tags': serializer.toJson<String>(tags),
     };
   }
 
@@ -2040,6 +2067,7 @@ class GlucoseLogRow extends DataClass implements Insertable<GlucoseLogRow> {
     DateTime? timestamp,
     Value<String?> notes = const Value.absent(),
     Value<String?> linkedMealId = const Value.absent(),
+    String? tags,
   }) => GlucoseLogRow(
     id: id ?? this.id,
     value: value ?? this.value,
@@ -2048,6 +2076,7 @@ class GlucoseLogRow extends DataClass implements Insertable<GlucoseLogRow> {
     timestamp: timestamp ?? this.timestamp,
     notes: notes.present ? notes.value : this.notes,
     linkedMealId: linkedMealId.present ? linkedMealId.value : this.linkedMealId,
+    tags: tags ?? this.tags,
   );
   GlucoseLogRow copyWithCompanion(GlucoseLogsCompanion data) {
     return GlucoseLogRow(
@@ -2060,6 +2089,7 @@ class GlucoseLogRow extends DataClass implements Insertable<GlucoseLogRow> {
       linkedMealId: data.linkedMealId.present
           ? data.linkedMealId.value
           : this.linkedMealId,
+      tags: data.tags.present ? data.tags.value : this.tags,
     );
   }
 
@@ -2072,14 +2102,23 @@ class GlucoseLogRow extends DataClass implements Insertable<GlucoseLogRow> {
           ..write('context: $context, ')
           ..write('timestamp: $timestamp, ')
           ..write('notes: $notes, ')
-          ..write('linkedMealId: $linkedMealId')
+          ..write('linkedMealId: $linkedMealId, ')
+          ..write('tags: $tags')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, value, unit, context, timestamp, notes, linkedMealId);
+  int get hashCode => Object.hash(
+    id,
+    value,
+    unit,
+    context,
+    timestamp,
+    notes,
+    linkedMealId,
+    tags,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2090,7 +2129,8 @@ class GlucoseLogRow extends DataClass implements Insertable<GlucoseLogRow> {
           other.context == this.context &&
           other.timestamp == this.timestamp &&
           other.notes == this.notes &&
-          other.linkedMealId == this.linkedMealId);
+          other.linkedMealId == this.linkedMealId &&
+          other.tags == this.tags);
 }
 
 class GlucoseLogsCompanion extends UpdateCompanion<GlucoseLogRow> {
@@ -2101,6 +2141,7 @@ class GlucoseLogsCompanion extends UpdateCompanion<GlucoseLogRow> {
   final Value<DateTime> timestamp;
   final Value<String?> notes;
   final Value<String?> linkedMealId;
+  final Value<String> tags;
   final Value<int> rowid;
   const GlucoseLogsCompanion({
     this.id = const Value.absent(),
@@ -2110,6 +2151,7 @@ class GlucoseLogsCompanion extends UpdateCompanion<GlucoseLogRow> {
     this.timestamp = const Value.absent(),
     this.notes = const Value.absent(),
     this.linkedMealId = const Value.absent(),
+    this.tags = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   GlucoseLogsCompanion.insert({
@@ -2120,6 +2162,7 @@ class GlucoseLogsCompanion extends UpdateCompanion<GlucoseLogRow> {
     required DateTime timestamp,
     this.notes = const Value.absent(),
     this.linkedMealId = const Value.absent(),
+    this.tags = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        value = Value(value),
@@ -2134,6 +2177,7 @@ class GlucoseLogsCompanion extends UpdateCompanion<GlucoseLogRow> {
     Expression<DateTime>? timestamp,
     Expression<String>? notes,
     Expression<String>? linkedMealId,
+    Expression<String>? tags,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2144,6 +2188,7 @@ class GlucoseLogsCompanion extends UpdateCompanion<GlucoseLogRow> {
       if (timestamp != null) 'timestamp': timestamp,
       if (notes != null) 'notes': notes,
       if (linkedMealId != null) 'linked_meal_id': linkedMealId,
+      if (tags != null) 'tags': tags,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2156,6 +2201,7 @@ class GlucoseLogsCompanion extends UpdateCompanion<GlucoseLogRow> {
     Value<DateTime>? timestamp,
     Value<String?>? notes,
     Value<String?>? linkedMealId,
+    Value<String>? tags,
     Value<int>? rowid,
   }) {
     return GlucoseLogsCompanion(
@@ -2166,6 +2212,7 @@ class GlucoseLogsCompanion extends UpdateCompanion<GlucoseLogRow> {
       timestamp: timestamp ?? this.timestamp,
       notes: notes ?? this.notes,
       linkedMealId: linkedMealId ?? this.linkedMealId,
+      tags: tags ?? this.tags,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2194,6 +2241,9 @@ class GlucoseLogsCompanion extends UpdateCompanion<GlucoseLogRow> {
     if (linkedMealId.present) {
       map['linked_meal_id'] = Variable<String>(linkedMealId.value);
     }
+    if (tags.present) {
+      map['tags'] = Variable<String>(tags.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2210,6 +2260,7 @@ class GlucoseLogsCompanion extends UpdateCompanion<GlucoseLogRow> {
           ..write('timestamp: $timestamp, ')
           ..write('notes: $notes, ')
           ..write('linkedMealId: $linkedMealId, ')
+          ..write('tags: $tags, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2383,6 +2434,16 @@ class $MealMacroLogsTable extends MealMacroLogs
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _tagsMeta = const VerificationMeta('tags');
+  @override
+  late final GeneratedColumn<String> tags = GeneratedColumn<String>(
+    'tags',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
   static const VerificationMeta _projectionPeakMgDlMeta =
       const VerificationMeta('projectionPeakMgDl');
   @override
@@ -2423,6 +2484,7 @@ class $MealMacroLogsTable extends MealMacroLogs
     foodFormFactor,
     postExercise,
     notes,
+    tags,
     projectionPeakMgDl,
     projectionTwoHourMgDl,
   ];
@@ -2549,6 +2611,12 @@ class $MealMacroLogsTable extends MealMacroLogs
         notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
       );
     }
+    if (data.containsKey('tags')) {
+      context.handle(
+        _tagsMeta,
+        tags.isAcceptableOrUnknown(data['tags']!, _tagsMeta),
+      );
+    }
     if (data.containsKey('projection_peak_mg_dl')) {
       context.handle(
         _projectionPeakMgDlMeta,
@@ -2632,6 +2700,10 @@ class $MealMacroLogsTable extends MealMacroLogs
         DriftSqlType.string,
         data['${effectivePrefix}notes'],
       ),
+      tags: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tags'],
+      )!,
       projectionPeakMgDl: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}projection_peak_mg_dl'],
@@ -2664,6 +2736,7 @@ class MealMacroLog extends DataClass implements Insertable<MealMacroLog> {
   final String foodFormFactor;
   final bool postExercise;
   final String? notes;
+  final String tags;
   final double projectionPeakMgDl;
   final double projectionTwoHourMgDl;
   const MealMacroLog({
@@ -2681,6 +2754,7 @@ class MealMacroLog extends DataClass implements Insertable<MealMacroLog> {
     required this.foodFormFactor,
     required this.postExercise,
     this.notes,
+    required this.tags,
     required this.projectionPeakMgDl,
     required this.projectionTwoHourMgDl,
   });
@@ -2705,6 +2779,7 @@ class MealMacroLog extends DataClass implements Insertable<MealMacroLog> {
     if (!nullToAbsent || notes != null) {
       map['notes'] = Variable<String>(notes);
     }
+    map['tags'] = Variable<String>(tags);
     map['projection_peak_mg_dl'] = Variable<double>(projectionPeakMgDl);
     map['projection_two_hour_mg_dl'] = Variable<double>(projectionTwoHourMgDl);
     return map;
@@ -2728,6 +2803,7 @@ class MealMacroLog extends DataClass implements Insertable<MealMacroLog> {
       notes: notes == null && nullToAbsent
           ? const Value.absent()
           : Value(notes),
+      tags: Value(tags),
       projectionPeakMgDl: Value(projectionPeakMgDl),
       projectionTwoHourMgDl: Value(projectionTwoHourMgDl),
     );
@@ -2753,6 +2829,7 @@ class MealMacroLog extends DataClass implements Insertable<MealMacroLog> {
       foodFormFactor: serializer.fromJson<String>(json['foodFormFactor']),
       postExercise: serializer.fromJson<bool>(json['postExercise']),
       notes: serializer.fromJson<String?>(json['notes']),
+      tags: serializer.fromJson<String>(json['tags']),
       projectionPeakMgDl: serializer.fromJson<double>(
         json['projectionPeakMgDl'],
       ),
@@ -2779,6 +2856,7 @@ class MealMacroLog extends DataClass implements Insertable<MealMacroLog> {
       'foodFormFactor': serializer.toJson<String>(foodFormFactor),
       'postExercise': serializer.toJson<bool>(postExercise),
       'notes': serializer.toJson<String?>(notes),
+      'tags': serializer.toJson<String>(tags),
       'projectionPeakMgDl': serializer.toJson<double>(projectionPeakMgDl),
       'projectionTwoHourMgDl': serializer.toJson<double>(projectionTwoHourMgDl),
     };
@@ -2799,6 +2877,7 @@ class MealMacroLog extends DataClass implements Insertable<MealMacroLog> {
     String? foodFormFactor,
     bool? postExercise,
     Value<String?> notes = const Value.absent(),
+    String? tags,
     double? projectionPeakMgDl,
     double? projectionTwoHourMgDl,
   }) => MealMacroLog(
@@ -2816,6 +2895,7 @@ class MealMacroLog extends DataClass implements Insertable<MealMacroLog> {
     foodFormFactor: foodFormFactor ?? this.foodFormFactor,
     postExercise: postExercise ?? this.postExercise,
     notes: notes.present ? notes.value : this.notes,
+    tags: tags ?? this.tags,
     projectionPeakMgDl: projectionPeakMgDl ?? this.projectionPeakMgDl,
     projectionTwoHourMgDl: projectionTwoHourMgDl ?? this.projectionTwoHourMgDl,
   );
@@ -2847,6 +2927,7 @@ class MealMacroLog extends DataClass implements Insertable<MealMacroLog> {
           ? data.postExercise.value
           : this.postExercise,
       notes: data.notes.present ? data.notes.value : this.notes,
+      tags: data.tags.present ? data.tags.value : this.tags,
       projectionPeakMgDl: data.projectionPeakMgDl.present
           ? data.projectionPeakMgDl.value
           : this.projectionPeakMgDl,
@@ -2873,6 +2954,7 @@ class MealMacroLog extends DataClass implements Insertable<MealMacroLog> {
           ..write('foodFormFactor: $foodFormFactor, ')
           ..write('postExercise: $postExercise, ')
           ..write('notes: $notes, ')
+          ..write('tags: $tags, ')
           ..write('projectionPeakMgDl: $projectionPeakMgDl, ')
           ..write('projectionTwoHourMgDl: $projectionTwoHourMgDl')
           ..write(')'))
@@ -2895,6 +2977,7 @@ class MealMacroLog extends DataClass implements Insertable<MealMacroLog> {
     foodFormFactor,
     postExercise,
     notes,
+    tags,
     projectionPeakMgDl,
     projectionTwoHourMgDl,
   );
@@ -2916,6 +2999,7 @@ class MealMacroLog extends DataClass implements Insertable<MealMacroLog> {
           other.foodFormFactor == this.foodFormFactor &&
           other.postExercise == this.postExercise &&
           other.notes == this.notes &&
+          other.tags == this.tags &&
           other.projectionPeakMgDl == this.projectionPeakMgDl &&
           other.projectionTwoHourMgDl == this.projectionTwoHourMgDl);
 }
@@ -2935,6 +3019,7 @@ class MealMacroLogsCompanion extends UpdateCompanion<MealMacroLog> {
   final Value<String> foodFormFactor;
   final Value<bool> postExercise;
   final Value<String?> notes;
+  final Value<String> tags;
   final Value<double> projectionPeakMgDl;
   final Value<double> projectionTwoHourMgDl;
   final Value<int> rowid;
@@ -2953,6 +3038,7 @@ class MealMacroLogsCompanion extends UpdateCompanion<MealMacroLog> {
     this.foodFormFactor = const Value.absent(),
     this.postExercise = const Value.absent(),
     this.notes = const Value.absent(),
+    this.tags = const Value.absent(),
     this.projectionPeakMgDl = const Value.absent(),
     this.projectionTwoHourMgDl = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -2972,6 +3058,7 @@ class MealMacroLogsCompanion extends UpdateCompanion<MealMacroLog> {
     this.foodFormFactor = const Value.absent(),
     this.postExercise = const Value.absent(),
     this.notes = const Value.absent(),
+    this.tags = const Value.absent(),
     this.projectionPeakMgDl = const Value.absent(),
     this.projectionTwoHourMgDl = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -2996,6 +3083,7 @@ class MealMacroLogsCompanion extends UpdateCompanion<MealMacroLog> {
     Expression<String>? foodFormFactor,
     Expression<bool>? postExercise,
     Expression<String>? notes,
+    Expression<String>? tags,
     Expression<double>? projectionPeakMgDl,
     Expression<double>? projectionTwoHourMgDl,
     Expression<int>? rowid,
@@ -3015,6 +3103,7 @@ class MealMacroLogsCompanion extends UpdateCompanion<MealMacroLog> {
       if (foodFormFactor != null) 'food_form_factor': foodFormFactor,
       if (postExercise != null) 'post_exercise': postExercise,
       if (notes != null) 'notes': notes,
+      if (tags != null) 'tags': tags,
       if (projectionPeakMgDl != null)
         'projection_peak_mg_dl': projectionPeakMgDl,
       if (projectionTwoHourMgDl != null)
@@ -3038,6 +3127,7 @@ class MealMacroLogsCompanion extends UpdateCompanion<MealMacroLog> {
     Value<String>? foodFormFactor,
     Value<bool>? postExercise,
     Value<String?>? notes,
+    Value<String>? tags,
     Value<double>? projectionPeakMgDl,
     Value<double>? projectionTwoHourMgDl,
     Value<int>? rowid,
@@ -3057,6 +3147,7 @@ class MealMacroLogsCompanion extends UpdateCompanion<MealMacroLog> {
       foodFormFactor: foodFormFactor ?? this.foodFormFactor,
       postExercise: postExercise ?? this.postExercise,
       notes: notes ?? this.notes,
+      tags: tags ?? this.tags,
       projectionPeakMgDl: projectionPeakMgDl ?? this.projectionPeakMgDl,
       projectionTwoHourMgDl:
           projectionTwoHourMgDl ?? this.projectionTwoHourMgDl,
@@ -3109,6 +3200,9 @@ class MealMacroLogsCompanion extends UpdateCompanion<MealMacroLog> {
     if (notes.present) {
       map['notes'] = Variable<String>(notes.value);
     }
+    if (tags.present) {
+      map['tags'] = Variable<String>(tags.value);
+    }
     if (projectionPeakMgDl.present) {
       map['projection_peak_mg_dl'] = Variable<double>(projectionPeakMgDl.value);
     }
@@ -3140,6 +3234,7 @@ class MealMacroLogsCompanion extends UpdateCompanion<MealMacroLog> {
           ..write('foodFormFactor: $foodFormFactor, ')
           ..write('postExercise: $postExercise, ')
           ..write('notes: $notes, ')
+          ..write('tags: $tags, ')
           ..write('projectionPeakMgDl: $projectionPeakMgDl, ')
           ..write('projectionTwoHourMgDl: $projectionTwoHourMgDl, ')
           ..write('rowid: $rowid')
@@ -6973,6 +7068,7 @@ typedef $$GlucoseLogsTableCreateCompanionBuilder =
       required DateTime timestamp,
       Value<String?> notes,
       Value<String?> linkedMealId,
+      Value<String> tags,
       Value<int> rowid,
     });
 typedef $$GlucoseLogsTableUpdateCompanionBuilder =
@@ -6984,6 +7080,7 @@ typedef $$GlucoseLogsTableUpdateCompanionBuilder =
       Value<DateTime> timestamp,
       Value<String?> notes,
       Value<String?> linkedMealId,
+      Value<String> tags,
       Value<int> rowid,
     });
 
@@ -7028,6 +7125,11 @@ class $$GlucoseLogsTableFilterComposer
 
   ColumnFilters<String> get linkedMealId => $composableBuilder(
     column: $table.linkedMealId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tags => $composableBuilder(
+    column: $table.tags,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -7075,6 +7177,11 @@ class $$GlucoseLogsTableOrderingComposer
     column: $table.linkedMealId,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get tags => $composableBuilder(
+    column: $table.tags,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$GlucoseLogsTableAnnotationComposer
@@ -7108,6 +7215,9 @@ class $$GlucoseLogsTableAnnotationComposer
     column: $table.linkedMealId,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get tags =>
+      $composableBuilder(column: $table.tags, builder: (column) => column);
 }
 
 class $$GlucoseLogsTableTableManager
@@ -7148,6 +7258,7 @@ class $$GlucoseLogsTableTableManager
                 Value<DateTime> timestamp = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
                 Value<String?> linkedMealId = const Value.absent(),
+                Value<String> tags = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => GlucoseLogsCompanion(
                 id: id,
@@ -7157,6 +7268,7 @@ class $$GlucoseLogsTableTableManager
                 timestamp: timestamp,
                 notes: notes,
                 linkedMealId: linkedMealId,
+                tags: tags,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -7168,6 +7280,7 @@ class $$GlucoseLogsTableTableManager
                 required DateTime timestamp,
                 Value<String?> notes = const Value.absent(),
                 Value<String?> linkedMealId = const Value.absent(),
+                Value<String> tags = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => GlucoseLogsCompanion.insert(
                 id: id,
@@ -7177,6 +7290,7 @@ class $$GlucoseLogsTableTableManager
                 timestamp: timestamp,
                 notes: notes,
                 linkedMealId: linkedMealId,
+                tags: tags,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -7220,6 +7334,7 @@ typedef $$MealMacroLogsTableCreateCompanionBuilder =
       Value<String> foodFormFactor,
       Value<bool> postExercise,
       Value<String?> notes,
+      Value<String> tags,
       Value<double> projectionPeakMgDl,
       Value<double> projectionTwoHourMgDl,
       Value<int> rowid,
@@ -7240,6 +7355,7 @@ typedef $$MealMacroLogsTableUpdateCompanionBuilder =
       Value<String> foodFormFactor,
       Value<bool> postExercise,
       Value<String?> notes,
+      Value<String> tags,
       Value<double> projectionPeakMgDl,
       Value<double> projectionTwoHourMgDl,
       Value<int> rowid,
@@ -7321,6 +7437,11 @@ class $$MealMacroLogsTableFilterComposer
 
   ColumnFilters<String> get notes => $composableBuilder(
     column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tags => $composableBuilder(
+    column: $table.tags,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7414,6 +7535,11 @@ class $$MealMacroLogsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get tags => $composableBuilder(
+    column: $table.tags,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<double> get projectionPeakMgDl => $composableBuilder(
     column: $table.projectionPeakMgDl,
     builder: (column) => ColumnOrderings(column),
@@ -7488,6 +7614,9 @@ class $$MealMacroLogsTableAnnotationComposer
   GeneratedColumn<String> get notes =>
       $composableBuilder(column: $table.notes, builder: (column) => column);
 
+  GeneratedColumn<String> get tags =>
+      $composableBuilder(column: $table.tags, builder: (column) => column);
+
   GeneratedColumn<double> get projectionPeakMgDl => $composableBuilder(
     column: $table.projectionPeakMgDl,
     builder: (column) => column,
@@ -7544,6 +7673,7 @@ class $$MealMacroLogsTableTableManager
                 Value<String> foodFormFactor = const Value.absent(),
                 Value<bool> postExercise = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
+                Value<String> tags = const Value.absent(),
                 Value<double> projectionPeakMgDl = const Value.absent(),
                 Value<double> projectionTwoHourMgDl = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -7562,6 +7692,7 @@ class $$MealMacroLogsTableTableManager
                 foodFormFactor: foodFormFactor,
                 postExercise: postExercise,
                 notes: notes,
+                tags: tags,
                 projectionPeakMgDl: projectionPeakMgDl,
                 projectionTwoHourMgDl: projectionTwoHourMgDl,
                 rowid: rowid,
@@ -7582,6 +7713,7 @@ class $$MealMacroLogsTableTableManager
                 Value<String> foodFormFactor = const Value.absent(),
                 Value<bool> postExercise = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
+                Value<String> tags = const Value.absent(),
                 Value<double> projectionPeakMgDl = const Value.absent(),
                 Value<double> projectionTwoHourMgDl = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -7600,6 +7732,7 @@ class $$MealMacroLogsTableTableManager
                 foodFormFactor: foodFormFactor,
                 postExercise: postExercise,
                 notes: notes,
+                tags: tags,
                 projectionPeakMgDl: projectionPeakMgDl,
                 projectionTwoHourMgDl: projectionTwoHourMgDl,
                 rowid: rowid,

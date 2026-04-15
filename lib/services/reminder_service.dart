@@ -97,6 +97,43 @@ class ReminderService {
     );
   }
 
+  /// Schedule a one-shot notification at a specific time in the future.
+  /// Unlike [scheduleDailyReminder], this fires once and does not repeat.
+  static Future<void> scheduleOneShot({
+    required int id,
+    required String title,
+    required String body,
+    required DateTime fireAt,
+  }) async {
+    if (!_initialized) {
+      final ok = await initialize();
+      if (!ok) {
+        debugPrint('ReminderService: cannot schedule — init failed');
+        return;
+      }
+    }
+
+    final scheduledDate = tz.TZDateTime.from(fireAt, tz.local);
+
+    await _plugin.zonedSchedule(
+      id: id,
+      title: title,
+      body: body,
+      scheduledDate: scheduledDate,
+      notificationDetails: const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'post_meal_reminders',
+          'Post-Meal Reminders',
+          channelDescription: 'Reminders to log post-meal glucose',
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+        iOS: DarwinNotificationDetails(),
+      ),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+    );
+  }
+
   static Future<void> cancelReminder(int id) async {
     await _plugin.cancel(id: id);
   }

@@ -14,6 +14,7 @@ abstract class GlucoseLog with _$GlucoseLog {
     context, // Enum stored as string: fasting, pre_meal, post_meal_30, post_meal_120, bedtime, night_time
     String? notes, // E.g., stress, exercise
     String? linkedMealId, // FK to MealLog.id — set when logging post-meal glucose from a meal
+    @Default([]) List<String> tags, // e.g., exercise, stress, illness
     @Default(false) bool isSynced,
   }) = _GlucoseLog;
 

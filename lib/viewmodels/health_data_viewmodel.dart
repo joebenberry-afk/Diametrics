@@ -256,6 +256,8 @@ class DailySummary {
   final int mealsLogged;
   final int dosesLogged;
   final double timeInRangePct;
+  final double belowRangePct;
+  final double aboveRangePct;
 
   const DailySummary({
     required this.avgGlucose,
@@ -265,6 +267,8 @@ class DailySummary {
     required this.mealsLogged,
     required this.dosesLogged,
     required this.timeInRangePct,
+    required this.belowRangePct,
+    required this.aboveRangePct,
   });
 }
 
@@ -303,9 +307,21 @@ final dailySummaryProvider = Provider<AsyncValue<DailySummary>>((ref) {
   final inRange = todayGlucose
       .where((g) => toMgdl(g) >= targetMin && toMgdl(g) <= targetMax)
       .length;
+  final belowRange = todayGlucose
+      .where((g) => toMgdl(g) < targetMin)
+      .length;
+  final aboveRange = todayGlucose
+      .where((g) => toMgdl(g) > targetMax)
+      .length;
   final tir = todayGlucose.isEmpty
       ? 0.0
       : (inRange / todayGlucose.length) * 100;
+  final belowPct = todayGlucose.isEmpty
+      ? 0.0
+      : (belowRange / todayGlucose.length) * 100;
+  final abovePct = todayGlucose.isEmpty
+      ? 0.0
+      : (aboveRange / todayGlucose.length) * 100;
   final totalCarbs = todayMeals.fold(0.0, (sum, m) => sum + m.carbohydrates);
   final totalCalories = todayMeals.fold(0.0, (sum, m) => sum + m.calories);
 
@@ -318,6 +334,8 @@ final dailySummaryProvider = Provider<AsyncValue<DailySummary>>((ref) {
       mealsLogged: todayMeals.length,
       dosesLogged: todayMeds.length,
       timeInRangePct: tir,
+      belowRangePct: belowPct,
+      aboveRangePct: abovePct,
     ),
   );
 });

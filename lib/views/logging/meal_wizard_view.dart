@@ -701,7 +701,47 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                 ),
               ),
 
-              const SizedBox(height: AppThemeTokens.spaceXl),
+              const SizedBox(height: AppThemeTokens.spaceMd),
+
+              // ── Meal Tags ───────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppThemeTokens.spaceMd),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Tags (optional)',
+                      style: TextStyle(
+                        color: isDark ? Colors.white70 : AppThemeTokens.textSecondary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: AppThemeTokens.spaceSm),
+                    Wrap(
+                      spacing: AppThemeTokens.spaceSm,
+                      runSpacing: AppThemeTokens.spaceXs,
+                      children: ['Restaurant', 'Home-cooked', 'High-GI', 'Low-GI', 'Takeout', 'Snack'].map((tag) {
+                        final isSelected = state.mealTags.contains(tag);
+                        return FilterChip(
+                          label: Text(tag),
+                          selected: isSelected,
+                          onSelected: (_) => viewModel.toggleMealTag(tag),
+                          selectedColor: AppThemeTokens.brandSuccess,
+                          labelStyle: TextStyle(
+                            color: isSelected ? Colors.white : null,
+                            fontSize: 12,
+                          ),
+                          checkmarkColor: Colors.white,
+                          visualDensity: VisualDensity.compact,
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: AppThemeTokens.spaceMd),
 
               // ── Error message ─────────────────────────────────────
               if (state.error != null)

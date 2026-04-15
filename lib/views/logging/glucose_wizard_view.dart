@@ -267,6 +267,42 @@ class _GlucoseWizardViewState extends ConsumerState<GlucoseWizardView> {
                 ),
               ),
 
+              // Context Tags
+              Padding(
+                padding: const EdgeInsets.only(top: AppThemeTokens.spaceSm),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Tags (optional)',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: isDark ? Colors.white70 : AppThemeTokens.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: AppThemeTokens.spaceSm),
+                    Wrap(
+                      spacing: AppThemeTokens.spaceSm,
+                      runSpacing: AppThemeTokens.spaceXs,
+                      children: ['Exercise', 'Stress', 'Illness', 'Menstruation', 'Travel', 'Fasting'].map((tag) {
+                        final isSelected = state.glucoseTags.contains(tag);
+                        return FilterChip(
+                          label: Text(tag),
+                          selected: isSelected,
+                          onSelected: (_) => viewModel.toggleGlucoseTag(tag),
+                          selectedColor: AppThemeTokens.brandPrimary,
+                          labelStyle: TextStyle(
+                            color: isSelected ? Colors.white : null,
+                            fontSize: 12,
+                          ),
+                          checkmarkColor: Colors.white,
+                          visualDensity: VisualDensity.compact,
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+
               if (state.error != null)
                 Padding(
                   padding: const EdgeInsets.only(

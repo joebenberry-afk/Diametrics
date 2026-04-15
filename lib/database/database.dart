@@ -56,6 +56,7 @@ class GlucoseLogs extends Table {
   DateTimeColumn get timestamp => dateTime()();
   TextColumn get notes => text().nullable()();
   TextColumn get linkedMealId => text().nullable()();
+  TextColumn get tags => text().withDefault(const Constant(''))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -77,6 +78,7 @@ class MealMacroLogs extends Table {
   TextColumn get foodFormFactor => text().withDefault(const Constant('standard'))();
   BoolColumn get postExercise => boolean().withDefault(const Constant(false))();
   TextColumn get notes => text().nullable()();
+  TextColumn get tags => text().withDefault(const Constant(''))();
   RealColumn get projectionPeakMgDl => real().withDefault(const Constant(0.0))();
   RealColumn get projectionTwoHourMgDl => real().withDefault(const Constant(0.0))();
 
@@ -166,7 +168,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -200,6 +202,10 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(glucoseLogs, glucoseLogs.linkedMealId);
         await m.addColumn(mealMacroLogs, mealMacroLogs.projectionPeakMgDl);
         await m.addColumn(mealMacroLogs, mealMacroLogs.projectionTwoHourMgDl);
+      }
+      if (from <= 7) {
+        await m.addColumn(glucoseLogs, glucoseLogs.tags);
+        await m.addColumn(mealMacroLogs, mealMacroLogs.tags);
       }
     },
   );

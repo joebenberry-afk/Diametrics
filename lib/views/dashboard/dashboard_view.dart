@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:fl_chart/fl_chart.dart';
+
 import '../../core/theme/app_tokens.dart';
 import '../../router/route_names.dart';
 import '../../core/widgets/account_card.dart';
@@ -565,7 +567,7 @@ class _DailySummaryCard extends ConsumerWidget {
                     )
                   : Column(
                       children: [
-                        // Time-in-range progress bar
+                        // Time-in-range donut chart
                         if (s.glucoseReadings > 0) ...[
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -591,23 +593,52 @@ class _DailySummaryCard extends ConsumerWidget {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 6),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(4),
-                            child: LinearProgressIndicator(
-                              value: (s.timeInRangePct / 100).clamp(0.0, 1.0),
-                              minHeight: 8,
-                              backgroundColor: AppThemeTokens.error.withValues(
-                                alpha: 0.2,
-                              ),
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                s.timeInRangePct >= 70
-                                    ? AppThemeTokens.brandSuccess
-                                    : s.timeInRangePct >= 50
-                                    ? AppThemeTokens.warning
-                                    : AppThemeTokens.error,
+                          const SizedBox(height: AppThemeTokens.spaceSm),
+                          SizedBox(
+                            height: 160,
+                            child: PieChart(
+                              PieChartData(
+                                sectionsSpace: 2,
+                                centerSpaceRadius: 45,
+                                sections: [
+                                  if (s.timeInRangePct > 0)
+                                    PieChartSectionData(
+                                      value: s.timeInRangePct,
+                                      color: AppThemeTokens.brandSuccess,
+                                      title: '${s.timeInRangePct.toStringAsFixed(0)}%',
+                                      titleStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white),
+                                      radius: 28,
+                                    ),
+                                  if (s.belowRangePct > 0)
+                                    PieChartSectionData(
+                                      value: s.belowRangePct,
+                                      color: AppThemeTokens.warning,
+                                      title: '${s.belowRangePct.toStringAsFixed(0)}%',
+                                      titleStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white),
+                                      radius: 28,
+                                    ),
+                                  if (s.aboveRangePct > 0)
+                                    PieChartSectionData(
+                                      value: s.aboveRangePct,
+                                      color: AppThemeTokens.error,
+                                      title: '${s.aboveRangePct.toStringAsFixed(0)}%',
+                                      titleStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white),
+                                      radius: 28,
+                                    ),
+                                ],
                               ),
                             ),
+                          ),
+                          const SizedBox(height: AppThemeTokens.spaceSm),
+                          const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _LegendDot(color: AppThemeTokens.brandSuccess, label: 'In Range'),
+                              SizedBox(width: 16),
+                              _LegendDot(color: AppThemeTokens.warning, label: 'Low'),
+                              SizedBox(width: 16),
+                              _LegendDot(color: AppThemeTokens.error, label: 'High'),
+                            ],
                           ),
                           const SizedBox(height: AppThemeTokens.spaceMd),
                         ],
@@ -895,6 +926,34 @@ class _SOSButtonState extends State<_SOSButton> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _LegendDot extends StatelessWidget {
+  final Color color;
+  final String label;
+  const _LegendDot({required this.color, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            color: AppThemeTokens.textSecondary,
+          ),
+        ),
+      ],
     );
   }
 }

@@ -14,6 +14,9 @@ _GlucoseLog _$GlucoseLogFromJson(Map<String, dynamic> json) => _GlucoseLog(
   context: json['context'] as String,
   notes: json['notes'] as String?,
   linkedMealId: json['linkedMealId'] as String?,
+  tags:
+      (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
+      const [],
   isSynced: json['isSynced'] as bool? ?? false,
 );
 
@@ -26,5 +29,6 @@ Map<String, dynamic> _$GlucoseLogToJson(_GlucoseLog instance) =>
       'context': instance.context,
       'notes': instance.notes,
       'linkedMealId': instance.linkedMealId,
+      'tags': instance.tags,
       'isSynced': instance.isSynced,
     };

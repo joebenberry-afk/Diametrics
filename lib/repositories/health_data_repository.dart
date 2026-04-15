@@ -24,6 +24,7 @@ class HealthDataRepository {
       timestamp: Value(log.timestamp),
       notes: Value(log.notes),
       linkedMealId: Value(log.linkedMealId),
+      tags: Value(log.tags.join(',')),
     ));
   }
 
@@ -75,6 +76,7 @@ class HealthDataRepository {
       foodFormFactor: Value(log.foodFormFactor),
       postExercise: Value(log.postExercise),
       notes: Value(log.notes),
+      tags: Value(log.tags.join(',')),
       projectionPeakMgDl: Value(log.projectionPeakMgDl),
       projectionTwoHourMgDl: Value(log.projectionTwoHourMgDl),
     ));
@@ -124,6 +126,7 @@ class HealthDataRepository {
           foodFormFactor: Value(log.foodFormFactor),
           postExercise: Value(log.postExercise),
           notes: Value(log.notes),
+          tags: Value(log.tags.join(',')),
           projectionPeakMgDl: Value(log.projectionPeakMgDl),
           projectionTwoHourMgDl: Value(log.projectionTwoHourMgDl),
         ));
@@ -186,6 +189,7 @@ class HealthDataRepository {
     context: row.context,
     notes: row.notes,
     linkedMealId: row.linkedMealId,
+    tags: row.tags.isEmpty ? [] : row.tags.split(','),
   );
 
   domain_models.MealLog _mealFromRow(MealMacroLog row) => domain_models.MealLog(
@@ -203,6 +207,7 @@ class HealthDataRepository {
     foodFormFactor: row.foodFormFactor,
     postExercise: row.postExercise,
     notes: row.notes,
+    tags: row.tags.isEmpty ? [] : row.tags.split(','),
     projectionPeakMgDl: row.projectionPeakMgDl,
     projectionTwoHourMgDl: row.projectionTwoHourMgDl,
   );
