@@ -150,7 +150,9 @@ class GlucoseProjectionService {
     const double aG = 0.8; // Bioavailability factor
 
     // Apply post-exercise heuristics before basic logic
-    double effectiveP1 = p1;
+    // Enforce a realistic minimum for clearance rate to avoid artificially delayed 4-hour peaks.
+    // The old default of 0.010 was far too slow for normal physiology.
+    double effectiveP1 = max(p1, 0.025);
     double effectiveTMax = tMaxBase;
     if (postExercise) {
       effectiveP1 *= 1.35; // 35% faster disposal
@@ -263,10 +265,13 @@ class GlucoseProjectionService {
       final double effectiveFasting = fastingSetpoint + dawnShift;
       // Clearance is scaled by the current absorption fraction so glucose
       // does not plummet before the food arrives.
-      final double absorptionFraction = fastGamma / (fastGammaSum / _projectionMinutes);
-      final double clearanceFraction = (absorptionFraction / (absorptionFraction + 1.0)).clamp(0.1, 1.0);
+      // Clearance should not drop just because food absorption drops. 
+      // Instead, we simulate endogenous insulin ramping up over the first 45 minutes 
+      // avoiding a stall in clearance when glucose is still high.
+      final double clearanceFraction = (t / 45.0).clamp(0.1, 1.0);
       final double rawClearance = max(0.0, gCurrent - effectiveFasting) * effectiveP1;
-      final double clearanceRate = min(rawClearance * clearanceFraction, 1.5);
+      // Allow a higher maximum clearance (4.0 instead of 1.5) to enable realistic return to baseline within 2-3 hours
+      final double clearanceRate = min(rawClearance * clearanceFraction, 4.0);
 
       // — Insulin on Board (Walsh bilinear) —
       // Differential IOB: insulin consumed in this minute

@@ -9,7 +9,7 @@ class AccountCard extends StatelessWidget {
   const AccountCard({
     super.key,
     required this.userName,
-    required this.userStatus,
+    this.userStatus = '',
     this.onTap,
   });
 
@@ -82,14 +82,16 @@ class AccountCard extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      userStatus,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: AppThemeTokens.brandSuccess,
-                        fontWeight: FontWeight.w600,
+                    if (userStatus.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        userStatus,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: AppThemeTokens.brandSuccess,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ),

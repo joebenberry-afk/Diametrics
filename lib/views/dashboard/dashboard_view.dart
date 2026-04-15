@@ -109,7 +109,6 @@ class DashboardView extends ConsumerWidget {
                   Expanded(
                     child: AccountCard(
                       userName: displayName,
-                      userStatus: statusText,
                       onTap: () {
                         context.push(Routes.settings);
                       },
@@ -166,7 +165,7 @@ class DashboardView extends ConsumerWidget {
                     unit: profile?.preferredGlucoseUnit ?? 'mg/dL',
                     icon: Icons.bloodtype_outlined,
                     accentColor: glucoseColor,
-                    trendData: trendData,
+                    trendData: const [],
                     onTap: () {
                       context.push(Routes.glucoseTrend);
                     },
