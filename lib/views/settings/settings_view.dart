@@ -58,7 +58,12 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
 
   bool _isDirty = false;
   bool _isSaving = false;
-  bool _hasPopulated = false;
+
+  /// Tracks when the form was last populated from the profile.
+  /// If the profile's `updatedAt` changes (e.g. background EKF tuning),
+  /// only the ML parameters are refreshed — user-editable fields are
+  /// left untouched so the user does not lose work-in-progress edits.
+  DateTime? _lastPopulatedAt;
 
   bool _reminderEnabled = false;
   TimeOfDay? _reminderTime;
@@ -70,7 +75,12 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
 
   static const _genderPresets = ['Male', 'Female', 'Other'];
   static const _diabetesPresets = [
-    'Type 1', 'Type 2', 'Gestational', 'LADA', 'Pre-diabetes', 'Other'
+    'Type 1',
+    'Type 2',
+    'Gestational',
+    'LADA',
+    'Pre-diabetes',
+    'Other',
   ];
 
   void _populateFromProfile(dynamic profile) {
@@ -83,7 +93,8 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
       final inches = totalInches % 12;
       _feetCtrl.text = feet.toString();
       _inchesCtrl.text = inches.toStringAsFixed(1);
-      _weightCtrl.text = ((profile.weightKg as double) * 2.20462).toStringAsFixed(1);
+      _weightCtrl.text = ((profile.weightKg as double) * 2.20462)
+          .toStringAsFixed(1);
     } else {
       _heightCtrl.text = profile.heightCm.toStringAsFixed(1);
       _weightCtrl.text = profile.weightKg.toStringAsFixed(1);
@@ -93,10 +104,14 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
       _diagnosisYearCtrl.text = profile.diagnosisYear.toString();
     }
     // Convert from mg/dL (storage) to preferred unit for display
-    final displayFactor = profile.preferredGlucoseUnit == 'mmol/L' ? 1 / 18.0182 : 1.0;
+    final displayFactor = profile.preferredGlucoseUnit == 'mmol/L'
+        ? 1 / 18.0182
+        : 1.0;
     final decimalPlaces = profile.preferredGlucoseUnit == 'mmol/L' ? 1 : 0;
-    _glucoseMinCtrl.text = (profile.targetGlucoseMin * displayFactor).toStringAsFixed(decimalPlaces);
-    _glucoseMaxCtrl.text = (profile.targetGlucoseMax * displayFactor).toStringAsFixed(decimalPlaces);
+    _glucoseMinCtrl.text = (profile.targetGlucoseMin * displayFactor)
+        .toStringAsFixed(decimalPlaces);
+    _glucoseMaxCtrl.text = (profile.targetGlucoseMax * displayFactor)
+        .toStringAsFixed(decimalPlaces);
 
     // Detect "custom Other" values saved from a previous session
     final storedGender = profile.gender as String;
@@ -209,12 +224,14 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
     final currentMin = double.tryParse(_glucoseMinCtrl.text);
     final currentMax = double.tryParse(_glucoseMaxCtrl.text);
     if (currentMin != null) {
-      _glucoseMinCtrl.text = (currentMin * factor)
-          .toStringAsFixed(newUnit == 'mmol/L' ? 1 : 0);
+      _glucoseMinCtrl.text = (currentMin * factor).toStringAsFixed(
+        newUnit == 'mmol/L' ? 1 : 0,
+      );
     }
     if (currentMax != null) {
-      _glucoseMaxCtrl.text = (currentMax * factor)
-          .toStringAsFixed(newUnit == 'mmol/L' ? 1 : 0);
+      _glucoseMaxCtrl.text = (currentMax * factor).toStringAsFixed(
+        newUnit == 'mmol/L' ? 1 : 0,
+      );
     }
 
     setState(() {
@@ -251,7 +268,8 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
       _showError('Please select a diabetes type.');
       return;
     }
-    if (_diabetesType == 'Other' && _otherDiabetesTypeCtrl.text.trim().isEmpty) {
+    if (_diabetesType == 'Other' &&
+        _otherDiabetesTypeCtrl.text.trim().isEmpty) {
       _showError('Please describe your diabetes type.');
       return;
     }
@@ -335,8 +353,17 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
           ),
         );
       }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        _showError('Failed to save settings. Please try again.');
+      }
+      return; // Don't proceed to reminder scheduling if profile save failed.
+    }
 
-      // Handle Reminders
+    // Handle Reminders — in a separate try/catch so a notification-plugin
+    // failure doesn't prevent the profile from being saved.
+    try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('medication_reminder_enabled', _reminderEnabled);
       if (_reminderTime != null) {
@@ -345,6 +372,21 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
       }
 
       if (_reminderEnabled && _reminderTime != null) {
+        // Ensure the notification plugin is initialized and permission is
+        // granted before attempting to schedule.
+        final ready = await ReminderService.initialize();
+        if (!ready && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Notification permission is required for reminders. '
+                'Please enable it in your device settings.',
+              ),
+              backgroundColor: AppThemeTokens.warningText,
+              duration: Duration(seconds: 5),
+            ),
+          );
+        }
         await ReminderService.scheduleDailyReminder(
           id: 1, // Single medication reminder
           title: 'Medication Reminder',
@@ -356,9 +398,18 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
         await ReminderService.cancelReminder(1);
       }
     } catch (e) {
+      debugPrint('Reminder scheduling failed: $e');
       if (mounted) {
-        setState(() => _isSaving = false);
-        _showError('Failed to save settings. Please try again.');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Settings saved, but reminder could not be scheduled. '
+              'Check notification permissions.',
+            ),
+            backgroundColor: AppThemeTokens.warningText,
+            duration: Duration(seconds: 4),
+          ),
+        );
       }
     }
   }
@@ -409,7 +460,9 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
               child: Text(
                 'Save',
                 style: TextStyle(
-                  color: isDark ? AppThemeTokens.brandAccent : AppThemeTokens.brandSecondary,
+                  color: isDark
+                      ? AppThemeTokens.brandAccent
+                      : AppThemeTokens.brandSecondary,
                   fontWeight: FontWeight.w700,
                   fontSize: 16,
                 ),
@@ -426,11 +479,27 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
           ),
         ),
         data: (profile) {
-          if (profile != null && !_hasPopulated) {
-            _hasPopulated = true;
-            WidgetsBinding.instance.addPostFrameCallback(
-              (_) { if (mounted) _populateFromProfile(profile); },
-            );
+          if (profile != null) {
+            if (_lastPopulatedAt == null) {
+              // First load — populate everything.
+              _lastPopulatedAt = profile.updatedAt;
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) _populateFromProfile(profile);
+              });
+            } else if (profile.updatedAt != _lastPopulatedAt && !_isDirty) {
+              // Profile was updated externally (e.g. EKF tuning).
+              // Only refresh ML parameters when the user hasn't started
+              // editing, to avoid overwriting in-progress changes.
+              _lastPopulatedAt = profile.updatedAt;
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (!mounted) return;
+                setState(() {
+                  _metabolicClearanceRate = profile.metabolicClearanceRate;
+                  _insulinSensitivityFactor = profile.insulinSensitivityFactor;
+                  _absorptionDelayBase = profile.absorptionDelayBase;
+                });
+              });
+            }
           }
           return _buildForm(isDark, theme);
         },
@@ -605,9 +674,13 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                         controller: _inchesCtrl,
                         label: 'Height (in)',
                         hint: 'e.g., 6.5',
-                        inputType: const TextInputType.numberWithOptions(decimal: true),
+                        inputType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                         formatters: [
-                          FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'^\d*\.?\d*'),
+                          ),
                         ],
                         validator: (v) {
                           final n = double.tryParse(v ?? '');
@@ -626,7 +699,9 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                   controller: _heightCtrl,
                   label: 'Height (cm)',
                   hint: 'e.g., 165.0',
-                  inputType: const TextInputType.numberWithOptions(decimal: true),
+                  inputType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   formatters: [
                     FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
                   ],
@@ -916,7 +991,9 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
           ClipRRect(
             borderRadius: BorderRadius.circular(AppThemeTokens.radiusLg),
             child: Theme(
-              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+              data: Theme.of(
+                context,
+              ).copyWith(dividerColor: Colors.transparent),
               child: ExpansionTile(
                 tilePadding: const EdgeInsets.symmetric(
                   horizontal: AppThemeTokens.spaceLg,
@@ -932,10 +1009,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                     : Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppThemeTokens.radiusLg),
-                  side: const BorderSide(
-                    color: Color(0xFFD97706),
-                    width: 1.5,
-                  ),
+                  side: const BorderSide(color: Color(0xFFD97706), width: 1.5),
                 ),
                 collapsedShape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppThemeTokens.radiusLg),
@@ -955,7 +1029,9 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                     Text(
                       'Advanced Model Parameters',
                       style: TextStyle(
-                        color: isDark ? Colors.white : AppThemeTokens.textPrimary,
+                        color: isDark
+                            ? Colors.white
+                            : AppThemeTokens.textPrimary,
                         fontWeight: FontWeight.w700,
                         fontSize: 15,
                       ),
@@ -966,7 +1042,9 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                   'Only change these if advised by a healthcare professional.',
                   style: TextStyle(
                     fontSize: 14,
-                    color: isDark ? Colors.white60 : AppThemeTokens.textSecondary,
+                    color: isDark
+                        ? Colors.white60
+                        : AppThemeTokens.textSecondary,
                   ),
                 ),
                 children: [
@@ -976,9 +1054,18 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                     clearanceRate: _metabolicClearanceRate,
                     isf: _insulinSensitivityFactor,
                     tMax: _absorptionDelayBase,
-                    onClearanceChanged: (v) { setState(() => _metabolicClearanceRate = v); _markDirty(); },
-                    onIsfChanged: (v) { setState(() => _insulinSensitivityFactor = v); _markDirty(); },
-                    onTMaxChanged: (v) { setState(() => _absorptionDelayBase = v); _markDirty(); },
+                    onClearanceChanged: (v) {
+                      setState(() => _metabolicClearanceRate = v);
+                      _markDirty();
+                    },
+                    onIsfChanged: (v) {
+                      setState(() => _insulinSensitivityFactor = v);
+                      _markDirty();
+                    },
+                    onTMaxChanged: (v) {
+                      setState(() => _absorptionDelayBase = v);
+                      _markDirty();
+                    },
                     onReset: () {
                       setState(() {
                         _metabolicClearanceRate = 0.010;
@@ -1002,7 +1089,10 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
             children: [
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: const Icon(LucideIcons.phoneCall, color: AppThemeTokens.error),
+                leading: const Icon(
+                  LucideIcons.phoneCall,
+                  color: AppThemeTokens.error,
+                ),
                 title: Text(
                   'Emergency Contacts',
                   style: TextStyle(
@@ -1014,11 +1104,16 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                 subtitle: Text(
                   'Manage who to call in an emergency',
                   style: TextStyle(
-                    color: isDark ? Colors.white60 : AppThemeTokens.textSecondary,
+                    color: isDark
+                        ? Colors.white60
+                        : AppThemeTokens.textSecondary,
                     fontSize: 14,
                   ),
                 ),
-                trailing: const Icon(Icons.chevron_right_rounded, color: AppThemeTokens.textSecondary),
+                trailing: const Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppThemeTokens.textSecondary,
+                ),
                 onTap: () {
                   context.push(Routes.settingsEmergencyContacts);
                 },
@@ -1271,9 +1366,13 @@ class _GenderSelector extends StatelessWidget {
                       color: isSelected
                           ? AppThemeTokens.brandSecondary
                           : (isDark
-                              ? Colors.white.withValues(alpha: 0.10)
-                              : AppThemeTokens.brandPrimary.withValues(alpha: 0.06)),
-                      borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
+                                ? Colors.white.withValues(alpha: 0.10)
+                                : AppThemeTokens.brandPrimary.withValues(
+                                    alpha: 0.06,
+                                  )),
+                      borderRadius: BorderRadius.circular(
+                        AppThemeTokens.radiusMd,
+                      ),
                       border: Border.all(
                         color: isSelected
                             ? AppThemeTokens.brandSecondary
@@ -1314,10 +1413,14 @@ class _GenderSelector extends StatelessWidget {
                     decoration: InputDecoration(
                       hintText: 'Describe your gender identity…',
                       hintStyle: TextStyle(
-                        color: isDark ? Colors.white38 : AppThemeTokens.textSecondary,
+                        color: isDark
+                            ? Colors.white38
+                            : AppThemeTokens.textSecondary,
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
+                        borderRadius: BorderRadius.circular(
+                          AppThemeTokens.radiusMd,
+                        ),
                         borderSide: BorderSide(
                           color: isDark
                               ? Colors.white.withValues(alpha: 0.3)
@@ -1325,7 +1428,9 @@ class _GenderSelector extends StatelessWidget {
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
+                        borderRadius: BorderRadius.circular(
+                          AppThemeTokens.radiusMd,
+                        ),
                         borderSide: const BorderSide(
                           color: AppThemeTokens.brandAccent,
                           width: 2,
@@ -1336,7 +1441,8 @@ class _GenderSelector extends StatelessWidget {
                         vertical: 12,
                       ),
                     ),
-                    validator: (v) => selected == 'Other' && (v == null || v.trim().isEmpty)
+                    validator: (v) =>
+                        selected == 'Other' && (v == null || v.trim().isEmpty)
                         ? 'Please describe your gender identity'
                         : null,
                   ),
@@ -1406,8 +1512,10 @@ class _DiabetesTypeSelector extends StatelessWidget {
                   color: isSelected
                       ? AppThemeTokens.brandSecondary
                       : (isDark
-                          ? Colors.white.withValues(alpha: 0.10)
-                          : AppThemeTokens.brandPrimary.withValues(alpha: 0.06)),
+                            ? Colors.white.withValues(alpha: 0.10)
+                            : AppThemeTokens.brandPrimary.withValues(
+                                alpha: 0.06,
+                              )),
                   borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
                   border: Border.all(
                     color: isSelected
@@ -1448,10 +1556,14 @@ class _DiabetesTypeSelector extends StatelessWidget {
                     decoration: InputDecoration(
                       hintText: 'Specify your diabetes type…',
                       hintStyle: TextStyle(
-                        color: isDark ? Colors.white38 : AppThemeTokens.textSecondary,
+                        color: isDark
+                            ? Colors.white38
+                            : AppThemeTokens.textSecondary,
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
+                        borderRadius: BorderRadius.circular(
+                          AppThemeTokens.radiusMd,
+                        ),
                         borderSide: BorderSide(
                           color: isDark
                               ? Colors.white.withValues(alpha: 0.3)
@@ -1459,7 +1571,9 @@ class _DiabetesTypeSelector extends StatelessWidget {
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
+                        borderRadius: BorderRadius.circular(
+                          AppThemeTokens.radiusMd,
+                        ),
                         borderSide: const BorderSide(
                           color: AppThemeTokens.brandAccent,
                           width: 2,
@@ -1470,7 +1584,8 @@ class _DiabetesTypeSelector extends StatelessWidget {
                         vertical: 12,
                       ),
                     ),
-                    validator: (v) => selected == 'Other' && (v == null || v.trim().isEmpty)
+                    validator: (v) =>
+                        selected == 'Other' && (v == null || v.trim().isEmpty)
                         ? 'Please specify your diabetes type'
                         : null,
                   ),
@@ -1520,8 +1635,10 @@ class _GlucoseUnitToggle extends StatelessWidget {
                       color: isSelected
                           ? AppThemeTokens.brandSecondary
                           : (isDark
-                              ? Colors.white.withValues(alpha: 0.08)
-                              : AppThemeTokens.brandPrimary.withValues(alpha: 0.06)),
+                                ? Colors.white.withValues(alpha: 0.08)
+                                : AppThemeTokens.brandPrimary.withValues(
+                                    alpha: 0.06,
+                                  )),
                       borderRadius: BorderRadius.circular(
                         AppThemeTokens.radiusMd,
                       ),
@@ -1670,7 +1787,10 @@ class _GlucoseTargetVisual extends StatelessWidget {
                 // Green target zone — positions always calculated in mg/dL against 0–400 scale
                 if (isValid)
                   FractionallySizedBox(
-                    widthFactor: ((maxMgdl - minMgdl) / maxScale).clamp(0.05, 1.0),
+                    widthFactor: ((maxMgdl - minMgdl) / maxScale).clamp(
+                      0.05,
+                      1.0,
+                    ),
                     child: Container(
                       height: 16,
                       margin: EdgeInsets.only(
@@ -1853,292 +1973,286 @@ class _MetabolicParamsSectionState extends State<_MetabolicParamsSection> {
   @override
   Widget build(BuildContext context) {
     final isDark = widget.isDark;
-    final textPrimary =
-        isDark ? Colors.white : AppThemeTokens.textPrimary;
-    final textSecondary =
-        isDark ? Colors.white60 : AppThemeTokens.textSecondary;
+    final textPrimary = isDark ? Colors.white : AppThemeTokens.textPrimary;
+    final textSecondary = isDark
+        ? Colors.white60
+        : AppThemeTokens.textSecondary;
     const amber = Color(0xFFD97706);
     const amberLight = Color(0xFFFEF3C7);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-          // ── Header ──────────────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppThemeTokens.spaceLg,
-              AppThemeTokens.spaceLg,
-              AppThemeTokens.spaceLg,
-              AppThemeTokens.spaceMd,
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: amber.withValues(alpha: 0.12),
-                    borderRadius:
-                        BorderRadius.circular(AppThemeTokens.radiusMd),
-                  ),
-                  child: const Icon(
-                    LucideIcons.brainCircuit,
-                    color: amber,
-                    size: 20,
-                  ),
+        // ── Header ──────────────────────────────────────────────────
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppThemeTokens.spaceLg,
+            AppThemeTokens.spaceLg,
+            AppThemeTokens.spaceLg,
+            AppThemeTokens.spaceMd,
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: amber.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
                 ),
-                const SizedBox(width: AppThemeTokens.spaceMd),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Advanced Model Parameters',
-                        style: TextStyle(
-                          color: textPrimary,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16,
-                        ),
+                child: const Icon(
+                  LucideIcons.brainCircuit,
+                  color: amber,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: AppThemeTokens.spaceMd),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Advanced Model Parameters',
+                      style: TextStyle(
+                        color: textPrimary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
                       ),
-                      const SizedBox(height: 2),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Auto-tuned by AI · Expert use only',
+                      style: TextStyle(
+                        color: amber,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Lock / Unlock toggle chip
+              InkWell(
+                borderRadius: BorderRadius.circular(AppThemeTokens.radiusFull),
+                onTap: _unlocked
+                    ? () => setState(() => _unlocked = false)
+                    : _requestUnlock,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _unlocked ? const Color(0xFFD1FAE5) : amberLight,
+                    borderRadius: BorderRadius.circular(
+                      AppThemeTokens.radiusFull,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        _unlocked ? Icons.lock_open_rounded : LucideIcons.lock,
+                        size: 12,
+                        color: _unlocked ? const Color(0xFF059669) : amber,
+                      ),
+                      const SizedBox(width: 4),
                       Text(
-                        'Auto-tuned by AI · Expert use only',
+                        _unlocked ? 'Unlocked' : 'Locked',
                         style: TextStyle(
-                          color: amber,
                           fontSize: 14,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
+                          color: _unlocked ? const Color(0xFF059669) : amber,
                         ),
                       ),
                     ],
                   ),
                 ),
-                // Lock / Unlock toggle chip
-                InkWell(
-                  borderRadius: BorderRadius.circular(AppThemeTokens.radiusFull),
-                  onTap: _unlocked
-                      ? () => setState(() => _unlocked = false)
-                      : _requestUnlock,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 250),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: _unlocked
-                          ? const Color(0xFFD1FAE5)
-                          : amberLight,
-                      borderRadius:
-                          BorderRadius.circular(AppThemeTokens.radiusFull),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          _unlocked
-                              ? Icons.lock_open_rounded
-                              : LucideIcons.lock,
-                          size: 12,
-                          color: _unlocked
-                              ? const Color(0xFF059669)
-                              : amber,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          _unlocked ? 'Unlocked' : 'Locked',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: _unlocked
-                                ? const Color(0xFF059669)
-                                : amber,
-                          ),
-                        ),
-                      ],
+              ),
+            ],
+          ),
+        ),
+
+        // ── Warning Banner ───────────────────────────────────────────
+        Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppThemeTokens.spaceLg,
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(AppThemeTokens.spaceSm),
+            decoration: BoxDecoration(
+              color: amber.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline_rounded, color: amber, size: 16),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    _unlocked
+                        ? 'You are editing clinical parameters. Changes affect glucose predictions.'
+                        : 'These values are automatically learned from your logs. No action needed.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isDark ? Colors.amber.shade200 : amber,
+                      fontWeight: FontWeight.w500,
+                      height: 1.4,
                     ),
                   ),
                 ),
               ],
             ),
           ),
+        ),
 
-          // ── Warning Banner ───────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.symmetric(
-                horizontal: AppThemeTokens.spaceLg),
-            child: Container(
-              padding: const EdgeInsets.all(AppThemeTokens.spaceSm),
-              decoration: BoxDecoration(
-                color: amber.withValues(alpha: 0.08),
-                borderRadius:
-                    BorderRadius.circular(AppThemeTokens.radiusMd),
-              ),
-              child: Row(
+        const SizedBox(height: AppThemeTokens.spaceMd),
+
+        // ── Sliders ──────────────────────────────────────────────────
+        Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppThemeTokens.spaceLg,
+          ),
+          child: AbsorbPointer(
+            absorbing: !_unlocked,
+            child: Opacity(
+              opacity: _unlocked ? 1.0 : 0.55,
+              child: Column(
                 children: [
-                  const Icon(Icons.info_outline_rounded,
-                      color: amber, size: 16),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      _unlocked
-                          ? 'You are editing clinical parameters. Changes affect glucose predictions.'
-                          : 'These values are automatically learned from your logs. No action needed.',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: isDark ? Colors.amber.shade200 : amber,
-                        fontWeight: FontWeight.w500,
-                        height: 1.4,
-                      ),
-                    ),
+                  _ParamSlider(
+                    label: 'Metabolic Clearance Rate',
+                    description:
+                        'How quickly excess glucose is cleared from blood.'
+                        ' Lower = slower clearance, higher post-meal spikes.',
+                    unit: 'min⁻¹',
+                    value: widget.clearanceRate,
+                    min: 0.002,
+                    max: 0.020,
+                    divisions: 18,
+                    displayDecimals: 3,
+                    defaultValue: _p1Default,
+                    isDark: isDark,
+                    textSecondary: textSecondary,
+                    onChanged: widget.onClearanceChanged,
+                  ),
+                  const SizedBox(height: AppThemeTokens.spaceMd),
+                  _ParamSlider(
+                    label: 'Insulin Sensitivity Factor',
+                    description:
+                        'How many mg/dL blood glucose drops per unit of '
+                        'rapid-acting insulin. Higher = more sensitive.',
+                    unit: 'mg/dL·U',
+                    value: widget.isf,
+                    min: 20.0,
+                    max: 150.0,
+                    divisions: 26,
+                    displayDecimals: 0,
+                    defaultValue: _isfDefault,
+                    isDark: isDark,
+                    textSecondary: textSecondary,
+                    onChanged: widget.onIsfChanged,
+                  ),
+                  const SizedBox(height: AppThemeTokens.spaceMd),
+                  _ParamSlider(
+                    label: 'Digestion Delay',
+                    description:
+                        'Time until peak gut glucose absorption. '
+                        'Longer = slower digestion, flatter but prolonged spike.',
+                    unit: 'minutes',
+                    value: widget.tMax,
+                    min: 20.0,
+                    max: 90.0,
+                    divisions: 14,
+                    displayDecimals: 0,
+                    defaultValue: _tMaxDefault,
+                    isDark: isDark,
+                    textSecondary: textSecondary,
+                    onChanged: widget.onTMaxChanged,
                   ),
                 ],
               ),
             ),
           ),
+        ),
 
-          const SizedBox(height: AppThemeTokens.spaceMd),
+        const SizedBox(height: AppThemeTokens.spaceMd),
 
-          // ── Sliders ──────────────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.symmetric(
-                horizontal: AppThemeTokens.spaceLg),
-            child: AbsorbPointer(
-              absorbing: !_unlocked,
-              child: Opacity(
-                opacity: _unlocked ? 1.0 : 0.55,
-                child: Column(
-                  children: [
-                    _ParamSlider(
-                      label: 'Metabolic Clearance Rate',
-                      description:
-                          'How quickly excess glucose is cleared from blood.'
-                          ' Lower = slower clearance, higher post-meal spikes.',
-                      unit: 'min⁻¹',
-                      value: widget.clearanceRate,
-                      min: 0.002,
-                      max: 0.020,
-                      divisions: 18,
-                      displayDecimals: 3,
-                      defaultValue: _p1Default,
-                      isDark: isDark,
-                      textSecondary: textSecondary,
-                      onChanged: widget.onClearanceChanged,
-                    ),
-                    const SizedBox(height: AppThemeTokens.spaceMd),
-                    _ParamSlider(
-                      label: 'Insulin Sensitivity Factor',
-                      description:
-                          'How many mg/dL blood glucose drops per unit of '
-                          'rapid-acting insulin. Higher = more sensitive.',
-                      unit: 'mg/dL·U',
-                      value: widget.isf,
-                      min: 20.0,
-                      max: 150.0,
-                      divisions: 26,
-                      displayDecimals: 0,
-                      defaultValue: _isfDefault,
-                      isDark: isDark,
-                      textSecondary: textSecondary,
-                      onChanged: widget.onIsfChanged,
-                    ),
-                    const SizedBox(height: AppThemeTokens.spaceMd),
-                    _ParamSlider(
-                      label: 'Digestion Delay',
-                      description:
-                          'Time until peak gut glucose absorption. '
-                          'Longer = slower digestion, flatter but prolonged spike.',
-                      unit: 'minutes',
-                      value: widget.tMax,
-                      min: 20.0,
-                      max: 90.0,
-                      divisions: 14,
-                      displayDecimals: 0,
-                      defaultValue: _tMaxDefault,
-                      isDark: isDark,
-                      textSecondary: textSecondary,
-                      onChanged: widget.onTMaxChanged,
-                    ),
-                  ],
-                ),
-              ),
-            ),
+        // ── Reset to Defaults button ─────────────────────────────────
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppThemeTokens.spaceLg,
+            0,
+            AppThemeTokens.spaceLg,
+            AppThemeTokens.spaceLg,
           ),
-
-          const SizedBox(height: AppThemeTokens.spaceMd),
-
-          // ── Reset to Defaults button ─────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppThemeTokens.spaceLg,
-              0,
-              AppThemeTokens.spaceLg,
-              AppThemeTokens.spaceLg,
-            ),
-            child: SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: _isAtDefault
-                    ? null
-                    : () async {
-                        final ok = await showDialog<bool>(
-                          context: context,
-                          builder: (ctx) => AlertDialog(
-                            title:
-                                const Text('Reset to Clinical Defaults?'),
-                            content: const Text(
-                              'This will restore population-level averages:\n\n'
-                              '• Clearance Rate: 0.010 min⁻¹\n'
-                              '• Insulin Sensitivity: 50 mg/dL·U\n'
-                              '• Digestion Delay: 40 minutes\n\n'
-                              'The AI will begin re-learning your personal '
-                              'parameters on your next meal logs.',
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(ctx, false),
-                                child: const Text('Cancel'),
-                              ),
-                              FilledButton(
-                                onPressed: () => Navigator.pop(ctx, true),
-                                child: const Text('Reset'),
-                              ),
-                            ],
+          child: SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _isAtDefault
+                  ? null
+                  : () async {
+                      final ok = await showDialog<bool>(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: const Text('Reset to Clinical Defaults?'),
+                          content: const Text(
+                            'This will restore population-level averages:\n\n'
+                            '• Clearance Rate: 0.010 min⁻¹\n'
+                            '• Insulin Sensitivity: 50 mg/dL·U\n'
+                            '• Digestion Delay: 40 minutes\n\n'
+                            'The AI will begin re-learning your personal '
+                            'parameters on your next meal logs.',
                           ),
-                        );
-                        if (ok == true && mounted) {
-                          widget.onReset();
-                          setState(() => _unlocked = false);
-                        }
-                      },
-                icon: Icon(
-                  Icons.restart_alt_rounded,
-                  size: 16,
-                  color: _isAtDefault ? textSecondary : AppThemeTokens.brandPrimary,
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx, false),
+                              child: const Text('Cancel'),
+                            ),
+                            FilledButton(
+                              onPressed: () => Navigator.pop(ctx, true),
+                              child: const Text('Reset'),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (ok == true && mounted) {
+                        widget.onReset();
+                        setState(() => _unlocked = false);
+                      }
+                    },
+              icon: Icon(
+                Icons.restart_alt_rounded,
+                size: 16,
+                color: _isAtDefault
+                    ? textSecondary
+                    : AppThemeTokens.brandPrimary,
+              ),
+              label: Text(
+                _isAtDefault
+                    ? 'Already at Default Values'
+                    : 'Reset to Clinical Defaults',
+                style: TextStyle(
+                  color: _isAtDefault
+                      ? textSecondary
+                      : AppThemeTokens.brandPrimary,
+                  fontWeight: FontWeight.w600,
                 ),
-                label: Text(
-                  _isAtDefault
-                      ? 'Already at Default Values'
-                      : 'Reset to Clinical Defaults',
-                  style: TextStyle(
-                    color: _isAtDefault
-                        ? textSecondary
-                        : AppThemeTokens.brandPrimary,
-                    fontWeight: FontWeight.w600,
-                  ),
+              ),
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(
+                  color: _isAtDefault
+                      ? Colors.grey.shade300
+                      : AppThemeTokens.brandPrimary.withValues(alpha: 0.5),
                 ),
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(
-                    color: _isAtDefault
-                        ? Colors.grey.shade300
-                        : AppThemeTokens.brandPrimary.withValues(alpha: 0.5),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppThemeTokens.radiusMd),
-                  ),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
                 ),
               ),
             ),
           ),
-        ],
+        ),
+      ],
     );
   }
 }
@@ -2215,11 +2329,7 @@ class _ParamSlider extends StatelessWidget {
         const SizedBox(height: 2),
         Text(
           description,
-          style: TextStyle(
-            fontSize: 14,
-            color: textSecondary,
-            height: 1.4,
-          ),
+          style: TextStyle(fontSize: 14, color: textSecondary, height: 1.4),
         ),
         SliderTheme(
           data: SliderThemeData(
@@ -2246,8 +2356,11 @@ class _ParamSlider extends StatelessWidget {
             ),
             Row(
               children: [
-                Icon(Icons.arrow_drop_up_rounded,
-                    size: 14, color: textSecondary),
+                Icon(
+                  Icons.arrow_drop_up_rounded,
+                  size: 14,
+                  color: textSecondary,
+                ),
                 Text(
                   'Default: ${defaultValue.toStringAsFixed(displayDecimals)}',
                   style: TextStyle(fontSize: 12, color: textSecondary),

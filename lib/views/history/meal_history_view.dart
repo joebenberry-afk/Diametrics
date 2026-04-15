@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_tokens.dart';
@@ -20,6 +21,8 @@ void _showMealEditSheet(
   final fatCtrl = TextEditingController(text: log.fats.toStringAsFixed(1));
   final calCtrl =
       TextEditingController(text: log.calories.toStringAsFixed(0));
+  final formKey = GlobalKey<FormState>();
+  DateTime editedTimestamp = log.timestamp;
 
   showModalBottomSheet(
     context: context,
@@ -29,7 +32,8 @@ void _showMealEditSheet(
         top: Radius.circular(AppThemeTokens.radiusLg),
       ),
     ),
-    builder: (ctx) => Padding(
+    builder: (ctx) => StatefulBuilder(
+      builder: (ctx, setSheetState) => Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(ctx).viewInsets.bottom,
       ),
@@ -41,7 +45,9 @@ void _showMealEditSheet(
             AppThemeTokens.spaceLg,
             AppThemeTokens.spaceLg,
           ),
-          child: Column(
+          child: Form(
+            key: formKey,
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -62,6 +68,54 @@ void _showMealEditSheet(
                 ],
               ),
               const SizedBox(height: AppThemeTokens.spaceMd),
+
+              // Timestamp editor
+              InkWell(
+                borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
+                onTap: () async {
+                  final date = await showDatePicker(
+                    context: ctx,
+                    initialDate: editedTimestamp,
+                    firstDate: DateTime(2020),
+                    lastDate: DateTime.now(),
+                  );
+                  if (date == null) return;
+                  if (!ctx.mounted) return;
+                  final time = await showTimePicker(
+                    context: ctx,
+                    initialTime: TimeOfDay.fromDateTime(editedTimestamp),
+                  );
+                  if (time == null) return;
+                  setSheetState(() {
+                    editedTimestamp = DateTime(
+                      date.year, date.month, date.day,
+                      time.hour, time.minute,
+                    );
+                  });
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(AppThemeTokens.spaceMd),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AppThemeTokens.border),
+                    borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.schedule, size: 20, color: AppThemeTokens.textSecondary),
+                      const SizedBox(width: AppThemeTokens.spaceSm),
+                      Expanded(
+                        child: Text(
+                          DateFormatter.formatDateTime(editedTimestamp),
+                          style: const TextStyle(fontSize: 15),
+                        ),
+                      ),
+                      const Icon(Icons.edit_outlined, size: 16, color: AppThemeTokens.textSecondary),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppThemeTokens.spaceMd),
+
               TextField(
                 controller: nameCtrl,
                 decoration: const InputDecoration(
@@ -117,17 +171,34 @@ void _showMealEditSheet(
                   ),
                 ),
                 onPressed: () {
+                  final carbs = double.tryParse(carbsCtrl.text);
+                  final protein = double.tryParse(proteinCtrl.text);
+                  final fat = double.tryParse(fatCtrl.text);
+                  final cal = double.tryParse(calCtrl.text);
+
+                  // Validate non-negative
+                  if ((carbs != null && carbs < 0) ||
+                      (protein != null && protein < 0) ||
+                      (fat != null && fat < 0) ||
+                      (cal != null && cal < 0)) {
+                    ScaffoldMessenger.of(ctx).showSnackBar(
+                      const SnackBar(
+                        content: Text('Values cannot be negative.'),
+                        backgroundColor: AppThemeTokens.error,
+                      ),
+                    );
+                    return;
+                  }
+
                   final updated = log.copyWith(
                     name: nameCtrl.text.trim().isEmpty
                         ? null
                         : nameCtrl.text.trim(),
-                    carbohydrates: double.tryParse(carbsCtrl.text) ??
-                        log.carbohydrates,
-                    proteins:
-                        double.tryParse(proteinCtrl.text) ?? log.proteins,
-                    fats: double.tryParse(fatCtrl.text) ?? log.fats,
-                    calories:
-                        double.tryParse(calCtrl.text) ?? log.calories,
+                    timestamp: editedTimestamp,
+                    carbohydrates: carbs ?? log.carbohydrates,
+                    proteins: protein ?? log.proteins,
+                    fats: fat ?? log.fats,
+                    calories: cal ?? log.calories,
                   );
                   ref
                       .read(mealLogsProvider.notifier)
@@ -149,8 +220,10 @@ void _showMealEditSheet(
               ),
             ],
           ),
+          ),
         ),
       ),
+    ),
     ),
   );
 }
@@ -375,13 +448,23 @@ class _MacroField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
+    return TextFormField(
       controller: controller,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      inputFormatters: [
+        FilteringTextInputFormatter.allow(RegExp(r'^\d{0,5}\.?\d{0,1}')),
+      ],
       decoration: InputDecoration(
         labelText: label,
         border: const OutlineInputBorder(),
       ),
+      validator: (val) {
+        if (val == null || val.isEmpty) return null;
+        final v = double.tryParse(val);
+        if (v == null) return 'Invalid number';
+        if (v < 0) return 'Cannot be negative';
+        return null;
+      },
     );
   }
 }

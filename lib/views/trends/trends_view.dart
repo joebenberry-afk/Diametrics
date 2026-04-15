@@ -33,7 +33,11 @@ class TrendsView extends ConsumerWidget {
         actions: [
           TextButton.icon(
             onPressed: () => context.push(Routes.glucoseHistory),
-            icon: const Icon(Icons.list_alt, color: AppThemeTokens.textPrimaryInverse, size: 18),
+            icon: const Icon(
+              Icons.list_alt,
+              color: AppThemeTokens.textPrimaryInverse,
+              size: 18,
+            ),
             label: const Text(
               'All readings',
               style: TextStyle(color: AppThemeTokens.textPrimaryInverse),
@@ -122,13 +126,20 @@ class _RangeChips extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [7, 30, 90].map((days) {
-        final label = days == 7 ? '7D' : days == 30 ? '30D' : '90D';
+        final label = days == 7
+            ? '7D'
+            : days == 30
+            ? '30D'
+            : '90D';
         final isSelected = selectedDays == days;
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppThemeTokens.spaceXs),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppThemeTokens.spaceXs,
+          ),
           child: ChoiceChip(
             label: Text(label),
             selected: isSelected,
@@ -136,14 +147,22 @@ class _RangeChips extends ConsumerWidget {
             onSelected: (_) =>
                 ref.read(selectedRangeProvider.notifier).state = days,
             selectedColor: AppThemeTokens.brandPrimary,
-            backgroundColor: Colors.white.withValues(alpha: 0.08),
+            backgroundColor: isDark
+                ? Colors.white.withValues(alpha: 0.08)
+                : AppThemeTokens.bgSurface,
             side: BorderSide(
               color: isSelected
                   ? AppThemeTokens.brandPrimary
-                  : Colors.white.withValues(alpha: 0.35),
+                  : isDark
+                  ? Colors.white.withValues(alpha: 0.35)
+                  : AppThemeTokens.textSecondary.withValues(alpha: 0.3),
             ),
-            labelStyle: const TextStyle(
-              color: Colors.white,
+            labelStyle: TextStyle(
+              color: isSelected
+                  ? Colors.white
+                  : isDark
+                  ? Colors.white
+                  : AppThemeTokens.textPrimary,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -226,49 +245,57 @@ class _GlucoseChart extends StatelessWidget {
 
     final rangeStart = glucoseLogs.first.timestamp;
 
-    double toX(DateTime ts) =>
-        ts.difference(rangeStart).inMinutes.toDouble();
+    double toX(DateTime ts) => ts.difference(rangeStart).inMinutes.toDouble();
 
     final spots = glucoseLogs
         .map((g) => FlSpot(toX(g.timestamp), toPreferred(g.value, g.unit)))
         .toList();
 
-    final mealLines = mealLogs.map((m) => VerticalLine(
-      x: toX(m.timestamp),
-      color: AppThemeTokens.brandSuccess.withValues(alpha: 0.6),
-      strokeWidth: 1.5,
-      dashArray: [4, 4],
-      label: VerticalLineLabel(
-        show: true,
-        labelResolver: (_) => '🍽',
-        style: const TextStyle(fontSize: 12),
-        alignment: Alignment.topCenter,
-      ),
-    )).toList();
+    final mealLines = mealLogs
+        .map(
+          (m) => VerticalLine(
+            x: toX(m.timestamp),
+            color: AppThemeTokens.brandSuccess.withValues(alpha: 0.6),
+            strokeWidth: 1.5,
+            dashArray: [4, 4],
+            label: VerticalLineLabel(
+              show: true,
+              labelResolver: (_) => '🍽',
+              style: const TextStyle(fontSize: 12),
+              alignment: Alignment.topCenter,
+            ),
+          ),
+        )
+        .toList();
 
     final medLines = medicationLogs
         .where((m) => m.medicationType == 'rapid_acting_insulin')
-        .map((m) => VerticalLine(
-          x: toX(m.timestamp),
-          color: AppThemeTokens.brandAccent.withValues(alpha: 0.6),
-          strokeWidth: 1.5,
-          dashArray: [4, 4],
-          label: VerticalLineLabel(
-            show: true,
-            labelResolver: (_) => '💉',
-            style: const TextStyle(fontSize: 12),
-            alignment: Alignment.topCenter,
+        .map(
+          (m) => VerticalLine(
+            x: toX(m.timestamp),
+            color: AppThemeTokens.brandAccent.withValues(alpha: 0.6),
+            strokeWidth: 1.5,
+            dashArray: [4, 4],
+            label: VerticalLineLabel(
+              show: true,
+              labelResolver: (_) => '💉',
+              style: const TextStyle(fontSize: 12),
+              alignment: Alignment.topCenter,
+            ),
           ),
-        ))
+        )
         .toList();
 
     final maxX = spots.last.x;
-    final allY = spots.map((s) => s.y).toList()
-      ..addAll([tMin, tMax]);
+    final allY = spots.map((s) => s.y).toList()..addAll([tMin, tMax]);
     final padding = preferredUnit == 'mmol/L' ? 1.1 : 20.0;
     final clampMax = preferredUnit == 'mmol/L' ? 33.3 : 600.0;
-    final minY = (allY.reduce((a, b) => a < b ? a : b) - padding).clamp(0, clampMax).toDouble();
-    final maxY = (allY.reduce((a, b) => a > b ? a : b) + padding).clamp(0, clampMax).toDouble();
+    final minY = (allY.reduce((a, b) => a < b ? a : b) - padding)
+        .clamp(0, clampMax)
+        .toDouble();
+    final maxY = (allY.reduce((a, b) => a > b ? a : b) + padding)
+        .clamp(0, clampMax)
+        .toDouble();
 
     return LineChart(
       LineChartData(
@@ -285,11 +312,12 @@ class _GlucoseChart extends StatelessWidget {
             barWidth: 2,
             dotData: FlDotData(
               show: spots.length <= 20,
-              getDotPainter: (spot, xPercentage, bar, index) => FlDotCirclePainter(
-                radius: 3,
-                color: AppThemeTokens.brandPrimary,
-                strokeWidth: 0,
-              ),
+              getDotPainter: (spot, xPercentage, bar, index) =>
+                  FlDotCirclePainter(
+                    radius: 3,
+                    color: AppThemeTokens.brandPrimary,
+                    strokeWidth: 0,
+                  ),
             ),
             belowBarData: BarAreaData(show: false),
           ),
@@ -333,8 +361,7 @@ class _GlucoseChart extends StatelessWidget {
               reservedSize: 22,
               interval: maxX > 0 ? maxX / 4 : 1,
               getTitlesWidget: (value, _) {
-                final dt =
-                    rangeStart.add(Duration(minutes: value.toInt()));
+                final dt = rangeStart.add(Duration(minutes: value.toInt()));
                 final label = '${dt.month}/${dt.day}';
                 return Text(
                   label,
@@ -399,7 +426,9 @@ class _StatsRow extends StatelessWidget {
     final avg = mgValues.reduce((a, b) => a + b) / mgValues.length;
 
     // targetMin/targetMax are stored in mg/dL — compare against mg/dL values directly
-    final inRange = mgValues.where((v) => v >= targetMin && v <= targetMax).length;
+    final inRange = mgValues
+        .where((v) => v >= targetMin && v <= targetMax)
+        .length;
     final tir = mgValues.isEmpty ? 0.0 : (inRange / mgValues.length) * 100;
 
     // ADAG formula: eA1c = (avgGlucose_mgdL + 46.7) / 28.7
@@ -450,20 +479,18 @@ class _StatCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Column(
       children: [
         Text(
           value,
-          style: const TextStyle(
-            fontSize: 16,
+          style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w700,
-            color: AppThemeTokens.textPrimary,
           ),
         ),
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 14,
+          style: theme.textTheme.bodySmall?.copyWith(
             color: AppThemeTokens.textSecondary,
           ),
         ),
@@ -501,6 +528,12 @@ class _GlucoseLogList extends StatelessWidget {
         final ts = g.timestamp;
         final dateStr =
             '${ts.day}/${ts.month}/${ts.year}  ${ts.hour.toString().padLeft(2, '0')}:${ts.minute.toString().padLeft(2, '0')}';
+        // Normalise the log value to the user's preferred display unit.
+        final displayValue = g.unit == unit
+            ? g.value
+            : unit == 'mmol/L'
+            ? g.value / 18.0182
+            : g.value * 18.0182;
         return ListTile(
           dense: true,
           leading: const Icon(
@@ -508,7 +541,7 @@ class _GlucoseLogList extends StatelessWidget {
             color: AppThemeTokens.brandPrimary,
           ),
           title: Text(
-            '${g.value.toStringAsFixed(unit == 'mmol/L' ? 1 : 0)} $unit',
+            '${displayValue.toStringAsFixed(unit == 'mmol/L' ? 1 : 0)} $unit',
             style: const TextStyle(fontWeight: FontWeight.w600),
           ),
           subtitle: Text(

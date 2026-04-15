@@ -38,16 +38,17 @@ void _showGlucoseDeleteSheet(
         mainAxisSize: MainAxisSize.min,
         children: [
           ListTile(
-            leading: const Icon(Icons.delete_outline, color: AppThemeTokens.error),
+            leading: const Icon(
+              Icons.delete_outline,
+              color: AppThemeTokens.error,
+            ),
             title: const Text(
               'Delete this reading',
               style: TextStyle(color: AppThemeTokens.error),
             ),
             onTap: () {
               Navigator.pop(context);
-              ref
-                  .read(glucoseLogsProvider.notifier)
-                  .deleteGlucoseLog(log.id);
+              ref.read(glucoseLogsProvider.notifier).deleteGlucoseLog(log.id);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: const Text('Reading deleted'),
@@ -55,9 +56,7 @@ void _showGlucoseDeleteSheet(
                   action: SnackBarAction(
                     label: 'Undo',
                     onPressed: () {
-                      ref
-                          .read(healthDataRepositoryProvider)
-                          .addGlucoseLog(log);
+                      ref.read(healthDataRepositoryProvider).addGlucoseLog(log);
                       ref.invalidate(glucoseLogsProvider);
                     },
                   ),
@@ -153,8 +152,7 @@ class GlucoseHistoryView extends ConsumerWidget {
             itemBuilder: (context, index) {
               final log = sortedLogs[index];
               return GestureDetector(
-                onLongPress: () =>
-                    _showGlucoseDeleteSheet(context, ref, log),
+                onLongPress: () => _showGlucoseDeleteSheet(context, ref, log),
                 child: Dismissible(
                   key: ValueKey(log.id),
                   direction: DismissDirection.endToStart,
@@ -218,10 +216,13 @@ class _GlucoseHistoryTile extends StatelessWidget {
     final targetMin = profile?.targetGlucoseMin ?? 70.0;
     final targetMax = profile?.targetGlucoseMax ?? 180.0;
 
+    // Normalise the log value to mg/dL before comparing against targets
+    // (targets are always stored in mg/dL).
+    final valueMgdl = log.unit == 'mmol/L' ? log.value * 18.0182 : log.value;
     Color statusColor = AppThemeTokens.brandSuccess;
-    if (log.value < targetMin) {
+    if (valueMgdl < targetMin) {
       statusColor = AppThemeTokens.warningText;
-    } else if (log.value > targetMax) {
+    } else if (valueMgdl > targetMax) {
       statusColor = AppThemeTokens.error;
     }
 
@@ -239,7 +240,7 @@ class _GlucoseHistoryTile extends StatelessWidget {
         ),
         alignment: Alignment.center,
         child: Text(
-          log.value.toStringAsFixed(0),
+          log.value.toStringAsFixed(log.unit == 'mmol/L' ? 1 : 0),
           style: TextStyle(
             color: statusColor,
             fontWeight: FontWeight.w700,
@@ -248,7 +249,7 @@ class _GlucoseHistoryTile extends StatelessWidget {
         ),
       ),
       title: Text(
-        '${log.value.toStringAsFixed(0)} ${log.unit}',
+        '${log.value.toStringAsFixed(log.unit == 'mmol/L' ? 1 : 0)} ${log.unit}',
         style: const TextStyle(fontWeight: FontWeight.w600),
       ),
       subtitle: Text(
