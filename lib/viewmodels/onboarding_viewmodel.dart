@@ -94,6 +94,10 @@ class OnboardingViewModel extends Notifier<UserProfile> {
     );
     state = updated;
     await UserRepository().saveProfile(updated);
-    ref.invalidate(userProfileProvider);
+    // Set the profile state directly instead of invalidating (which would
+    // trigger an async re-fetch, putting the provider into a loading state).
+    // The router redirect checks isLoading and bounces back to splash if
+    // true — causing a visible flash after onboarding completes.
+    ref.read(userProfileProvider.notifier).setProfile(updated);
   }
 }

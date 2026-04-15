@@ -56,6 +56,15 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper>
         return;
       }
       if (_authInProgress) return; // already authenticating
+
+      // If the app is already on the lock screen (e.g. the user dismissed
+      // the biometric prompt then backgrounded), re-prompt immediately
+      // instead of silently staying locked.
+      if (_locked) {
+        _retryAuth();
+        return;
+      }
+
       final bg = AppLockConfig.lastBackgroundedTime;
       if (bg != null &&
           DateTime.now().difference(bg) >= AppLockConfig.lockTimeout) {
@@ -73,6 +82,14 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper>
     // Tell the wrapper to ignore lifecycle events caused by the biometric
     // dialog itself (Samsung One UI and some other OEMs trigger paused/resumed
     // when the fingerprint overlay appears).
+    AppLockConfig.ignoreNextResume = true;
+    await _attemptAuth();
+  }
+
+  /// Re-prompt auth when the user returns to an already-locked screen.
+  Future<void> _retryAuth() async {
+    if (_authInProgress) return;
+    setState(() => _authInProgress = true);
     AppLockConfig.ignoreNextResume = true;
     await _attemptAuth();
   }
@@ -126,10 +143,7 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper>
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppThemeTokens.brandSecondary,
                       foregroundColor: AppThemeTokens.textPrimaryInverse,
-                      minimumSize: const Size(
-                        160,
-                        AppThemeTokens.minTapTarget,
-                      ),
+                      minimumSize: const Size(160, AppThemeTokens.minTapTarget),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(
                           AppThemeTokens.radiusMd,

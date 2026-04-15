@@ -7,9 +7,7 @@ import '../repositories/user_repository.dart';
 /// Provides the current [UserProfile] to the entire app.
 /// Returns `null` when onboarding has not been completed yet.
 final userProfileProvider =
-    AsyncNotifierProvider<ProfileViewModel, UserProfile?>(
-      ProfileViewModel.new,
-    );
+    AsyncNotifierProvider<ProfileViewModel, UserProfile?>(ProfileViewModel.new);
 
 class ProfileViewModel extends AsyncNotifier<UserProfile?> {
   late final UserRepository _repo;
@@ -33,5 +31,14 @@ class ProfileViewModel extends AsyncNotifier<UserProfile?> {
     final updated = profile.copyWith(updatedAt: DateTime.now());
     await _repo.saveProfile(updated);
     state = AsyncData(updated);
+  }
+
+  /// Sets the in-memory profile state without a DB write.
+  ///
+  /// Used after onboarding where the profile has already been persisted
+  /// by the caller. Avoids [ref.invalidate] which would put the provider
+  /// into a loading state and cause the router to flash back to splash.
+  void setProfile(UserProfile profile) {
+    state = AsyncData(profile);
   }
 }
