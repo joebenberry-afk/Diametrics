@@ -37,13 +37,16 @@ class DashboardView extends ConsumerWidget {
     final targetDecimalPlaces = preferredUnit == 'mmol/L' ? 1 : 0;
     final statusText = profile != null && diabetesType.isNotEmpty
         ? '$diabetesType • Target ${(profile.targetGlucoseMin * targetDisplayFactor).toStringAsFixed(targetDecimalPlaces)}–${(profile.targetGlucoseMax * targetDisplayFactor).toStringAsFixed(targetDecimalPlaces)} $preferredUnit'
-        : 'Loading profile…';
+        : '—';
 
     // Get latest glucose
     final latestGlucose = ref.watch(latestGlucoseProvider);
-    final glucoseValue = latestGlucose.valueOrNull?.value;
+    final latestLog = latestGlucose.valueOrNull;
+    final glucoseValue = latestLog?.value;
+    final glucoseLogUnit = latestLog?.unit ?? preferredUnit;
+    // Use 1 decimal for mmol/L, 0 for mg/dL
     final glucoseDisplay = glucoseValue != null
-        ? glucoseValue.toStringAsFixed(0)
+        ? glucoseValue.toStringAsFixed(glucoseLogUnit == 'mmol/L' ? 1 : 0)
         : '--';
 
     // Get last 6 readings for trendData
@@ -55,13 +58,22 @@ class DashboardView extends ConsumerWidget {
     final recentGlucose = sortedGlucose.length > 6
         ? sortedGlucose.sublist(sortedGlucose.length - 6)
         : sortedGlucose;
-    final trendData = recentGlucose.map((g) => g.value).toList();
+    final trendData = recentGlucose.map((g) {
+      // Normalise each reading to the user's preferred unit for the sparkline.
+      if (g.unit == preferredUnit) return g.value;
+      return preferredUnit == 'mmol/L' ? g.value / 18.0182 : g.value * 18.0182;
+    }).toList();
 
+    // Normalise the latest reading to mg/dL for comparison against
+    // targets (which are always stored in mg/dL).
+    final glucoseMgdl = glucoseValue != null
+        ? (glucoseLogUnit == 'mmol/L' ? glucoseValue * 18.0182 : glucoseValue)
+        : null;
     // Color: red if out of range, green if in range, primary if no data
     Color glucoseColor = AppThemeTokens.brandPrimary;
-    if (glucoseValue != null && profile != null) {
-      if (glucoseValue < profile.targetGlucoseMin ||
-          glucoseValue > profile.targetGlucoseMax) {
+    if (glucoseMgdl != null && profile != null) {
+      if (glucoseMgdl < profile.targetGlucoseMin ||
+          glucoseMgdl > profile.targetGlucoseMax) {
         glucoseColor = AppThemeTokens.error;
       } else {
         glucoseColor = AppThemeTokens.brandSuccess;
@@ -97,200 +109,229 @@ class DashboardView extends ConsumerWidget {
         ],
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppThemeTokens.spaceLg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // ── Header / Account Area ──────────────────────────────────
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: AccountCard(
-                      userName: displayName,
-                      userStatus: statusText,
-                      onTap: () {
-                        context.push(Routes.settings);
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: AppThemeTokens.spaceSm),
-                  const _SOSButton(),
-                ],
-              ),
-              const SizedBox(height: AppThemeTokens.spaceSm),
-
-              // ── Alert Banner ───────────────────────────────────────────
-              Builder(
-                builder: (context) {
-                  final alertLevel = ref.watch(glucoseAlertProvider);
-                  final latestGlucose = ref
-                      .watch(latestGlucoseProvider)
-                      .valueOrNull;
-                  if (alertLevel == GlucoseAlertLevel.none ||
-                      latestGlucose == null) {
-                    return const SizedBox.shrink();
-                  }
-                  return _AlertBanner(
-                    level: alertLevel,
-                    glucoseValue: latestGlucose.value,
-                    unit: latestGlucose.unit,
-                  );
-                },
-              ),
-
-              const SizedBox(height: AppThemeTokens.spaceMd),
-
-              // ── Title Section ──────────────────────────────────────────
-              Text('Health Overview', style: theme.textTheme.headlineMedium),
-              const SizedBox(height: AppThemeTokens.spaceSm),
-              Text(
-                'Your vitals and activity for today',
-                style: theme.textTheme.bodyMedium,
-              ),
-              const SizedBox(height: AppThemeTokens.spaceLg),
-
-              // ── Metrics Grid ───────────────────────────────────────────
-              GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 2,
-                crossAxisSpacing: AppThemeTokens.spaceMd,
-                mainAxisSpacing: AppThemeTokens.spaceMd,
-                childAspectRatio: 0.9,
-                children: [
-                  MetricCard(
-                    title: 'Glucose',
-                    value: glucoseDisplay,
-                    unit: profile?.preferredGlucoseUnit ?? 'mg/dL',
-                    icon: Icons.bloodtype_outlined,
-                    accentColor: glucoseColor,
-                    trendData: trendData,
-                    onTap: () {
-                      context.push(Routes.glucoseTrend);
-                    },
-                  ),
-                  MetricCard(
-                    title: 'Meals',
-                    value: caloriesDisplay,
-                    unit: 'kcal',
-                    icon: Icons.restaurant_outlined,
-                    accentColor: AppThemeTokens.brandSuccess,
-                    trendData: const [],
-                    onTap: () {
-                      context.push(Routes.mealHistory);
-                    },
-                  ),
-                  MetricCard(
-                    title: 'Medication',
-                    value: dosesDisplay,
-                    unit: 'Doses',
-                    icon: Icons.medication_outlined,
-                    accentColor: AppThemeTokens.brandAccent,
-                    onTap: () {
-                      context.push(Routes.medicationHistory);
-                    },
-                  ),
-                  MetricCard(
-                    title: 'Activity',
-                    value: stepsDisplay,
-                    unit: 'Steps',
-                    icon: Icons.directions_walk,
-                    accentColor: AppThemeTokens.brandSecondary,
-                    trendData: const [],
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: AppThemeTokens.spaceLg),
-              const _DailySummaryCard(),
-              const SizedBox(height: AppThemeTokens.spaceLg),
-
-              // ── Recent Activity Section ────────────────────────────────
-              Container(
-                padding: const EdgeInsets.all(AppThemeTokens.spaceLg),
-                decoration: BoxDecoration(
-                  color: isDark ? AppThemeTokens.bgSurfaceDark : Colors.white,
-                  borderRadius: BorderRadius.circular(AppThemeTokens.radiusLg),
-                  border: Border.all(
-                    color: isDark
-                        ? AppThemeTokens.brandSecondary.withValues(alpha: 0.3)
-                        : const Color(0xFFD1D5DB),
-                  ),
-                ),
-                child: Column(
+        child: RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(glucoseLogsProvider);
+            ref.invalidate(mealLogsProvider);
+            ref.invalidate(medicationLogsProvider);
+            // Allow the providers to rebuild before dismissing the spinner.
+            await Future.delayed(const Duration(milliseconds: 300));
+          },
+          color: AppThemeTokens.brandPrimary,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(AppThemeTokens.spaceLg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // ── Header / Account Area ──────────────────────────────────
+                Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Recent Activity',
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        fontSize: 20,
+                    Expanded(
+                      child: AccountCard(
+                        userName: displayName,
+                        userStatus: statusText,
+                        onTap: () {
+                          context.push(Routes.settings);
+                        },
                       ),
                     ),
-                    const SizedBox(height: AppThemeTokens.spaceMd),
-                    activityAsync.when(
-                      loading: () =>
-                          const Center(child: CircularProgressIndicator()),
-                      error: (err, stack) =>
-                          const Center(child: Text('Error loading activity')),
-                      data: (entries) {
-                        if (entries.isEmpty) {
-                          return const Padding(
-                            padding: EdgeInsets.symmetric(
-                              vertical: AppThemeTokens.spaceLg,
-                            ),
-                            child: Center(
-                              child: Text(
-                                'No activity yet. Start logging!',
-                                style: TextStyle(
-                                  color: AppThemeTokens.textSecondary,
-                                ),
-                              ),
-                            ),
-                          );
-                        }
+                    const SizedBox(width: AppThemeTokens.spaceSm),
+                    const _SOSButton(),
+                  ],
+                ),
+                const SizedBox(height: AppThemeTokens.spaceSm),
 
-                        return Column(
-                          children: entries.map((entry) {
-                            return Column(
-                              children: [
-                                ListTile(
-                                  contentPadding: EdgeInsets.zero,
-                                  leading: CircleAvatar(
-                                    backgroundColor: (entry['color'] as Color)
-                                        .withValues(alpha: 0.1),
-                                    child: Icon(
-                                      entry['icon'] as IconData,
-                                      size: 20,
-                                      color: entry['color'] as Color,
-                                    ),
-                                  ),
-                                  title: Text(
-                                    entry['label'] as String,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  subtitle: Text(
-                                    '${_timeAgo(entry['timestamp'] as DateTime)} • ${entry['subtitle']}',
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      color: AppThemeTokens.textSecondary,
-                                    ),
-                                  ),
-                                ),
-                                if (entry != entries.last) const Divider(),
-                              ],
-                            );
-                          }).toList(),
+                // ── Alert Banner ───────────────────────────────────────────
+                Builder(
+                  builder: (context) {
+                    final alertLevel = ref.watch(glucoseAlertProvider);
+                    final latestGlucose = ref
+                        .watch(latestGlucoseProvider)
+                        .valueOrNull;
+                    if (alertLevel == GlucoseAlertLevel.none ||
+                        latestGlucose == null) {
+                      return const SizedBox.shrink();
+                    }
+                    return _AlertBanner(
+                      level: alertLevel,
+                      glucoseValue: latestGlucose.value,
+                      unit: latestGlucose.unit,
+                    );
+                  },
+                ),
+
+                const SizedBox(height: AppThemeTokens.spaceMd),
+
+                // ── Title Section ──────────────────────────────────────────
+                Text('Health Overview', style: theme.textTheme.headlineMedium),
+                const SizedBox(height: AppThemeTokens.spaceSm),
+                Text(
+                  'Your vitals and activity for today',
+                  style: theme.textTheme.bodyMedium,
+                ),
+                const SizedBox(height: AppThemeTokens.spaceLg),
+
+                // ── Metrics Grid ───────────────────────────────────────────
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  crossAxisSpacing: AppThemeTokens.spaceMd,
+                  mainAxisSpacing: AppThemeTokens.spaceMd,
+                  childAspectRatio: 0.9,
+                  children: [
+                    MetricCard(
+                      title: 'Glucose',
+                      value: glucoseDisplay,
+                      unit: profile?.preferredGlucoseUnit ?? 'mg/dL',
+                      icon: Icons.bloodtype_outlined,
+                      accentColor: glucoseColor,
+                      trendData: trendData,
+                      onTap: () {
+                        context.push(Routes.glucoseTrend);
+                      },
+                    ),
+                    MetricCard(
+                      title: 'Meals',
+                      value: caloriesDisplay,
+                      unit: 'kcal',
+                      icon: Icons.restaurant_outlined,
+                      accentColor: AppThemeTokens.brandSuccess,
+                      trendData: const [],
+                      onTap: () {
+                        context.push(Routes.mealHistory);
+                      },
+                    ),
+                    MetricCard(
+                      title: 'Medication',
+                      value: dosesDisplay,
+                      unit: 'Doses',
+                      icon: Icons.medication_outlined,
+                      accentColor: AppThemeTokens.brandAccent,
+                      onTap: () {
+                        context.push(Routes.medicationHistory);
+                      },
+                    ),
+                    MetricCard(
+                      title: 'Activity',
+                      value: stepsDisplay,
+                      unit: 'Steps',
+                      icon: Icons.directions_walk,
+                      accentColor: AppThemeTokens.brandSecondary,
+                      trendData: const [],
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Today: $stepsDisplay steps tracked via pedometer.',
+                            ),
+                            behavior: SnackBarBehavior.floating,
+                            duration: const Duration(seconds: 2),
+                          ),
                         );
                       },
                     ),
                   ],
                 ),
-              ),
-            ],
+
+                const SizedBox(height: AppThemeTokens.spaceLg),
+                const _DailySummaryCard(),
+                const SizedBox(height: AppThemeTokens.spaceLg),
+
+                // ── Recent Activity Section ────────────────────────────────
+                Container(
+                  padding: const EdgeInsets.all(AppThemeTokens.spaceLg),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppThemeTokens.bgSurfaceDark : Colors.white,
+                    borderRadius: BorderRadius.circular(
+                      AppThemeTokens.radiusLg,
+                    ),
+                    border: Border.all(
+                      color: isDark
+                          ? AppThemeTokens.brandSecondary.withValues(alpha: 0.3)
+                          : const Color(0xFFD1D5DB),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Recent Activity',
+                        style: theme.textTheme.headlineMedium?.copyWith(
+                          fontSize: 20,
+                        ),
+                      ),
+                      const SizedBox(height: AppThemeTokens.spaceMd),
+                      activityAsync.when(
+                        loading: () =>
+                            const Center(child: CircularProgressIndicator()),
+                        error: (err, stack) =>
+                            const Center(child: Text('Error loading activity')),
+                        data: (entries) {
+                          if (entries.isEmpty) {
+                            return const Padding(
+                              padding: EdgeInsets.symmetric(
+                                vertical: AppThemeTokens.spaceLg,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'No activity yet. Start logging!',
+                                  style: TextStyle(
+                                    color: AppThemeTokens.textSecondary,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }
+
+                          return Column(
+                            children: entries.map((entry) {
+                              return Column(
+                                children: [
+                                  ListTile(
+                                    contentPadding: EdgeInsets.zero,
+                                    leading: CircleAvatar(
+                                      backgroundColor: (entry['color'] as Color)
+                                          .withValues(alpha: 0.1),
+                                      child: Icon(
+                                        entry['icon'] as IconData,
+                                        size: 20,
+                                        color: entry['color'] as Color,
+                                      ),
+                                    ),
+                                    title: Text(
+                                      entry['label'] as String,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        color: isDark
+                                            ? Colors.white
+                                            : AppThemeTokens.textPrimary,
+                                      ),
+                                    ),
+                                    subtitle: Text(
+                                      '${_timeAgo(entry['timestamp'] as DateTime)} • ${entry['subtitle']}',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: isDark
+                                            ? Colors.white60
+                                            : AppThemeTokens.textSecondary,
+                                      ),
+                                    ),
+                                  ),
+                                  if (entry != entries.last) const Divider(),
+                                ],
+                              );
+                            }).toList(),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -501,99 +542,104 @@ class _DailySummaryCard extends ConsumerWidget {
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (_, _) => const Text('Could not load summary'),
             data: (s) {
-                // Convert avg glucose from mg/dL to preferred unit for display
-                final summaryProfile = ref.watch(userProfileProvider).valueOrNull;
-                final summaryUnit = summaryProfile?.preferredGlucoseUnit ?? 'mg/dL';
-                final avgDisplayFactor = summaryUnit == 'mmol/L' ? 1 / 18.0182 : 1.0;
-                final avgDecimalPlaces = summaryUnit == 'mmol/L' ? 1 : 0;
-                final avgDisplay = s.avgGlucose > 0
-                    ? (s.avgGlucose * avgDisplayFactor).toStringAsFixed(avgDecimalPlaces)
-                    : '--';
+              // Convert avg glucose from mg/dL to preferred unit for display
+              final summaryProfile = ref.watch(userProfileProvider).valueOrNull;
+              final summaryUnit =
+                  summaryProfile?.preferredGlucoseUnit ?? 'mg/dL';
+              final avgDisplayFactor = summaryUnit == 'mmol/L'
+                  ? 1 / 18.0182
+                  : 1.0;
+              final avgDecimalPlaces = summaryUnit == 'mmol/L' ? 1 : 0;
+              final avgDisplay = s.avgGlucose > 0
+                  ? (s.avgGlucose * avgDisplayFactor).toStringAsFixed(
+                      avgDecimalPlaces,
+                    )
+                  : '--';
 
-                return s.glucoseReadings == 0 &&
-                    s.mealsLogged == 0 &&
-                    s.dosesLogged == 0
-                ? const Text(
-                    'No data logged today yet.',
-                    style: TextStyle(color: AppThemeTokens.textSecondary),
-                  )
-                : Column(
-                    children: [
-                      // Time-in-range progress bar
-                      if (s.glucoseReadings > 0) ...[
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              'Time in Range',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: AppThemeTokens.textSecondary,
+              return s.glucoseReadings == 0 &&
+                      s.mealsLogged == 0 &&
+                      s.dosesLogged == 0
+                  ? const Text(
+                      'No data logged today yet.',
+                      style: TextStyle(color: AppThemeTokens.textSecondary),
+                    )
+                  : Column(
+                      children: [
+                        // Time-in-range progress bar
+                        if (s.glucoseReadings > 0) ...[
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Time in Range',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: AppThemeTokens.textSecondary,
+                                ),
                               ),
-                            ),
-                            Text(
-                              '${s.timeInRangePct.toStringAsFixed(0)}%',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: s.timeInRangePct >= 70
+                              Text(
+                                '${s.timeInRangePct.toStringAsFixed(0)}%',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: s.timeInRangePct >= 70
+                                      ? AppThemeTokens.brandSuccess
+                                      : s.timeInRangePct >= 50
+                                      ? AppThemeTokens.warningText
+                                      : AppThemeTokens.error,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: LinearProgressIndicator(
+                              value: (s.timeInRangePct / 100).clamp(0.0, 1.0),
+                              minHeight: 8,
+                              backgroundColor: AppThemeTokens.error.withValues(
+                                alpha: 0.2,
+                              ),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                s.timeInRangePct >= 70
                                     ? AppThemeTokens.brandSuccess
                                     : s.timeInRangePct >= 50
-                                    ? AppThemeTokens.warningText
+                                    ? AppThemeTokens.warning
                                     : AppThemeTokens.error,
                               ),
                             ),
+                          ),
+                          const SizedBox(height: AppThemeTokens.spaceMd),
+                        ],
+                        // Stats row
+                        Row(
+                          children: [
+                            _SummaryStatTile(
+                              label: 'Avg Glucose',
+                              value: avgDisplay,
+                              unit: summaryUnit,
+                            ),
+                            _SummaryStatTile(
+                              label: 'Carbs',
+                              value: s.totalCarbs.toStringAsFixed(0),
+                              unit: 'g',
+                            ),
+                            _SummaryStatTile(
+                              label: 'Calories',
+                              value: s.totalCalories > 0
+                                  ? s.totalCalories.toStringAsFixed(0)
+                                  : '--',
+                              unit: 'kcal',
+                            ),
+                            _SummaryStatTile(
+                              label: 'Readings',
+                              value: '${s.glucoseReadings}',
+                              unit: 'today',
+                            ),
                           ],
                         ),
-                        const SizedBox(height: 6),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(4),
-                          child: LinearProgressIndicator(
-                            value: (s.timeInRangePct / 100).clamp(0.0, 1.0),
-                            minHeight: 8,
-                            backgroundColor: AppThemeTokens.error.withValues(
-                              alpha: 0.2,
-                            ),
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              s.timeInRangePct >= 70
-                                  ? AppThemeTokens.brandSuccess
-                                  : s.timeInRangePct >= 50
-                                  ? AppThemeTokens.warning
-                                  : AppThemeTokens.error,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: AppThemeTokens.spaceMd),
                       ],
-                      // Stats row
-                      Row(
-                        children: [
-                          _SummaryStatTile(
-                            label: 'Avg Glucose',
-                            value: avgDisplay,
-                            unit: summaryUnit,
-                          ),
-                          _SummaryStatTile(
-                            label: 'Carbs',
-                            value: s.totalCarbs.toStringAsFixed(0),
-                            unit: 'g',
-                          ),
-                          _SummaryStatTile(
-                            label: 'Calories',
-                            value: s.totalCalories > 0
-                                ? s.totalCalories.toStringAsFixed(0)
-                                : '--',
-                            unit: 'kcal',
-                          ),
-                          _SummaryStatTile(
-                            label: 'Readings',
-                            value: '${s.glucoseReadings}',
-                            unit: 'today',
-                          ),
-                        ],
-                      ),
-                    ],
-                  );
+                    );
             },
           ),
         ],
@@ -673,19 +719,19 @@ class _AlertBanner extends StatelessWidget {
         const Color(0xFFFFF3CD),
         const Color(0xFF856404),
         Icons.warning_amber_rounded,
-        'Low glucose detected: ${glucoseValue.toStringAsFixed(0)} $unit. Consider fast-acting carbohydrates.',
+        'Low glucose detected: ${glucoseValue.toStringAsFixed(unit == 'mmol/L' ? 1 : 0)} $unit. Consider fast-acting carbohydrates.',
       ),
       GlucoseAlertLevel.hyperElevated => (
         const Color(0xFFFFE4E4),
         AppThemeTokens.error,
         Icons.arrow_upward_rounded,
-        'Glucose above target: ${glucoseValue.toStringAsFixed(0)} $unit. Monitor closely.',
+        'Glucose above target: ${glucoseValue.toStringAsFixed(unit == 'mmol/L' ? 1 : 0)} $unit. Monitor closely.',
       ),
       GlucoseAlertLevel.hyperHigh => (
         AppThemeTokens.error,
         Colors.white,
         Icons.priority_high_rounded,
-        'High glucose: ${glucoseValue.toStringAsFixed(0)} $unit. Contact your care team if persistent.',
+        'High glucose: ${glucoseValue.toStringAsFixed(unit == 'mmol/L' ? 1 : 0)} $unit. Contact your care team if persistent.',
       ),
       _ => (Colors.transparent, Colors.transparent, Icons.info, ''),
     };
@@ -784,7 +830,9 @@ class _SOSButtonState extends State<_SOSButton> {
     if (!success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('No emergency contact configured, or unable to dial.'),
+          content: const Text(
+            'No emergency contact configured, or unable to dial.',
+          ),
           backgroundColor: AppThemeTokens.error,
           action: SnackBarAction(
             label: 'Configure',
@@ -819,12 +867,19 @@ class _SOSButtonState extends State<_SOSButton> {
                 ? const SizedBox(
                     width: 24,
                     height: 24,
-                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3),
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 3,
+                    ),
                   )
                 : const Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.warning_rounded, color: Colors.white, size: 28),
+                      Icon(
+                        Icons.warning_rounded,
+                        color: Colors.white,
+                        size: 28,
+                      ),
                       SizedBox(height: 2),
                       Text(
                         'SOS',
