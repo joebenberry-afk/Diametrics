@@ -21,6 +21,9 @@ _MealLog _$MealLogFromJson(Map<String, dynamic> json) => _MealLog(
   notes: json['notes'] as String?,
   foodFormFactor: json['foodFormFactor'] as String? ?? 'standard',
   postExercise: json['postExercise'] as bool? ?? false,
+  projectionPeakMgDl: (json['projectionPeakMgDl'] as num?)?.toDouble() ?? 0.0,
+  projectionTwoHourMgDl:
+      (json['projectionTwoHourMgDl'] as num?)?.toDouble() ?? 0.0,
   isSynced: json['isSynced'] as bool? ?? false,
 );
 
@@ -39,5 +42,7 @@ Map<String, dynamic> _$MealLogToJson(_MealLog instance) => <String, dynamic>{
   'notes': instance.notes,
   'foodFormFactor': instance.foodFormFactor,
   'postExercise': instance.postExercise,
+  'projectionPeakMgDl': instance.projectionPeakMgDl,
+  'projectionTwoHourMgDl': instance.projectionTwoHourMgDl,
   'isSynced': instance.isSynced,
 };

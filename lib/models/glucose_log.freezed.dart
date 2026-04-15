@@ -18,6 +18,7 @@ mixin _$GlucoseLog {
  String get id; DateTime get timestamp; double get value; String get unit;// Enum: mg/dL, mmol/L
  String get context;// Enum stored as string: fasting, pre_meal, post_meal_30, post_meal_120, bedtime, night_time
  String? get notes;// E.g., stress, exercise
+ String? get linkedMealId;// FK to MealLog.id — set when logging post-meal glucose from a meal
  bool get isSynced;
 /// Create a copy of GlucoseLog
 /// with the given fields replaced by the non-null parameter values.
@@ -31,16 +32,16 @@ $GlucoseLogCopyWith<GlucoseLog> get copyWith => _$GlucoseLogCopyWithImpl<Glucose
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GlucoseLog&&(identical(other.id, id) || other.id == id)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.value, value) || other.value == value)&&(identical(other.unit, unit) || other.unit == unit)&&(identical(other.context, context) || other.context == context)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.isSynced, isSynced) || other.isSynced == isSynced));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is GlucoseLog&&(identical(other.id, id) || other.id == id)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.value, value) || other.value == value)&&(identical(other.unit, unit) || other.unit == unit)&&(identical(other.context, context) || other.context == context)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.linkedMealId, linkedMealId) || other.linkedMealId == linkedMealId)&&(identical(other.isSynced, isSynced) || other.isSynced == isSynced));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,timestamp,value,unit,context,notes,isSynced);
+int get hashCode => Object.hash(runtimeType,id,timestamp,value,unit,context,notes,linkedMealId,isSynced);
 
 @override
 String toString() {
-  return 'GlucoseLog(id: $id, timestamp: $timestamp, value: $value, unit: $unit, context: $context, notes: $notes, isSynced: $isSynced)';
+  return 'GlucoseLog(id: $id, timestamp: $timestamp, value: $value, unit: $unit, context: $context, notes: $notes, linkedMealId: $linkedMealId, isSynced: $isSynced)';
 }
 
 
@@ -51,7 +52,7 @@ abstract mixin class $GlucoseLogCopyWith<$Res>  {
   factory $GlucoseLogCopyWith(GlucoseLog value, $Res Function(GlucoseLog) _then) = _$GlucoseLogCopyWithImpl;
 @useResult
 $Res call({
- String id, DateTime timestamp, double value, String unit, String context, String? notes, bool isSynced
+ String id, DateTime timestamp, double value, String unit, String context, String? notes, String? linkedMealId, bool isSynced
 });
 
 
@@ -68,7 +69,7 @@ class _$GlucoseLogCopyWithImpl<$Res>
 
 /// Create a copy of GlucoseLog
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? timestamp = null,Object? value = null,Object? unit = null,Object? context = null,Object? notes = freezed,Object? isSynced = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? timestamp = null,Object? value = null,Object? unit = null,Object? context = null,Object? notes = freezed,Object? linkedMealId = freezed,Object? isSynced = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,timestamp: null == timestamp ? _self.timestamp : timestamp // ignore: cast_nullable_to_non_nullable
@@ -76,6 +77,7 @@ as DateTime,value: null == value ? _self.value : value // ignore: cast_nullable_
 as double,unit: null == unit ? _self.unit : unit // ignore: cast_nullable_to_non_nullable
 as String,context: null == context ? _self.context : context // ignore: cast_nullable_to_non_nullable
 as String,notes: freezed == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
+as String?,linkedMealId: freezed == linkedMealId ? _self.linkedMealId : linkedMealId // ignore: cast_nullable_to_non_nullable
 as String?,isSynced: null == isSynced ? _self.isSynced : isSynced // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
@@ -162,10 +164,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  DateTime timestamp,  double value,  String unit,  String context,  String? notes,  bool isSynced)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  DateTime timestamp,  double value,  String unit,  String context,  String? notes,  String? linkedMealId,  bool isSynced)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _GlucoseLog() when $default != null:
-return $default(_that.id,_that.timestamp,_that.value,_that.unit,_that.context,_that.notes,_that.isSynced);case _:
+return $default(_that.id,_that.timestamp,_that.value,_that.unit,_that.context,_that.notes,_that.linkedMealId,_that.isSynced);case _:
   return orElse();
 
 }
@@ -183,10 +185,10 @@ return $default(_that.id,_that.timestamp,_that.value,_that.unit,_that.context,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  DateTime timestamp,  double value,  String unit,  String context,  String? notes,  bool isSynced)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  DateTime timestamp,  double value,  String unit,  String context,  String? notes,  String? linkedMealId,  bool isSynced)  $default,) {final _that = this;
 switch (_that) {
 case _GlucoseLog():
-return $default(_that.id,_that.timestamp,_that.value,_that.unit,_that.context,_that.notes,_that.isSynced);case _:
+return $default(_that.id,_that.timestamp,_that.value,_that.unit,_that.context,_that.notes,_that.linkedMealId,_that.isSynced);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -203,10 +205,10 @@ return $default(_that.id,_that.timestamp,_that.value,_that.unit,_that.context,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  DateTime timestamp,  double value,  String unit,  String context,  String? notes,  bool isSynced)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  DateTime timestamp,  double value,  String unit,  String context,  String? notes,  String? linkedMealId,  bool isSynced)?  $default,) {final _that = this;
 switch (_that) {
 case _GlucoseLog() when $default != null:
-return $default(_that.id,_that.timestamp,_that.value,_that.unit,_that.context,_that.notes,_that.isSynced);case _:
+return $default(_that.id,_that.timestamp,_that.value,_that.unit,_that.context,_that.notes,_that.linkedMealId,_that.isSynced);case _:
   return null;
 
 }
@@ -218,7 +220,7 @@ return $default(_that.id,_that.timestamp,_that.value,_that.unit,_that.context,_t
 @JsonSerializable()
 
 class _GlucoseLog implements GlucoseLog {
-  const _GlucoseLog({required this.id, required this.timestamp, required this.value, required this.unit, required this.context, this.notes, this.isSynced = false});
+  const _GlucoseLog({required this.id, required this.timestamp, required this.value, required this.unit, required this.context, this.notes, this.linkedMealId, this.isSynced = false});
   factory _GlucoseLog.fromJson(Map<String, dynamic> json) => _$GlucoseLogFromJson(json);
 
 @override final  String id;
@@ -230,6 +232,8 @@ class _GlucoseLog implements GlucoseLog {
 // Enum stored as string: fasting, pre_meal, post_meal_30, post_meal_120, bedtime, night_time
 @override final  String? notes;
 // E.g., stress, exercise
+@override final  String? linkedMealId;
+// FK to MealLog.id — set when logging post-meal glucose from a meal
 @override@JsonKey() final  bool isSynced;
 
 /// Create a copy of GlucoseLog
@@ -245,16 +249,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _GlucoseLog&&(identical(other.id, id) || other.id == id)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.value, value) || other.value == value)&&(identical(other.unit, unit) || other.unit == unit)&&(identical(other.context, context) || other.context == context)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.isSynced, isSynced) || other.isSynced == isSynced));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _GlucoseLog&&(identical(other.id, id) || other.id == id)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.value, value) || other.value == value)&&(identical(other.unit, unit) || other.unit == unit)&&(identical(other.context, context) || other.context == context)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.linkedMealId, linkedMealId) || other.linkedMealId == linkedMealId)&&(identical(other.isSynced, isSynced) || other.isSynced == isSynced));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,timestamp,value,unit,context,notes,isSynced);
+int get hashCode => Object.hash(runtimeType,id,timestamp,value,unit,context,notes,linkedMealId,isSynced);
 
 @override
 String toString() {
-  return 'GlucoseLog(id: $id, timestamp: $timestamp, value: $value, unit: $unit, context: $context, notes: $notes, isSynced: $isSynced)';
+  return 'GlucoseLog(id: $id, timestamp: $timestamp, value: $value, unit: $unit, context: $context, notes: $notes, linkedMealId: $linkedMealId, isSynced: $isSynced)';
 }
 
 
@@ -265,7 +269,7 @@ abstract mixin class _$GlucoseLogCopyWith<$Res> implements $GlucoseLogCopyWith<$
   factory _$GlucoseLogCopyWith(_GlucoseLog value, $Res Function(_GlucoseLog) _then) = __$GlucoseLogCopyWithImpl;
 @override @useResult
 $Res call({
- String id, DateTime timestamp, double value, String unit, String context, String? notes, bool isSynced
+ String id, DateTime timestamp, double value, String unit, String context, String? notes, String? linkedMealId, bool isSynced
 });
 
 
@@ -282,7 +286,7 @@ class __$GlucoseLogCopyWithImpl<$Res>
 
 /// Create a copy of GlucoseLog
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? timestamp = null,Object? value = null,Object? unit = null,Object? context = null,Object? notes = freezed,Object? isSynced = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? timestamp = null,Object? value = null,Object? unit = null,Object? context = null,Object? notes = freezed,Object? linkedMealId = freezed,Object? isSynced = null,}) {
   return _then(_GlucoseLog(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,timestamp: null == timestamp ? _self.timestamp : timestamp // ignore: cast_nullable_to_non_nullable
@@ -290,6 +294,7 @@ as DateTime,value: null == value ? _self.value : value // ignore: cast_nullable_
 as double,unit: null == unit ? _self.unit : unit // ignore: cast_nullable_to_non_nullable
 as String,context: null == context ? _self.context : context // ignore: cast_nullable_to_non_nullable
 as String,notes: freezed == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
+as String?,linkedMealId: freezed == linkedMealId ? _self.linkedMealId : linkedMealId // ignore: cast_nullable_to_non_nullable
 as String?,isSynced: null == isSynced ? _self.isSynced : isSynced // ignore: cast_nullable_to_non_nullable
 as bool,
   ));

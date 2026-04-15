@@ -40,7 +40,10 @@ void main() async {
 
   // ReminderService (timezone parsing) doesn't touch the DB — safe to fire now.
   unawaited(ReminderService.initialize().catchError(
-    (e) => debugPrint('Reminder initialization failed: $e'),
+    (e) {
+      debugPrint('Reminder initialization failed: $e');
+      return false;
+    },
   ));
 
   // Food seeding MUST start after the first frame renders.

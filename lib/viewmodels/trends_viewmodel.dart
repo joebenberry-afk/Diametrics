@@ -22,6 +22,9 @@ class TrendsData {
 /// Selected time range in days. Defaults to 7.
 final selectedRangeProvider = StateProvider<int>((ref) => 7);
 
+/// Currently selected day for intra-day drill-down. Null = overview mode.
+final selectedDayProvider = StateProvider<DateTime?>((ref) => null);
+
 final trendsProvider =
     AsyncNotifierProvider<TrendsViewModel, TrendsData>(TrendsViewModel.new);
 

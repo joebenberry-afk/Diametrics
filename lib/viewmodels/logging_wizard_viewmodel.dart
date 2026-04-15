@@ -282,6 +282,38 @@ class LoggingWizardViewModel extends Notifier<LoggingWizardState> {
     }
   }
 
+  /// Saves a post-meal glucose reading linked to a specific meal.
+  Future<bool> savePostMealGlucose({
+    required double value,
+    required String unit,
+    required String mealId,
+    String context = 'post_meal_120',
+  }) async {
+    state = state.copyWith(isSubmitting: true, error: _clearValue);
+    try {
+      final log = GlucoseLog(
+        id: _uuid.v4(),
+        timestamp: DateTime.now(),
+        value: value,
+        unit: unit,
+        context: context,
+        linkedMealId: mealId,
+      );
+
+      final dataRepo = ref.read(healthDataRepositoryProvider);
+      await dataRepo.addGlucoseLog(log);
+      ref.invalidate(glucoseLogsProvider);
+
+      unawaited(_runEkfTuning(log));
+
+      state = LoggingWizardState();
+      return true;
+    } catch (e) {
+      state = state.copyWith(isSubmitting: false, error: e.toString());
+      return false;
+    }
+  }
+
   /// Saves the meal log, records the pre-meal glucose reading (if manually
   /// entered), then runs the Phase 1 Hovorka glucose projection.
   ///
@@ -329,30 +361,11 @@ class LoggingWizardViewModel extends Notifier<LoggingWizardState> {
           ? state.pendingCalories!
           : computedCalories;
 
-      // 2. Save the meal log
-      final mealLog = MealLog(
-        id: _uuid.v4(),
-        timestamp: DateTime.now(),
-        carbohydrates: state.pendingCarbs!,
-        dietaryFiber: state.pendingFiber ?? 0.0,
-        proteins: state.pendingProteins!,
-        fats: state.pendingFats!,
-        calories: finalCalories,
-        containsAlcohol: state.containsAlcohol,
-        containsCaffeine: state.containsCaffeine,
-        mealType: state.mealType,
-        foodFormFactor: state.foodFormFactor,
-        postExercise: state.postExercise,
-      );
-      await repo.addMealLog(mealLog);
-      ref.invalidate(mealLogsProvider);
-
-      // 3. Calculate IOB and run the projection using personalized ML params.
+      // 2. Calculate IOB and run the projection FIRST so we can store results on the meal.
       final iob = await _calculateIOB();
       final unit = preMealUnit;
       final mealCount = profile?.tuningMealCount ?? 0;
 
-      // Normalize baseline to mg/dL for the projection service math
       double normalizedBaseline = state.preMealGlucose!;
       if (unit == 'mmol/L') {
         normalizedBaseline *= 18.0182;
@@ -378,6 +391,26 @@ class LoggingWizardViewModel extends Notifier<LoggingWizardState> {
         mealTimestamp: DateTime.now(),
         mealName: state.mealName,
       );
+
+      // 3. Save the meal log WITH projection results embedded
+      final mealLog = MealLog(
+        id: _uuid.v4(),
+        timestamp: DateTime.now(),
+        carbohydrates: state.pendingCarbs!,
+        dietaryFiber: state.pendingFiber ?? 0.0,
+        proteins: state.pendingProteins!,
+        fats: state.pendingFats!,
+        calories: finalCalories,
+        containsAlcohol: state.containsAlcohol,
+        containsCaffeine: state.containsCaffeine,
+        mealType: state.mealType,
+        foodFormFactor: state.foodFormFactor,
+        postExercise: state.postExercise,
+        projectionPeakMgDl: result.peakGlucose,
+        projectionTwoHourMgDl: result.twoHourGlucose,
+      );
+      await repo.addMealLog(mealLog);
+      ref.invalidate(mealLogsProvider);
 
       // 4. Persist projection for history
       await repo.addProjectionLog(

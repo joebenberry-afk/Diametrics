@@ -152,8 +152,8 @@ class _GlucoseWizardViewState extends ConsumerState<GlucoseWizardView> {
                         final parsed = double.tryParse(val);
                         if (parsed == null) return;
                         final isValid = state.glucoseUnit == 'mmol/L'
-                            ? parsed >= 1.1 && parsed <= 33.3
-                            : parsed >= 20 && parsed <= 600;
+                            ? parsed >= 1.1 && parsed <= 27.8
+                            : parsed >= 20 && parsed <= 500;
                         if (isValid) {
                           viewModel.updateGlucoseValue(parsed);
                         }
@@ -162,11 +162,11 @@ class _GlucoseWizardViewState extends ConsumerState<GlucoseWizardView> {
                         final v = double.tryParse(val ?? '');
                         if (v == null) return 'Enter a number';
                         final unit = state.glucoseUnit;
-                        if (unit == 'mmol/L' && (v < 1.1 || v > 33.3)) {
-                          return 'Enter a value between 1.1 and 33.3 mmol/L';
+                        if (unit == 'mmol/L' && (v < 1.1 || v > 27.8)) {
+                          return 'Enter a value between 1.1 and 27.8 mmol/L';
                         }
-                        if (unit == 'mg/dL' && (v < 20 || v > 600)) {
-                          return 'Enter a value between 20 and 600 mg/dL';
+                        if (unit == 'mg/dL' && (v < 20 || v > 500)) {
+                          return 'Enter a value between 20 and 500 mg/dL';
                         }
                         return null;
                       },
@@ -211,9 +211,7 @@ class _GlucoseWizardViewState extends ConsumerState<GlucoseWizardView> {
                         padding: const EdgeInsets.all(AppThemeTokens.spaceMd),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? AppThemeTokens.brandPrimary.withValues(
-                                  alpha: 0.1,
-                                )
+                              ? AppThemeTokens.brandPrimary
                               : Colors.transparent,
                           border: Border.all(
                             color: isSelected
@@ -232,7 +230,7 @@ class _GlucoseWizardViewState extends ConsumerState<GlucoseWizardView> {
                                   ? Icons.radio_button_checked
                                   : Icons.radio_button_unchecked,
                               color: isSelected
-                                  ? AppThemeTokens.brandPrimary
+                                  ? Colors.white
                                   : Colors.grey,
                             ),
                             const SizedBox(width: AppThemeTokens.spaceMd),
@@ -242,6 +240,7 @@ class _GlucoseWizardViewState extends ConsumerState<GlucoseWizardView> {
                                 fontWeight: isSelected
                                     ? FontWeight.w600
                                     : FontWeight.normal,
+                                color: isSelected ? Colors.white : null,
                               ),
                             ),
                             if (option['value'] == 'pre_meal' ||
@@ -249,14 +248,14 @@ class _GlucoseWizardViewState extends ConsumerState<GlucoseWizardView> {
                               const Spacer(),
                               Icon(
                                 Icons.bolt,
-                                color: AppThemeTokens.brandAccent,
+                                color: isSelected ? Colors.white70 : AppThemeTokens.brandAccent,
                                 size: 16,
                               ),
                               const SizedBox(width: 4),
                               Text(
                                 'AI Input',
                                 style: theme.textTheme.labelSmall?.copyWith(
-                                  color: AppThemeTokens.brandAccent,
+                                  color: isSelected ? Colors.white70 : AppThemeTokens.brandAccent,
                                 ),
                               ),
                             ],

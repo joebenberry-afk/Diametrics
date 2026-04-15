@@ -1,8 +1,8 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../core/theme/app_tokens.dart';
 import '../../models/glucose_log.dart';
@@ -20,6 +20,7 @@ class TrendsView extends ConsumerWidget {
     final selectedDays = ref.watch(selectedRangeProvider);
     final trendsAsync = ref.watch(trendsProvider);
     final profile = ref.watch(userProfileProvider).valueOrNull;
+    final selectedDay = ref.watch(selectedDayProvider);
 
     final targetMin = profile?.targetGlucoseMin ?? 70.0;
     final targetMax = profile?.targetGlucoseMax ?? 180.0;
@@ -27,49 +28,69 @@ class TrendsView extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Glucose Trends'),
+        title: Text(selectedDay != null
+            ? DateFormat('EEEE, MMM d').format(selectedDay)
+            : 'Glucose Trends'),
         backgroundColor: AppThemeTokens.brandPrimary,
         foregroundColor: AppThemeTokens.textPrimaryInverse,
+        leading: selectedDay != null
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () =>
+                    ref.read(selectedDayProvider.notifier).state = null,
+              )
+            : null,
         actions: [
-          TextButton.icon(
-            onPressed: () => context.push(Routes.glucoseHistory),
-            icon: const Icon(
-              Icons.list_alt,
-              color: AppThemeTokens.textPrimaryInverse,
-              size: 18,
+          if (selectedDay == null)
+            TextButton.icon(
+              onPressed: () => context.push(Routes.glucoseHistory),
+              icon: const Icon(
+                Icons.list_alt,
+                color: AppThemeTokens.textPrimaryInverse,
+                size: 18,
+              ),
+              label: const Text(
+                'All readings',
+                style: TextStyle(color: AppThemeTokens.textPrimaryInverse),
+              ),
             ),
-            label: const Text(
-              'All readings',
-              style: TextStyle(color: AppThemeTokens.textPrimaryInverse),
-            ),
-          ),
         ],
       ),
       body: SafeArea(
         child: trendsAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Center(child: Text('Error: $e')),
-          data: (data) => _TrendsContent(
-            data: data,
-            selectedDays: selectedDays,
-            targetMin: targetMin,
-            targetMax: targetMax,
-            unit: unit,
-          ),
+          data: (data) => selectedDay != null
+              ? _IntraDayContent(
+                  data: data,
+                  selectedDay: selectedDay,
+                  targetMin: targetMin,
+                  targetMax: targetMax,
+                  unit: unit,
+                )
+              : _OverviewContent(
+                  data: data,
+                  selectedDays: selectedDays,
+                  targetMin: targetMin,
+                  targetMax: targetMax,
+                  unit: unit,
+                ),
         ),
       ),
     );
   }
 }
 
-class _TrendsContent extends StatelessWidget {
+// ── Overview Content (7D/30D/90D daily aggregates) ───────────────────────────
+
+class _OverviewContent extends ConsumerWidget {
   final TrendsData data;
   final int selectedDays;
   final double targetMin;
   final double targetMax;
   final String unit;
 
-  const _TrendsContent({
+  const _OverviewContent({
     required this.data,
     required this.selectedDays,
     required this.targetMin,
@@ -78,7 +99,7 @@ class _TrendsContent extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Column(
       children: [
         const SizedBox(height: AppThemeTokens.spaceMd),
@@ -90,14 +111,27 @@ class _TrendsContent extends StatelessWidget {
             padding: const EdgeInsets.symmetric(
               horizontal: AppThemeTokens.spaceMd,
             ),
-            child: _GlucoseChart(
+            child: _OverviewChart(
               glucoseLogs: data.glucoseLogs,
-              mealLogs: data.mealLogs,
-              medicationLogs: data.medicationLogs,
               targetMin: targetMin,
               targetMax: targetMax,
               preferredUnit: unit,
               selectedDays: selectedDays,
+              onDayTapped: (day) {
+                ref.read(selectedDayProvider.notifier).state = day;
+              },
+            ),
+          ),
+        ),
+        const SizedBox(height: AppThemeTokens.spaceSm),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppThemeTokens.spaceMd),
+          child: Text(
+            'Tap a point to see that day\'s readings',
+            style: TextStyle(
+              fontSize: 12,
+              color: AppThemeTokens.textSecondary,
+              fontStyle: FontStyle.italic,
             ),
           ),
         ),
@@ -112,6 +146,76 @@ class _TrendsContent extends StatelessWidget {
         const Divider(height: AppThemeTokens.spaceLg),
         Expanded(
           child: _GlucoseLogList(logs: data.glucoseLogs, unit: unit),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Intra-Day Content ────────────────────────────────────────────────────────
+
+class _IntraDayContent extends StatelessWidget {
+  final TrendsData data;
+  final DateTime selectedDay;
+  final double targetMin;
+  final double targetMax;
+  final String unit;
+
+  const _IntraDayContent({
+    required this.data,
+    required this.selectedDay,
+    required this.targetMin,
+    required this.targetMax,
+    required this.unit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final dayLogs = data.glucoseLogs
+        .where((g) =>
+            g.timestamp.year == selectedDay.year &&
+            g.timestamp.month == selectedDay.month &&
+            g.timestamp.day == selectedDay.day)
+        .toList()
+      ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
+
+    final dayMeals = data.mealLogs
+        .where((m) =>
+            m.timestamp.year == selectedDay.year &&
+            m.timestamp.month == selectedDay.month &&
+            m.timestamp.day == selectedDay.day)
+        .toList();
+
+    final dayMeds = data.medicationLogs
+        .where((m) =>
+            m.timestamp.year == selectedDay.year &&
+            m.timestamp.month == selectedDay.month &&
+            m.timestamp.day == selectedDay.day)
+        .toList();
+
+    return Column(
+      children: [
+        const SizedBox(height: AppThemeTokens.spaceMd),
+        SizedBox(
+          height: MediaQuery.of(context).size.height * 0.42,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppThemeTokens.spaceMd,
+            ),
+            child: _IntraDayChart(
+              glucoseLogs: dayLogs,
+              mealLogs: dayMeals,
+              medicationLogs: dayMeds,
+              targetMin: targetMin,
+              targetMax: targetMax,
+              preferredUnit: unit,
+            ),
+          ),
+        ),
+        const SizedBox(height: AppThemeTokens.spaceMd),
+        const Divider(height: AppThemeTokens.spaceLg),
+        Expanded(
+          child: _GlucoseLogList(logs: dayLogs, unit: unit),
         ),
       ],
     );
@@ -144,8 +248,10 @@ class _RangeChips extends ConsumerWidget {
             label: Text(label),
             selected: isSelected,
             showCheckmark: false,
-            onSelected: (_) =>
-                ref.read(selectedRangeProvider.notifier).state = days,
+            onSelected: (_) {
+              ref.read(selectedRangeProvider.notifier).state = days;
+              ref.read(selectedDayProvider.notifier).state = null;
+            },
             selectedColor: AppThemeTokens.brandPrimary,
             backgroundColor: isDark
                 ? Colors.white.withValues(alpha: 0.08)
@@ -172,25 +278,23 @@ class _RangeChips extends ConsumerWidget {
   }
 }
 
-// ── Chart ───────────────────────────────────────────────────────────────────
+// ── Overview Chart (daily aggregates) ────────────────────────────────────────
 
-class _GlucoseChart extends StatelessWidget {
+class _OverviewChart extends StatelessWidget {
   final List<GlucoseLog> glucoseLogs;
-  final List<MealLog> mealLogs;
-  final List<MedicationLog> medicationLogs;
   final double targetMin;
   final double targetMax;
   final String preferredUnit;
   final int selectedDays;
+  final void Function(DateTime day) onDayTapped;
 
-  const _GlucoseChart({
+  const _OverviewChart({
     required this.glucoseLogs,
-    required this.mealLogs,
-    required this.medicationLogs,
     required this.targetMin,
     required this.targetMax,
     required this.preferredUnit,
     required this.selectedDays,
+    required this.onDayTapped,
   });
 
   @override
@@ -232,20 +336,245 @@ class _GlucoseChart extends StatelessWidget {
       );
     }
 
-    // Normalize a log value to the user's preferred unit.
     double toPreferred(double value, String logUnit) {
       if (logUnit == preferredUnit) return value;
       if (preferredUnit == 'mmol/L') return value / 18.0182;
       return value * 18.0182;
     }
 
-    // Convert targetMin/targetMax (stored in mg/dL) to the preferred unit.
     final tMin = preferredUnit == 'mmol/L' ? targetMin / 18.0182 : targetMin;
     final tMax = preferredUnit == 'mmol/L' ? targetMax / 18.0182 : targetMax;
 
-    final rangeStart = glucoseLogs.first.timestamp;
+    // Group logs by day
+    final Map<String, List<GlucoseLog>> byDay = {};
+    for (final log in glucoseLogs) {
+      final key = '${log.timestamp.year}-${log.timestamp.month}-${log.timestamp.day}';
+      byDay.putIfAbsent(key, () => []).add(log);
+    }
 
-    double toX(DateTime ts) => ts.difference(rangeStart).inMinutes.toDouble();
+    final days = byDay.entries.toList()
+      ..sort((a, b) {
+        final aDate = a.value.first.timestamp;
+        final bDate = b.value.first.timestamp;
+        return aDate.compareTo(bDate);
+      });
+
+    if (days.isEmpty) return const SizedBox.shrink();
+
+    final firstDate = days.first.value.first.timestamp;
+    double toX(DateTime ts) {
+      return ts.difference(DateTime(firstDate.year, firstDate.month, firstDate.day))
+          .inDays
+          .toDouble();
+    }
+
+    final avgSpots = <FlSpot>[];
+    final dayDates = <double, DateTime>{};
+
+    for (final entry in days) {
+      final dayLogs = entry.value;
+      final x = toX(dayLogs.first.timestamp);
+      final values = dayLogs.map((g) => toPreferred(g.value, g.unit)).toList();
+      final avg = values.reduce((a, b) => a + b) / values.length;
+      avgSpots.add(FlSpot(x, avg));
+      dayDates[x] = DateTime(
+        dayLogs.first.timestamp.year,
+        dayLogs.first.timestamp.month,
+        dayLogs.first.timestamp.day,
+      );
+    }
+
+    final allY = [...avgSpots.map((s) => s.y), tMin, tMax];
+    final padding = preferredUnit == 'mmol/L' ? 1.1 : 20.0;
+    final clampMax = preferredUnit == 'mmol/L' ? 27.8 : 500.0;
+    final minY = (allY.reduce((a, b) => a < b ? a : b) - padding)
+        .clamp(0.0, clampMax);
+    final maxY = (allY.reduce((a, b) => a > b ? a : b) + padding)
+        .clamp(0.0, clampMax);
+    final maxX = avgSpots.last.x;
+
+    return LineChart(
+      LineChartData(
+        minX: avgSpots.first.x,
+        maxX: maxX,
+        minY: minY,
+        maxY: maxY,
+        clipData: const FlClipData.all(),
+        lineTouchData: LineTouchData(
+          handleBuiltInTouches: true,
+          touchCallback: (event, response) {
+            if (event is FlTapUpEvent && response?.lineBarSpots != null) {
+              final spot = response!.lineBarSpots!.first;
+              final date = dayDates[spot.x];
+              if (date != null) onDayTapped(date);
+            }
+          },
+          touchTooltipData: LineTouchTooltipData(
+            getTooltipItems: (spots) {
+              return spots.map((spot) {
+                final date = dayDates[spot.x];
+                final dateStr = date != null
+                    ? DateFormat('MMM d').format(date)
+                    : '';
+                final valueStr = preferredUnit == 'mmol/L'
+                    ? spot.y.toStringAsFixed(1)
+                    : spot.y.toStringAsFixed(0);
+                return LineTooltipItem(
+                  '$dateStr\n$valueStr $preferredUnit',
+                  const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                );
+              }).toList();
+            },
+          ),
+        ),
+        lineBarsData: [
+          LineChartBarData(
+            spots: avgSpots,
+            isCurved: true,
+            color: AppThemeTokens.brandPrimary,
+            barWidth: 2.5,
+            dotData: FlDotData(
+              show: true,
+              getDotPainter: (spot, xPercentage, bar, index) =>
+                  FlDotCirclePainter(
+                    radius: 4,
+                    color: AppThemeTokens.brandPrimary,
+                    strokeWidth: 2,
+                    strokeColor: Colors.white,
+                  ),
+            ),
+            belowBarData: BarAreaData(
+              show: true,
+              color: AppThemeTokens.brandPrimary.withValues(alpha: 0.1),
+            ),
+          ),
+        ],
+        extraLinesData: ExtraLinesData(
+          horizontalLines: [
+            HorizontalLine(
+              y: tMin,
+              color: AppThemeTokens.brandSuccess.withValues(alpha: 0.5),
+              strokeWidth: 1,
+              dashArray: [6, 4],
+            ),
+            HorizontalLine(
+              y: tMax,
+              color: AppThemeTokens.error.withValues(alpha: 0.5),
+              strokeWidth: 1,
+              dashArray: [6, 4],
+            ),
+          ],
+        ),
+        titlesData: FlTitlesData(
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 40,
+              getTitlesWidget: (value, _) => Text(
+                preferredUnit == 'mmol/L'
+                    ? value.toStringAsFixed(1)
+                    : value.toInt().toString(),
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppThemeTokens.textSecondary,
+                ),
+              ),
+            ),
+          ),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 32,
+              interval: maxX > 6 ? (maxX / 5).ceilToDouble() : 1,
+              getTitlesWidget: (value, _) {
+                final date = dayDates[value];
+                if (date == null) return const SizedBox.shrink();
+                final label = selectedDays <= 7
+                    ? DateFormat('EEE').format(date)
+                    : DateFormat('M/d').format(date);
+                return Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppThemeTokens.textSecondary,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+        ),
+        borderData: FlBorderData(show: false),
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          getDrawingHorizontalLine: (_) => FlLine(
+            color: AppThemeTokens.brandAccent.withValues(alpha: 0.15),
+            strokeWidth: 1,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Intra-Day Chart ─────────────────────────────────────────────────────────
+
+class _IntraDayChart extends StatelessWidget {
+  final List<GlucoseLog> glucoseLogs;
+  final List<MealLog> mealLogs;
+  final List<MedicationLog> medicationLogs;
+  final double targetMin;
+  final double targetMax;
+  final String preferredUnit;
+
+  const _IntraDayChart({
+    required this.glucoseLogs,
+    required this.mealLogs,
+    required this.medicationLogs,
+    required this.targetMin,
+    required this.targetMax,
+    required this.preferredUnit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (glucoseLogs.isEmpty) {
+      return Center(
+        child: Text(
+          'No readings for this day.',
+          style: TextStyle(color: AppThemeTokens.textSecondary, fontSize: 16),
+        ),
+      );
+    }
+
+    double toPreferred(double value, String logUnit) {
+      if (logUnit == preferredUnit) return value;
+      if (preferredUnit == 'mmol/L') return value / 18.0182;
+      return value * 18.0182;
+    }
+
+    final tMin = preferredUnit == 'mmol/L' ? targetMin / 18.0182 : targetMin;
+    final tMax = preferredUnit == 'mmol/L' ? targetMax / 18.0182 : targetMax;
+
+    final dayStart = DateTime(
+      glucoseLogs.first.timestamp.year,
+      glucoseLogs.first.timestamp.month,
+      glucoseLogs.first.timestamp.day,
+    );
+    double toX(DateTime ts) => ts.difference(dayStart).inMinutes.toDouble();
 
     final spots = glucoseLogs
         .map((g) => FlSpot(toX(g.timestamp), toPreferred(g.value, g.unit)))
@@ -260,8 +589,12 @@ class _GlucoseChart extends StatelessWidget {
             dashArray: [4, 4],
             label: VerticalLineLabel(
               show: true,
-              labelResolver: (_) => '🍽',
-              style: const TextStyle(fontSize: 12),
+              labelResolver: (_) => 'M',
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: AppThemeTokens.brandSuccess,
+              ),
               alignment: Alignment.topCenter,
             ),
           ),
@@ -278,48 +611,81 @@ class _GlucoseChart extends StatelessWidget {
             dashArray: [4, 4],
             label: VerticalLineLabel(
               show: true,
-              labelResolver: (_) => '💉',
-              style: const TextStyle(fontSize: 12),
+              labelResolver: (_) => 'Rx',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: AppThemeTokens.brandAccent,
+              ),
               alignment: Alignment.topCenter,
             ),
           ),
         )
         .toList();
 
-    final maxX = spots.last.x;
     final allY = spots.map((s) => s.y).toList()..addAll([tMin, tMax]);
     final padding = preferredUnit == 'mmol/L' ? 1.1 : 20.0;
-    final clampMax = preferredUnit == 'mmol/L' ? 33.3 : 600.0;
+    final clampMax = preferredUnit == 'mmol/L' ? 27.8 : 500.0;
     final minY = (allY.reduce((a, b) => a < b ? a : b) - padding)
-        .clamp(0, clampMax)
-        .toDouble();
+        .clamp(0.0, clampMax);
     final maxY = (allY.reduce((a, b) => a > b ? a : b) + padding)
-        .clamp(0, clampMax)
-        .toDouble();
+        .clamp(0.0, clampMax);
 
     return LineChart(
       LineChartData(
         minX: 0,
-        maxX: maxX,
+        maxX: 1440,
         minY: minY,
         maxY: maxY,
         clipData: const FlClipData.all(),
+        lineTouchData: LineTouchData(
+          touchTooltipData: LineTouchTooltipData(
+            getTooltipItems: (spots) {
+              return spots.map((spot) {
+                final hour = (spot.x / 60).floor();
+                final min = (spot.x % 60).floor();
+                final timeStr = '${hour.toString().padLeft(2, '0')}:${min.toString().padLeft(2, '0')}';
+                final valueStr = preferredUnit == 'mmol/L'
+                    ? spot.y.toStringAsFixed(1)
+                    : spot.y.toStringAsFixed(0);
+                return LineTooltipItem(
+                  '$timeStr\n$valueStr $preferredUnit',
+                  const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                );
+              }).toList();
+            },
+          ),
+        ),
         lineBarsData: [
           LineChartBarData(
             spots: spots,
             isCurved: true,
             color: AppThemeTokens.brandPrimary,
-            barWidth: 2,
+            barWidth: 2.5,
             dotData: FlDotData(
-              show: spots.length <= 20,
-              getDotPainter: (spot, xPercentage, bar, index) =>
-                  FlDotCirclePainter(
-                    radius: 3,
-                    color: AppThemeTokens.brandPrimary,
-                    strokeWidth: 0,
-                  ),
+              show: true,
+              getDotPainter: (spot, xPercentage, bar, index) {
+                final inRange = spot.y >= tMin && spot.y <= tMax;
+                return FlDotCirclePainter(
+                  radius: 5,
+                  color: inRange
+                      ? AppThemeTokens.brandSuccessLight
+                      : spot.y > tMax
+                          ? AppThemeTokens.error
+                          : AppThemeTokens.warning,
+                  strokeWidth: 2,
+                  strokeColor: Colors.white,
+                );
+              },
             ),
-            belowBarData: BarAreaData(show: false),
+            belowBarData: BarAreaData(
+              show: true,
+              color: AppThemeTokens.brandPrimary.withValues(alpha: 0.08),
+            ),
           ),
         ],
         extraLinesData: ExtraLinesData(
@@ -358,16 +724,19 @@ class _GlucoseChart extends StatelessWidget {
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              reservedSize: 22,
-              interval: maxX > 0 ? maxX / 4 : 1,
+              reservedSize: 32,
+              interval: 180,
               getTitlesWidget: (value, _) {
-                final dt = rangeStart.add(Duration(minutes: value.toInt()));
-                final label = '${dt.month}/${dt.day}';
-                return Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppThemeTokens.textSecondary,
+                final hour = (value / 60).floor();
+                if (hour < 0 || hour > 24) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    '${hour.toString().padLeft(2, '0')}:00',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppThemeTokens.textSecondary,
+                    ),
                   ),
                 );
               },
@@ -383,7 +752,12 @@ class _GlucoseChart extends StatelessWidget {
         borderData: FlBorderData(show: false),
         gridData: FlGridData(
           show: true,
-          drawVerticalLine: false,
+          drawVerticalLine: true,
+          verticalInterval: 360,
+          getDrawingVerticalLine: (_) => FlLine(
+            color: AppThemeTokens.brandAccent.withValues(alpha: 0.1),
+            strokeWidth: 1,
+          ),
           getDrawingHorizontalLine: (_) => FlLine(
             color: AppThemeTokens.brandAccent.withValues(alpha: 0.15),
             strokeWidth: 1,
@@ -417,7 +791,6 @@ class _StatsRow extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    // Convert each log's value to mg/dL using that log's own unit field
     double fromMgdL(double v) => unit == 'mmol/L' ? v / 18.0182 : v;
 
     final mgValues = glucoseLogs.map((g) {
@@ -425,13 +798,11 @@ class _StatsRow extends StatelessWidget {
     }).toList();
     final avg = mgValues.reduce((a, b) => a + b) / mgValues.length;
 
-    // targetMin/targetMax are stored in mg/dL — compare against mg/dL values directly
     final inRange = mgValues
         .where((v) => v >= targetMin && v <= targetMax)
         .length;
     final tir = mgValues.isEmpty ? 0.0 : (inRange / mgValues.length) * 100;
 
-    // ADAG formula: eA1c = (avgGlucose_mgdL + 46.7) / 28.7
     final hba1c = (avg + 46.7) / 28.7;
 
     final displayAvg = unit == 'mmol/L'
@@ -528,7 +899,6 @@ class _GlucoseLogList extends StatelessWidget {
         final ts = g.timestamp;
         final dateStr =
             '${ts.day}/${ts.month}/${ts.year}  ${ts.hour.toString().padLeft(2, '0')}:${ts.minute.toString().padLeft(2, '0')}';
-        // Normalise the log value to the user's preferred display unit.
         final displayValue = g.unit == unit
             ? g.value
             : unit == 'mmol/L'

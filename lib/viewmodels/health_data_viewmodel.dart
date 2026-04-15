@@ -138,6 +138,12 @@ final latestGlucoseProvider = Provider<AsyncValue<GlucoseLog?>>((ref) {
   });
 });
 
+/// Glucose readings linked to a specific meal (by linkedMealId).
+final linkedGlucoseProvider = FutureProvider.family<List<GlucoseLog>, String>((ref, mealId) async {
+  final repo = ref.read(healthDataRepositoryProvider);
+  return repo.getGlucoseLogsForMeal(mealId);
+});
+
 /// Today's total calories from MealLogs.
 final todayCaloriesProvider = Provider<AsyncValue<double>>((ref) {
   return ref.watch(mealLogsProvider).whenData((logs) {

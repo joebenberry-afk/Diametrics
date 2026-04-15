@@ -306,7 +306,7 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                       final parsed = double.tryParse(val);
                       if (parsed != null && parsed > 0) {
                         final isMmol = _preferredGlucoseUnit == 'mmol/L';
-                        final max = isMmol ? 33.3 : 600.0;
+                        final max = isMmol ? 27.8 : 500.0;
                         if (parsed <= max) {
                           viewModel.setPreMealGlucose(parsed);
                         }

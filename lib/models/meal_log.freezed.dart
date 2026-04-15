@@ -23,7 +23,7 @@ mixin _$MealLog {
  bool get containsCaffeine;// Can spike BG
  String get mealType;// Enum stored as string: breakfast, lunch, dinner, snack
  String? get notes; String get foodFormFactor;// Enum: standard, liquid, highFiber, processed
- bool get postExercise; bool get isSynced;
+ bool get postExercise; double get projectionPeakMgDl; double get projectionTwoHourMgDl; bool get isSynced;
 /// Create a copy of MealLog
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -36,16 +36,16 @@ $MealLogCopyWith<MealLog> get copyWith => _$MealLogCopyWithImpl<MealLog>(this as
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MealLog&&(identical(other.id, id) || other.id == id)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.name, name) || other.name == name)&&(identical(other.carbohydrates, carbohydrates) || other.carbohydrates == carbohydrates)&&(identical(other.dietaryFiber, dietaryFiber) || other.dietaryFiber == dietaryFiber)&&(identical(other.proteins, proteins) || other.proteins == proteins)&&(identical(other.fats, fats) || other.fats == fats)&&(identical(other.calories, calories) || other.calories == calories)&&(identical(other.containsAlcohol, containsAlcohol) || other.containsAlcohol == containsAlcohol)&&(identical(other.containsCaffeine, containsCaffeine) || other.containsCaffeine == containsCaffeine)&&(identical(other.mealType, mealType) || other.mealType == mealType)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.foodFormFactor, foodFormFactor) || other.foodFormFactor == foodFormFactor)&&(identical(other.postExercise, postExercise) || other.postExercise == postExercise)&&(identical(other.isSynced, isSynced) || other.isSynced == isSynced));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MealLog&&(identical(other.id, id) || other.id == id)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.name, name) || other.name == name)&&(identical(other.carbohydrates, carbohydrates) || other.carbohydrates == carbohydrates)&&(identical(other.dietaryFiber, dietaryFiber) || other.dietaryFiber == dietaryFiber)&&(identical(other.proteins, proteins) || other.proteins == proteins)&&(identical(other.fats, fats) || other.fats == fats)&&(identical(other.calories, calories) || other.calories == calories)&&(identical(other.containsAlcohol, containsAlcohol) || other.containsAlcohol == containsAlcohol)&&(identical(other.containsCaffeine, containsCaffeine) || other.containsCaffeine == containsCaffeine)&&(identical(other.mealType, mealType) || other.mealType == mealType)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.foodFormFactor, foodFormFactor) || other.foodFormFactor == foodFormFactor)&&(identical(other.postExercise, postExercise) || other.postExercise == postExercise)&&(identical(other.projectionPeakMgDl, projectionPeakMgDl) || other.projectionPeakMgDl == projectionPeakMgDl)&&(identical(other.projectionTwoHourMgDl, projectionTwoHourMgDl) || other.projectionTwoHourMgDl == projectionTwoHourMgDl)&&(identical(other.isSynced, isSynced) || other.isSynced == isSynced));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,timestamp,name,carbohydrates,dietaryFiber,proteins,fats,calories,containsAlcohol,containsCaffeine,mealType,notes,foodFormFactor,postExercise,isSynced);
+int get hashCode => Object.hash(runtimeType,id,timestamp,name,carbohydrates,dietaryFiber,proteins,fats,calories,containsAlcohol,containsCaffeine,mealType,notes,foodFormFactor,postExercise,projectionPeakMgDl,projectionTwoHourMgDl,isSynced);
 
 @override
 String toString() {
-  return 'MealLog(id: $id, timestamp: $timestamp, name: $name, carbohydrates: $carbohydrates, dietaryFiber: $dietaryFiber, proteins: $proteins, fats: $fats, calories: $calories, containsAlcohol: $containsAlcohol, containsCaffeine: $containsCaffeine, mealType: $mealType, notes: $notes, foodFormFactor: $foodFormFactor, postExercise: $postExercise, isSynced: $isSynced)';
+  return 'MealLog(id: $id, timestamp: $timestamp, name: $name, carbohydrates: $carbohydrates, dietaryFiber: $dietaryFiber, proteins: $proteins, fats: $fats, calories: $calories, containsAlcohol: $containsAlcohol, containsCaffeine: $containsCaffeine, mealType: $mealType, notes: $notes, foodFormFactor: $foodFormFactor, postExercise: $postExercise, projectionPeakMgDl: $projectionPeakMgDl, projectionTwoHourMgDl: $projectionTwoHourMgDl, isSynced: $isSynced)';
 }
 
 
@@ -56,7 +56,7 @@ abstract mixin class $MealLogCopyWith<$Res>  {
   factory $MealLogCopyWith(MealLog value, $Res Function(MealLog) _then) = _$MealLogCopyWithImpl;
 @useResult
 $Res call({
- String id, DateTime timestamp, String? name, double carbohydrates, double dietaryFiber, double proteins, double fats, double calories, bool containsAlcohol, bool containsCaffeine, String mealType, String? notes, String foodFormFactor, bool postExercise, bool isSynced
+ String id, DateTime timestamp, String? name, double carbohydrates, double dietaryFiber, double proteins, double fats, double calories, bool containsAlcohol, bool containsCaffeine, String mealType, String? notes, String foodFormFactor, bool postExercise, double projectionPeakMgDl, double projectionTwoHourMgDl, bool isSynced
 });
 
 
@@ -73,7 +73,7 @@ class _$MealLogCopyWithImpl<$Res>
 
 /// Create a copy of MealLog
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? timestamp = null,Object? name = freezed,Object? carbohydrates = null,Object? dietaryFiber = null,Object? proteins = null,Object? fats = null,Object? calories = null,Object? containsAlcohol = null,Object? containsCaffeine = null,Object? mealType = null,Object? notes = freezed,Object? foodFormFactor = null,Object? postExercise = null,Object? isSynced = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? timestamp = null,Object? name = freezed,Object? carbohydrates = null,Object? dietaryFiber = null,Object? proteins = null,Object? fats = null,Object? calories = null,Object? containsAlcohol = null,Object? containsCaffeine = null,Object? mealType = null,Object? notes = freezed,Object? foodFormFactor = null,Object? postExercise = null,Object? projectionPeakMgDl = null,Object? projectionTwoHourMgDl = null,Object? isSynced = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,timestamp: null == timestamp ? _self.timestamp : timestamp // ignore: cast_nullable_to_non_nullable
@@ -89,7 +89,9 @@ as bool,mealType: null == mealType ? _self.mealType : mealType // ignore: cast_n
 as String,notes: freezed == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
 as String?,foodFormFactor: null == foodFormFactor ? _self.foodFormFactor : foodFormFactor // ignore: cast_nullable_to_non_nullable
 as String,postExercise: null == postExercise ? _self.postExercise : postExercise // ignore: cast_nullable_to_non_nullable
-as bool,isSynced: null == isSynced ? _self.isSynced : isSynced // ignore: cast_nullable_to_non_nullable
+as bool,projectionPeakMgDl: null == projectionPeakMgDl ? _self.projectionPeakMgDl : projectionPeakMgDl // ignore: cast_nullable_to_non_nullable
+as double,projectionTwoHourMgDl: null == projectionTwoHourMgDl ? _self.projectionTwoHourMgDl : projectionTwoHourMgDl // ignore: cast_nullable_to_non_nullable
+as double,isSynced: null == isSynced ? _self.isSynced : isSynced // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
@@ -175,10 +177,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  DateTime timestamp,  String? name,  double carbohydrates,  double dietaryFiber,  double proteins,  double fats,  double calories,  bool containsAlcohol,  bool containsCaffeine,  String mealType,  String? notes,  String foodFormFactor,  bool postExercise,  bool isSynced)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  DateTime timestamp,  String? name,  double carbohydrates,  double dietaryFiber,  double proteins,  double fats,  double calories,  bool containsAlcohol,  bool containsCaffeine,  String mealType,  String? notes,  String foodFormFactor,  bool postExercise,  double projectionPeakMgDl,  double projectionTwoHourMgDl,  bool isSynced)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MealLog() when $default != null:
-return $default(_that.id,_that.timestamp,_that.name,_that.carbohydrates,_that.dietaryFiber,_that.proteins,_that.fats,_that.calories,_that.containsAlcohol,_that.containsCaffeine,_that.mealType,_that.notes,_that.foodFormFactor,_that.postExercise,_that.isSynced);case _:
+return $default(_that.id,_that.timestamp,_that.name,_that.carbohydrates,_that.dietaryFiber,_that.proteins,_that.fats,_that.calories,_that.containsAlcohol,_that.containsCaffeine,_that.mealType,_that.notes,_that.foodFormFactor,_that.postExercise,_that.projectionPeakMgDl,_that.projectionTwoHourMgDl,_that.isSynced);case _:
   return orElse();
 
 }
@@ -196,10 +198,10 @@ return $default(_that.id,_that.timestamp,_that.name,_that.carbohydrates,_that.di
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  DateTime timestamp,  String? name,  double carbohydrates,  double dietaryFiber,  double proteins,  double fats,  double calories,  bool containsAlcohol,  bool containsCaffeine,  String mealType,  String? notes,  String foodFormFactor,  bool postExercise,  bool isSynced)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  DateTime timestamp,  String? name,  double carbohydrates,  double dietaryFiber,  double proteins,  double fats,  double calories,  bool containsAlcohol,  bool containsCaffeine,  String mealType,  String? notes,  String foodFormFactor,  bool postExercise,  double projectionPeakMgDl,  double projectionTwoHourMgDl,  bool isSynced)  $default,) {final _that = this;
 switch (_that) {
 case _MealLog():
-return $default(_that.id,_that.timestamp,_that.name,_that.carbohydrates,_that.dietaryFiber,_that.proteins,_that.fats,_that.calories,_that.containsAlcohol,_that.containsCaffeine,_that.mealType,_that.notes,_that.foodFormFactor,_that.postExercise,_that.isSynced);case _:
+return $default(_that.id,_that.timestamp,_that.name,_that.carbohydrates,_that.dietaryFiber,_that.proteins,_that.fats,_that.calories,_that.containsAlcohol,_that.containsCaffeine,_that.mealType,_that.notes,_that.foodFormFactor,_that.postExercise,_that.projectionPeakMgDl,_that.projectionTwoHourMgDl,_that.isSynced);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -216,10 +218,10 @@ return $default(_that.id,_that.timestamp,_that.name,_that.carbohydrates,_that.di
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  DateTime timestamp,  String? name,  double carbohydrates,  double dietaryFiber,  double proteins,  double fats,  double calories,  bool containsAlcohol,  bool containsCaffeine,  String mealType,  String? notes,  String foodFormFactor,  bool postExercise,  bool isSynced)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  DateTime timestamp,  String? name,  double carbohydrates,  double dietaryFiber,  double proteins,  double fats,  double calories,  bool containsAlcohol,  bool containsCaffeine,  String mealType,  String? notes,  String foodFormFactor,  bool postExercise,  double projectionPeakMgDl,  double projectionTwoHourMgDl,  bool isSynced)?  $default,) {final _that = this;
 switch (_that) {
 case _MealLog() when $default != null:
-return $default(_that.id,_that.timestamp,_that.name,_that.carbohydrates,_that.dietaryFiber,_that.proteins,_that.fats,_that.calories,_that.containsAlcohol,_that.containsCaffeine,_that.mealType,_that.notes,_that.foodFormFactor,_that.postExercise,_that.isSynced);case _:
+return $default(_that.id,_that.timestamp,_that.name,_that.carbohydrates,_that.dietaryFiber,_that.proteins,_that.fats,_that.calories,_that.containsAlcohol,_that.containsCaffeine,_that.mealType,_that.notes,_that.foodFormFactor,_that.postExercise,_that.projectionPeakMgDl,_that.projectionTwoHourMgDl,_that.isSynced);case _:
   return null;
 
 }
@@ -231,7 +233,7 @@ return $default(_that.id,_that.timestamp,_that.name,_that.carbohydrates,_that.di
 @JsonSerializable()
 
 class _MealLog implements MealLog {
-  const _MealLog({required this.id, required this.timestamp, this.name, required this.carbohydrates, this.dietaryFiber = 0.0, required this.proteins, required this.fats, this.calories = 0.0, this.containsAlcohol = false, this.containsCaffeine = false, required this.mealType, this.notes, this.foodFormFactor = 'standard', this.postExercise = false, this.isSynced = false});
+  const _MealLog({required this.id, required this.timestamp, this.name, required this.carbohydrates, this.dietaryFiber = 0.0, required this.proteins, required this.fats, this.calories = 0.0, this.containsAlcohol = false, this.containsCaffeine = false, required this.mealType, this.notes, this.foodFormFactor = 'standard', this.postExercise = false, this.projectionPeakMgDl = 0.0, this.projectionTwoHourMgDl = 0.0, this.isSynced = false});
   factory _MealLog.fromJson(Map<String, dynamic> json) => _$MealLogFromJson(json);
 
 @override final  String id;
@@ -256,6 +258,8 @@ class _MealLog implements MealLog {
 @override@JsonKey() final  String foodFormFactor;
 // Enum: standard, liquid, highFiber, processed
 @override@JsonKey() final  bool postExercise;
+@override@JsonKey() final  double projectionPeakMgDl;
+@override@JsonKey() final  double projectionTwoHourMgDl;
 @override@JsonKey() final  bool isSynced;
 
 /// Create a copy of MealLog
@@ -271,16 +275,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MealLog&&(identical(other.id, id) || other.id == id)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.name, name) || other.name == name)&&(identical(other.carbohydrates, carbohydrates) || other.carbohydrates == carbohydrates)&&(identical(other.dietaryFiber, dietaryFiber) || other.dietaryFiber == dietaryFiber)&&(identical(other.proteins, proteins) || other.proteins == proteins)&&(identical(other.fats, fats) || other.fats == fats)&&(identical(other.calories, calories) || other.calories == calories)&&(identical(other.containsAlcohol, containsAlcohol) || other.containsAlcohol == containsAlcohol)&&(identical(other.containsCaffeine, containsCaffeine) || other.containsCaffeine == containsCaffeine)&&(identical(other.mealType, mealType) || other.mealType == mealType)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.foodFormFactor, foodFormFactor) || other.foodFormFactor == foodFormFactor)&&(identical(other.postExercise, postExercise) || other.postExercise == postExercise)&&(identical(other.isSynced, isSynced) || other.isSynced == isSynced));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MealLog&&(identical(other.id, id) || other.id == id)&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.name, name) || other.name == name)&&(identical(other.carbohydrates, carbohydrates) || other.carbohydrates == carbohydrates)&&(identical(other.dietaryFiber, dietaryFiber) || other.dietaryFiber == dietaryFiber)&&(identical(other.proteins, proteins) || other.proteins == proteins)&&(identical(other.fats, fats) || other.fats == fats)&&(identical(other.calories, calories) || other.calories == calories)&&(identical(other.containsAlcohol, containsAlcohol) || other.containsAlcohol == containsAlcohol)&&(identical(other.containsCaffeine, containsCaffeine) || other.containsCaffeine == containsCaffeine)&&(identical(other.mealType, mealType) || other.mealType == mealType)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.foodFormFactor, foodFormFactor) || other.foodFormFactor == foodFormFactor)&&(identical(other.postExercise, postExercise) || other.postExercise == postExercise)&&(identical(other.projectionPeakMgDl, projectionPeakMgDl) || other.projectionPeakMgDl == projectionPeakMgDl)&&(identical(other.projectionTwoHourMgDl, projectionTwoHourMgDl) || other.projectionTwoHourMgDl == projectionTwoHourMgDl)&&(identical(other.isSynced, isSynced) || other.isSynced == isSynced));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,timestamp,name,carbohydrates,dietaryFiber,proteins,fats,calories,containsAlcohol,containsCaffeine,mealType,notes,foodFormFactor,postExercise,isSynced);
+int get hashCode => Object.hash(runtimeType,id,timestamp,name,carbohydrates,dietaryFiber,proteins,fats,calories,containsAlcohol,containsCaffeine,mealType,notes,foodFormFactor,postExercise,projectionPeakMgDl,projectionTwoHourMgDl,isSynced);
 
 @override
 String toString() {
-  return 'MealLog(id: $id, timestamp: $timestamp, name: $name, carbohydrates: $carbohydrates, dietaryFiber: $dietaryFiber, proteins: $proteins, fats: $fats, calories: $calories, containsAlcohol: $containsAlcohol, containsCaffeine: $containsCaffeine, mealType: $mealType, notes: $notes, foodFormFactor: $foodFormFactor, postExercise: $postExercise, isSynced: $isSynced)';
+  return 'MealLog(id: $id, timestamp: $timestamp, name: $name, carbohydrates: $carbohydrates, dietaryFiber: $dietaryFiber, proteins: $proteins, fats: $fats, calories: $calories, containsAlcohol: $containsAlcohol, containsCaffeine: $containsCaffeine, mealType: $mealType, notes: $notes, foodFormFactor: $foodFormFactor, postExercise: $postExercise, projectionPeakMgDl: $projectionPeakMgDl, projectionTwoHourMgDl: $projectionTwoHourMgDl, isSynced: $isSynced)';
 }
 
 
@@ -291,7 +295,7 @@ abstract mixin class _$MealLogCopyWith<$Res> implements $MealLogCopyWith<$Res> {
   factory _$MealLogCopyWith(_MealLog value, $Res Function(_MealLog) _then) = __$MealLogCopyWithImpl;
 @override @useResult
 $Res call({
- String id, DateTime timestamp, String? name, double carbohydrates, double dietaryFiber, double proteins, double fats, double calories, bool containsAlcohol, bool containsCaffeine, String mealType, String? notes, String foodFormFactor, bool postExercise, bool isSynced
+ String id, DateTime timestamp, String? name, double carbohydrates, double dietaryFiber, double proteins, double fats, double calories, bool containsAlcohol, bool containsCaffeine, String mealType, String? notes, String foodFormFactor, bool postExercise, double projectionPeakMgDl, double projectionTwoHourMgDl, bool isSynced
 });
 
 
@@ -308,7 +312,7 @@ class __$MealLogCopyWithImpl<$Res>
 
 /// Create a copy of MealLog
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? timestamp = null,Object? name = freezed,Object? carbohydrates = null,Object? dietaryFiber = null,Object? proteins = null,Object? fats = null,Object? calories = null,Object? containsAlcohol = null,Object? containsCaffeine = null,Object? mealType = null,Object? notes = freezed,Object? foodFormFactor = null,Object? postExercise = null,Object? isSynced = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? timestamp = null,Object? name = freezed,Object? carbohydrates = null,Object? dietaryFiber = null,Object? proteins = null,Object? fats = null,Object? calories = null,Object? containsAlcohol = null,Object? containsCaffeine = null,Object? mealType = null,Object? notes = freezed,Object? foodFormFactor = null,Object? postExercise = null,Object? projectionPeakMgDl = null,Object? projectionTwoHourMgDl = null,Object? isSynced = null,}) {
   return _then(_MealLog(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,timestamp: null == timestamp ? _self.timestamp : timestamp // ignore: cast_nullable_to_non_nullable
@@ -324,7 +328,9 @@ as bool,mealType: null == mealType ? _self.mealType : mealType // ignore: cast_n
 as String,notes: freezed == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
 as String?,foodFormFactor: null == foodFormFactor ? _self.foodFormFactor : foodFormFactor // ignore: cast_nullable_to_non_nullable
 as String,postExercise: null == postExercise ? _self.postExercise : postExercise // ignore: cast_nullable_to_non_nullable
-as bool,isSynced: null == isSynced ? _self.isSynced : isSynced // ignore: cast_nullable_to_non_nullable
+as bool,projectionPeakMgDl: null == projectionPeakMgDl ? _self.projectionPeakMgDl : projectionPeakMgDl // ignore: cast_nullable_to_non_nullable
+as double,projectionTwoHourMgDl: null == projectionTwoHourMgDl ? _self.projectionTwoHourMgDl : projectionTwoHourMgDl // ignore: cast_nullable_to_non_nullable
+as double,isSynced: null == isSynced ? _self.isSynced : isSynced // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }

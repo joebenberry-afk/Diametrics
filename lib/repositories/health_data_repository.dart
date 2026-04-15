@@ -23,6 +23,7 @@ class HealthDataRepository {
       context: Value(log.context),
       timestamp: Value(log.timestamp),
       notes: Value(log.notes),
+      linkedMealId: Value(log.linkedMealId),
     ));
   }
 
@@ -41,6 +42,14 @@ class HealthDataRepository {
           ..limit(1))
         .getSingleOrNull();
     return row == null ? null : _glucoseFromRow(row);
+  }
+
+  Future<List<GlucoseLog>> getGlucoseLogsForMeal(String mealId) async {
+    final rows = await (db.select(db.glucoseLogs)
+          ..where((t) => t.linkedMealId.equals(mealId))
+          ..orderBy([(t) => OrderingTerm.asc(t.timestamp)]))
+        .get();
+    return rows.map(_glucoseFromRow).toList();
   }
 
   // ── Meals ──────────────────────────────────────────────────────────────
@@ -66,6 +75,8 @@ class HealthDataRepository {
       foodFormFactor: Value(log.foodFormFactor),
       postExercise: Value(log.postExercise),
       notes: Value(log.notes),
+      projectionPeakMgDl: Value(log.projectionPeakMgDl),
+      projectionTwoHourMgDl: Value(log.projectionTwoHourMgDl),
     ));
   }
 
@@ -113,6 +124,8 @@ class HealthDataRepository {
           foodFormFactor: Value(log.foodFormFactor),
           postExercise: Value(log.postExercise),
           notes: Value(log.notes),
+          projectionPeakMgDl: Value(log.projectionPeakMgDl),
+          projectionTwoHourMgDl: Value(log.projectionTwoHourMgDl),
         ));
   }
 
@@ -172,6 +185,7 @@ class HealthDataRepository {
     unit: row.unit,
     context: row.context,
     notes: row.notes,
+    linkedMealId: row.linkedMealId,
   );
 
   domain_models.MealLog _mealFromRow(MealMacroLog row) => domain_models.MealLog(
@@ -189,6 +203,8 @@ class HealthDataRepository {
     foodFormFactor: row.foodFormFactor,
     postExercise: row.postExercise,
     notes: row.notes,
+    projectionPeakMgDl: row.projectionPeakMgDl,
+    projectionTwoHourMgDl: row.projectionTwoHourMgDl,
   );
 
   MedicationLog _medFromRow(MedicationLogRow row) => MedicationLog(

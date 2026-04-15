@@ -7,6 +7,9 @@ import '../../core/utils/date_formatter.dart';
 import '../../models/meal_log.dart';
 import '../../router/route_names.dart';
 import '../../viewmodels/health_data_viewmodel.dart';
+import '../../viewmodels/logging_wizard_viewmodel.dart';
+import '../../viewmodels/profile_viewmodel.dart';
+import '../../models/glucose_log.dart';
 
 void _showMealEditSheet(
   BuildContext context,
@@ -249,6 +252,181 @@ void _confirmDeleteMeal(
   );
 }
 
+void _showPostMealGlucoseSheet(
+  BuildContext context,
+  WidgetRef ref,
+  MealLog log,
+) {
+  final glucoseCtrl = TextEditingController();
+  final profile = ref.read(userProfileProvider).valueOrNull;
+  final unit = profile?.preferredGlucoseUnit ?? 'mg/dL';
+  String selectedContext = 'post_meal_120';
+  bool isSubmitting = false;
+
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(AppThemeTokens.radiusLg),
+      ),
+    ),
+    builder: (ctx) => StatefulBuilder(
+      builder: (ctx, setSheetState) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(ctx).viewInsets.bottom,
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(
+              AppThemeTokens.spaceLg,
+              AppThemeTokens.spaceMd,
+              AppThemeTokens.spaceLg,
+              AppThemeTokens.spaceLg,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Post-Meal Glucose',
+                        style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(ctx),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppThemeTokens.spaceSm),
+                Text(
+                  'How is your blood glucose after this meal?',
+                  style: TextStyle(
+                    color: AppThemeTokens.textSecondary,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: AppThemeTokens.spaceLg),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _TimingChip(
+                        label: '30 min after',
+                        isSelected: selectedContext == 'post_meal_30',
+                        onTap: () => setSheetState(() => selectedContext = 'post_meal_30'),
+                      ),
+                    ),
+                    const SizedBox(width: AppThemeTokens.spaceSm),
+                    Expanded(
+                      child: _TimingChip(
+                        label: '2 hours after',
+                        isSelected: selectedContext == 'post_meal_120',
+                        onTap: () => setSheetState(() => selectedContext = 'post_meal_120'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppThemeTokens.spaceLg),
+                TextFormField(
+                  controller: glucoseCtrl,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(
+                      RegExp(r'^\d{0,3}\.?\d{0,1}$'),
+                    ),
+                  ],
+                  textAlign: TextAlign.center,
+                  style: Theme.of(ctx).textTheme.headlineLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
+                    ),
+                    hintText: '---',
+                    suffixText: unit,
+                  ),
+                ),
+                const SizedBox(height: AppThemeTokens.spaceLg),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppThemeTokens.brandPrimary,
+                    foregroundColor: AppThemeTokens.textPrimaryInverse,
+                    minimumSize: const Size.fromHeight(AppThemeTokens.minTapTarget),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
+                    ),
+                  ),
+                  onPressed: isSubmitting
+                      ? null
+                      : () async {
+                          final parsed = double.tryParse(glucoseCtrl.text);
+                          if (parsed == null || parsed <= 0) {
+                            ScaffoldMessenger.of(ctx).showSnackBar(
+                              const SnackBar(
+                                content: Text('Enter a valid glucose reading.'),
+                                backgroundColor: AppThemeTokens.error,
+                              ),
+                            );
+                            return;
+                          }
+                          final isMmol = unit == 'mmol/L';
+                          final max = isMmol ? 27.8 : 500.0;
+                          if (parsed > max) {
+                            ScaffoldMessenger.of(ctx).showSnackBar(
+                              SnackBar(
+                                content: Text('Maximum value is ${max.toStringAsFixed(isMmol ? 1 : 0)} $unit'),
+                                backgroundColor: AppThemeTokens.error,
+                              ),
+                            );
+                            return;
+                          }
+                          setSheetState(() => isSubmitting = true);
+                          final success = await ref
+                              .read(loggingWizardProvider.notifier)
+                              .savePostMealGlucose(
+                                value: parsed,
+                                unit: unit,
+                                mealId: log.id,
+                                context: selectedContext,
+                              );
+                          if (!ctx.mounted) return;
+                          Navigator.pop(ctx);
+                          if (success) {
+                            ref.invalidate(linkedGlucoseProvider(log.id));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Post-meal glucose saved!'),
+                                backgroundColor: AppThemeTokens.brandSuccess,
+                              ),
+                            );
+                          }
+                        },
+                  child: isSubmitting
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text(
+                          'Save Reading',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
 class MealHistoryView extends ConsumerWidget {
   const MealHistoryView({super.key});
 
@@ -341,7 +519,10 @@ class MealHistoryView extends ConsumerWidget {
                     ),
                   ),
                   onDismissed: (_) => _confirmDeleteMeal(context, ref, log),
-                  child: _MealHistoryTile(log: log),
+                  child: _MealHistoryTile(
+                    log: log,
+                    onAddPostMealGlucose: () => _showPostMealGlucoseSheet(context, ref, log),
+                  ),
                 ),
               );
             },
@@ -358,17 +539,24 @@ class MealHistoryView extends ConsumerWidget {
   }
 }
 
-class _MealHistoryTile extends StatelessWidget {
+class _MealHistoryTile extends ConsumerWidget {
   final MealLog log;
+  final VoidCallback onAddPostMealGlucose;
 
-  const _MealHistoryTile({required this.log});
+  const _MealHistoryTile({
+    required this.log,
+    required this.onAddPostMealGlucose,
+  });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final defaultTitle =
         '${log.mealType[0].toUpperCase()}${log.mealType.substring(1)} meal';
-
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final profile = ref.watch(userProfileProvider).valueOrNull;
+    final unit = profile?.preferredGlucoseUnit ?? 'mg/dL';
+    final linkedGlucoseAsync = ref.watch(linkedGlucoseProvider(log.id));
+
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(
         horizontal: AppThemeTokens.spaceLg,
@@ -422,6 +610,58 @@ class _MealHistoryTile extends StatelessWidget {
                 ],
               ),
             ),
+          linkedGlucoseAsync.when(
+            loading: () => const SizedBox.shrink(),
+            error: (_, _) => const SizedBox.shrink(),
+            data: (linkedLogs) {
+              if (linkedLogs.isEmpty) {
+                return Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: InkWell(
+                    onTap: onAddPostMealGlucose,
+                    borderRadius: BorderRadius.circular(AppThemeTokens.radiusSm),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppThemeTokens.spaceSm,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppThemeTokens.brandPrimary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(AppThemeTokens.radiusSm),
+                        border: Border.all(
+                          color: AppThemeTokens.brandPrimary.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.add_circle_outline,
+                            size: 16,
+                            color: AppThemeTokens.brandPrimary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Add Post-Meal Glucose',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppThemeTokens.brandPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              } else {
+                return Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: _buildComparisonRow(linkedLogs, unit),
+                );
+              }
+            },
+          ),
         ],
       ),
       trailing: Row(
@@ -436,6 +676,46 @@ class _MealHistoryTile extends StatelessWidget {
           const Icon(Icons.edit_outlined, size: 16, color: AppThemeTokens.textSecondary),
         ],
       ),
+    );
+  }
+
+  Widget _buildComparisonRow(List<GlucoseLog> linkedLogs, String unit) {
+    final postMealLog = linkedLogs.firstWhere(
+      (g) => g.context == 'post_meal_120',
+      orElse: () => linkedLogs.first,
+    );
+
+    final actualValue = postMealLog.unit == unit
+        ? postMealLog.value
+        : unit == 'mmol/L'
+            ? postMealLog.value / 18.0182
+            : postMealLog.value * 18.0182;
+
+    final predictedValue = log.projectionTwoHourMgDl > 0
+        ? (unit == 'mmol/L'
+            ? log.projectionTwoHourMgDl / 18.0182
+            : log.projectionTwoHourMgDl)
+        : null;
+
+    final displayActual = unit == 'mmol/L'
+        ? actualValue.toStringAsFixed(1)
+        : actualValue.toStringAsFixed(0);
+
+    return Wrap(
+      spacing: AppThemeTokens.spaceSm,
+      children: [
+        _MiniChip(
+          label: 'Actual: $displayActual $unit',
+          color: AppThemeTokens.brandSuccessLight,
+          icon: Icons.check_circle_outline,
+        ),
+        if (predictedValue != null)
+          _MiniChip(
+            label: 'Predicted: ${unit == 'mmol/L' ? predictedValue.toStringAsFixed(1) : predictedValue.toStringAsFixed(0)} $unit',
+            color: AppThemeTokens.brandAccent,
+            icon: Icons.auto_graph,
+          ),
+      ],
     );
   }
 }
@@ -503,6 +783,49 @@ class _MiniChip extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _TimingChip extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _TimingChip({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          vertical: AppThemeTokens.spaceMd,
+        ),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppThemeTokens.brandPrimary
+              : Colors.transparent,
+          border: Border.all(
+            color: isSelected
+                ? AppThemeTokens.brandPrimary
+                : AppThemeTokens.border,
+          ),
+          borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
+        ),
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: isSelected ? Colors.white : null,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+          ),
+        ),
       ),
     );
   }
