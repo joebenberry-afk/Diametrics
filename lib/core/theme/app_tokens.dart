@@ -25,6 +25,14 @@ class AppThemeTokens {
   static const Color warning = Color(0xFFFFB703);
   static const Color warningText = Color(0xFF9C6E00); // dark amber, ~4.8:1 on white
 
+  // Macro Accent Colors
+  static const Color accentCarbs = Color(0xFFFFB703);    // Amber/gold
+  static const Color accentFat = Color(0xFFE63946);      // Red
+
+  // Borders
+  static const Color border = Color(0xFFD1D5DB);         // Light grey
+  static const Color borderLight = Color(0xFFE5E7EB);    // Very light grey
+
   // Typography
   static const String fontFamily = 'Inter';
   static const double glassBlur = 12.0;
