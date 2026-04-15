@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../viewmodels/logging_wizard_viewmodel.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -13,6 +14,8 @@ class MedicationWizardView extends ConsumerStatefulWidget {
 }
 
 class _MedicationWizardViewState extends ConsumerState<MedicationWizardView> {
+  final _dosageCtrl = TextEditingController();
+
   String _dosageUnit(String medicationType) {
     switch (medicationType) {
       case 'rapid_acting_insulin':
@@ -28,11 +31,15 @@ class _MedicationWizardViewState extends ConsumerState<MedicationWizardView> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      // Reset any stale state from a previously opened (but cancelled) wizard.
-      ref.read(loggingWizardProvider.notifier).reset();
-    });
+    // Invalidate to guarantee a clean slate — prevents stale state
+    // leaking from a previously opened wizard (shared provider, #10).
+    ref.invalidate(loggingWizardProvider);
+  }
+
+  @override
+  void dispose() {
+    _dosageCtrl.dispose();
+    super.dispose();
   }
 
   @override
@@ -51,7 +58,36 @@ class _MedicationWizardViewState extends ConsumerState<MedicationWizardView> {
       {'value': 'pill', 'label': 'Oral Medication (Pill)'},
     ];
 
-    return Scaffold(
+    final hasData = state.pendingMedicationUnits != null;
+
+    return PopScope(
+      canPop: !hasData,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        final shouldDiscard = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Discard changes?'),
+            content: const Text(
+              'You have an unsaved medication entry. Are you sure you want to leave?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Keep editing'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Discard'),
+              ),
+            ],
+          ),
+        );
+        if (shouldDiscard == true && context.mounted) {
+          context.pop();
+        }
+      },
+      child: Scaffold(
       appBar: AppBar(
         title: const Text('Log Medication'),
         backgroundColor: Colors.transparent,
@@ -59,7 +95,13 @@ class _MedicationWizardViewState extends ConsumerState<MedicationWizardView> {
         actions: [
           IconButton(
             icon: const Icon(LucideIcons.x),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              if (hasData) {
+                Navigator.maybePop(context);
+              } else {
+                context.pop();
+              }
+            },
             tooltip: 'Cancel',
           ),
         ],
@@ -95,10 +137,11 @@ class _MedicationWizardViewState extends ConsumerState<MedicationWizardView> {
                 textBaseline: TextBaseline.alphabetic,
                 children: [
                   SizedBox(
-                    width: 150,
-                    child: TextFormField(
-                      initialValue:
-                          state.pendingMedicationUnits?.toString() ?? '',
+                    width: 200,
+                    child: Semantics(
+                      label: 'Medication dosage',
+                      child: TextFormField(
+                      controller: _dosageCtrl,
                       keyboardType: const TextInputType.numberWithOptions(
                         decimal: true,
                       ),
@@ -120,6 +163,7 @@ class _MedicationWizardViewState extends ConsumerState<MedicationWizardView> {
                           viewModel.updateMedicationUnits(parsed);
                         }
                       },
+                    ),
                     ),
                   ),
                   const SizedBox(width: AppThemeTokens.spaceSm),
@@ -167,7 +211,7 @@ class _MedicationWizardViewState extends ConsumerState<MedicationWizardView> {
                           border: Border.all(
                             color: isSelected
                                 ? AppThemeTokens.brandAccent
-                                : Colors.grey.withValues(alpha: 0.3),
+                                : AppThemeTokens.border.withValues(alpha: 0.8),
                             width: isSelected ? 2 : 1,
                           ),
                           borderRadius: BorderRadius.circular(
@@ -215,22 +259,41 @@ class _MedicationWizardViewState extends ConsumerState<MedicationWizardView> {
 
               // Save Button
               ElevatedButton(
-                onPressed: (state.isSubmitting ||
+                onPressed:
+                    (state.isSubmitting ||
                         state.medicationType.isEmpty ||
                         state.pendingMedicationUnits == null)
                     ? null
                     : () async {
                         final success = await viewModel.saveMedicationLog();
-                        if (success && context.mounted) {
-                          Navigator.pop(context);
+                        if (!context.mounted) return;
+                        if (success) {
+                          context.pop();
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Medication logged!')),
+                          );
+                        } else {
+                          final errorMsg = ref
+                              .read(loggingWizardProvider)
+                              .error;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                errorMsg ??
+                                    'Could not save medication. Please try again.',
+                              ),
+                              backgroundColor: AppThemeTokens.error,
+                              duration: const Duration(seconds: 4),
+                            ),
                           );
                         }
                       },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppThemeTokens.brandAccent,
                   foregroundColor: AppThemeTokens.textPrimaryInverse,
+                  disabledBackgroundColor: AppThemeTokens.brandAccent
+                      .withValues(alpha: 0.4),
+                  disabledForegroundColor: Colors.white54,
                   padding: const EdgeInsets.symmetric(
                     vertical: AppThemeTokens.spaceLg,
                   ),
@@ -242,9 +305,11 @@ class _MedicationWizardViewState extends ConsumerState<MedicationWizardView> {
                 ),
                 child: state.isSubmitting
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text(
-                        'Save Medication',
-                        style: TextStyle(
+                    : Text(
+                        state.pendingMedicationUnits == null
+                            ? 'Enter dosage to save'
+                            : 'Save Medication',
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
@@ -255,6 +320,7 @@ class _MedicationWizardViewState extends ConsumerState<MedicationWizardView> {
           ),
         ),
       ),
+    ),
     );
   }
 }

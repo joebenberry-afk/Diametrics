@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../viewmodels/logging_wizard_viewmodel.dart';
 import '../../viewmodels/profile_viewmodel.dart';
@@ -12,19 +13,28 @@ class GlucoseWizardView extends ConsumerStatefulWidget {
 }
 
 class _GlucoseWizardViewState extends ConsumerState<GlucoseWizardView> {
+  final _glucoseCtrl = TextEditingController();
+
   @override
   void initState() {
     super.initState();
+    // Invalidate to guarantee a clean slate — prevents stale state
+    // leaking from a previously opened wizard (shared provider, #10).
+    ref.invalidate(loggingWizardProvider);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      // Reset any stale state from a previously opened wizard.
-      ref.read(loggingWizardProvider.notifier).reset();
       // Load the user's preferred glucose unit so logged readings use the
       // correct unit tag rather than always defaulting to 'mg/dL'.
       final profile = ref.read(userProfileProvider).valueOrNull;
       final unit = profile?.preferredGlucoseUnit ?? 'mg/dL';
       ref.read(loggingWizardProvider.notifier).initGlucoseUnit(unit);
     });
+  }
+
+  @override
+  void dispose() {
+    _glucoseCtrl.dispose();
+    super.dispose();
   }
 
   @override
@@ -44,12 +54,53 @@ class _GlucoseWizardViewState extends ConsumerState<GlucoseWizardView> {
       {'value': 'night_time', 'label': 'Night Time'},
     ];
 
-    return Scaffold(
+    final hasData = state.pendingGlucoseValue != null;
+
+    return PopScope(
+      canPop: !hasData,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        final shouldDiscard = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Discard changes?'),
+            content: const Text(
+              'You have an unsaved glucose reading. Are you sure you want to leave?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Keep editing'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Discard'),
+              ),
+            ],
+          ),
+        );
+        if (shouldDiscard == true && context.mounted) {
+          context.pop();
+        }
+      },
+      child: Scaffold(
       appBar: AppBar(
         title: const Text('Log Blood Glucose'),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        actions: const [],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () {
+              if (hasData) {
+                Navigator.maybePop(context);
+              } else {
+                context.pop();
+              }
+            },
+            tooltip: 'Cancel',
+          ),
+        ],
       ),
       body: SafeArea(
         child: Padding(
@@ -74,15 +125,19 @@ class _GlucoseWizardViewState extends ConsumerState<GlucoseWizardView> {
                 textBaseline: TextBaseline.alphabetic,
                 children: [
                   SizedBox(
-                    width: 150,
-                    child: TextFormField(
-                      initialValue: state.pendingGlucoseValue?.toString() ?? '',
+                    width: 200,
+                    child: Semantics(
+                      label: 'Blood glucose value',
+                      child: TextFormField(
+                      controller: _glucoseCtrl,
                       keyboardType: const TextInputType.numberWithOptions(
                         decimal: true,
                       ),
                       textAlign: TextAlign.center,
                       style: theme.textTheme.displayLarge?.copyWith(
-                        color: isDark ? Colors.white : AppThemeTokens.brandPrimary,
+                        color: isDark
+                            ? Colors.white
+                            : AppThemeTokens.brandPrimary,
                         fontWeight: FontWeight.bold,
                       ),
                       decoration: const InputDecoration(
@@ -115,6 +170,7 @@ class _GlucoseWizardViewState extends ConsumerState<GlucoseWizardView> {
                         }
                         return null;
                       },
+                    ),
                     ),
                   ),
                   const SizedBox(width: AppThemeTokens.spaceSm),
@@ -162,7 +218,7 @@ class _GlucoseWizardViewState extends ConsumerState<GlucoseWizardView> {
                           border: Border.all(
                             color: isSelected
                                 ? AppThemeTokens.brandPrimary
-                                : Colors.grey.withValues(alpha: 0.3),
+                                : AppThemeTokens.border.withValues(alpha: 0.8),
                             width: isSelected ? 2 : 1,
                           ),
                           borderRadius: BorderRadius.circular(
@@ -231,11 +287,26 @@ class _GlucoseWizardViewState extends ConsumerState<GlucoseWizardView> {
                     ? null
                     : () async {
                         final success = await viewModel.saveGlucoseLog();
-                        if (success && context.mounted) {
-                          Navigator.pop(context);
+                        if (!context.mounted) return;
+                        if (success) {
+                          context.pop();
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text('Glucose reading saved!'),
+                            ),
+                          );
+                        } else {
+                          final errorMsg = ref
+                              .read(loggingWizardProvider)
+                              .error;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                errorMsg ??
+                                    'Could not save reading. Please try again.',
+                              ),
+                              backgroundColor: AppThemeTokens.error,
+                              duration: const Duration(seconds: 4),
                             ),
                           );
                         }
@@ -243,6 +314,9 @@ class _GlucoseWizardViewState extends ConsumerState<GlucoseWizardView> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppThemeTokens.brandPrimary,
                   foregroundColor: AppThemeTokens.textPrimaryInverse,
+                  disabledBackgroundColor: AppThemeTokens.brandPrimary
+                      .withValues(alpha: 0.4),
+                  disabledForegroundColor: Colors.white54,
                   padding: const EdgeInsets.symmetric(
                     vertical: AppThemeTokens.spaceLg,
                   ),
@@ -254,9 +328,11 @@ class _GlucoseWizardViewState extends ConsumerState<GlucoseWizardView> {
                 ),
                 child: state.isSubmitting
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text(
-                        'Save Reading',
-                        style: TextStyle(
+                    : Text(
+                        state.pendingGlucoseValue == null
+                            ? 'Enter a reading to save'
+                            : 'Save Reading',
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
@@ -267,6 +343,7 @@ class _GlucoseWizardViewState extends ConsumerState<GlucoseWizardView> {
           ),
         ),
       ),
+    ),
     );
   }
 }

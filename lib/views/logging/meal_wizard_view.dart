@@ -32,10 +32,11 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
   @override
   void initState() {
     super.initState();
+    // Invalidate to guarantee a clean slate — prevents stale state
+    // leaking from a previously opened wizard (shared provider, #10).
+    ref.invalidate(loggingWizardProvider);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      // Reset any stale state from a previously opened (but cancelled) wizard.
-      ref.read(loggingWizardProvider.notifier).reset();
       ref.read(loggingWizardProvider.notifier).checkRecentPreMealGlucose();
       _loadUserWeight();
     });
@@ -67,12 +68,14 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
     );
     if (result == null || !mounted) return;
 
-    ref.read(loggingWizardProvider.notifier).updateMealMacros(
-      carbs: result.totalCarbs,
-      proteins: result.totalProtein,
-      fats: result.totalFat,
-      calories: result.totalCalories,
-    );
+    ref
+        .read(loggingWizardProvider.notifier)
+        .updateMealMacros(
+          carbs: result.totalCarbs,
+          proteins: result.totalProtein,
+          fats: result.totalFat,
+          calories: result.totalCalories,
+        );
 
     _carbsCtrl.text = result.totalCarbs.toStringAsFixed(1);
     _proteinCtrl.text = result.totalProtein.toStringAsFixed(1);
@@ -101,7 +104,9 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
       onPressed: _openFoodScanner,
       style: OutlinedButton.styleFrom(
         foregroundColor: AppThemeTokens.brandAccent,
-        side: BorderSide(color: AppThemeTokens.brandAccent.withValues(alpha: 0.7)),
+        side: BorderSide(
+          color: AppThemeTokens.brandAccent.withValues(alpha: 0.7),
+        ),
         padding: const EdgeInsets.symmetric(vertical: 14),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
@@ -157,7 +162,9 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: AppThemeTokens.brandAccent.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(AppThemeTokens.radiusFull),
+                  borderRadius: BorderRadius.circular(
+                    AppThemeTokens.radiusFull,
+                  ),
                   border: Border.all(
                     color: AppThemeTokens.brandAccent.withValues(alpha: 0.4),
                   ),
@@ -165,8 +172,11 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.bolt,
-                        color: AppThemeTokens.brandAccent, size: 14),
+                    Icon(
+                      Icons.bolt,
+                      color: AppThemeTokens.brandAccent,
+                      size: 14,
+                    ),
                     const SizedBox(width: 2),
                     Text(
                       'Required',
@@ -195,8 +205,11 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
               ),
               child: Row(
                 children: [
-                  const Icon(LucideIcons.checkCircle,
-                      color: AppThemeTokens.brandSuccessLight, size: 18),
+                  const Icon(
+                    LucideIcons.checkCircle,
+                    color: AppThemeTokens.brandSuccessLight,
+                    size: 18,
+                  ),
                   const SizedBox(width: AppThemeTokens.spaceSm),
                   Text(
                     '${state.preMealGlucose!.toStringAsFixed(0)} $_preferredGlucoseUnit',
@@ -210,17 +223,23 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                     child: Text(
                       'recent reading auto-detected',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: isDark ? Colors.white54 : AppThemeTokens.textSecondary,
+                        color: isDark
+                            ? Colors.white54
+                            : AppThemeTokens.textSecondary,
                       ),
                     ),
                   ),
                   InkWell(
-                    borderRadius: BorderRadius.circular(AppThemeTokens.radiusSm),
+                    borderRadius: BorderRadius.circular(
+                      AppThemeTokens.radiusSm,
+                    ),
                     onTap: () {
-                      ref.read(loggingWizardProvider.notifier)
+                      ref
+                          .read(loggingWizardProvider.notifier)
                           .setPreMealGlucose(0);
                       // Clear so user can enter manually
-                      ref.read(loggingWizardProvider.notifier)
+                      ref
+                          .read(loggingWizardProvider.notifier)
                           .checkRecentPreMealGlucose();
                     },
                     child: Text(
@@ -250,10 +269,13 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
               children: [
                 Expanded(
                   child: TextFormField(
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'^\d{0,3}\.?\d{0,1}$')),
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'^\d{0,3}\.?\d{0,1}$'),
+                      ),
                     ],
                     textAlign: TextAlign.center,
                     style: theme.textTheme.headlineLarge?.copyWith(
@@ -266,12 +288,16 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                       hintStyle: TextStyle(
                         color: isDark
                             ? Colors.white30
-                            : AppThemeTokens.textSecondary.withValues(alpha: 0.5),
+                            : AppThemeTokens.textSecondary.withValues(
+                                alpha: 0.5,
+                              ),
                         fontSize: 32,
                       ),
                       suffixText: _preferredGlucoseUnit,
                       suffixStyle: TextStyle(
-                        color: isDark ? Colors.white60 : AppThemeTokens.textSecondary,
+                        color: isDark
+                            ? Colors.white60
+                            : AppThemeTokens.textSecondary,
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
                       ),
@@ -305,14 +331,47 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final canSave = !state.isSubmitting &&
+    final canSave =
+        !state.isSubmitting &&
         state.preMealGlucose != null &&
         state.preMealGlucose! > 0 &&
         state.pendingCarbs != null &&
         state.pendingProteins != null &&
         state.pendingFats != null;
 
-    return Scaffold(
+    final hasData = state.preMealGlucose != null ||
+        state.pendingCarbs != null ||
+        state.pendingProteins != null ||
+        state.pendingFats != null;
+
+    return PopScope(
+      canPop: !hasData,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        final shouldDiscard = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Discard changes?'),
+            content: const Text(
+              'You have unsaved meal data. Are you sure you want to leave?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Keep editing'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Discard'),
+              ),
+            ],
+          ),
+        );
+        if (shouldDiscard == true && context.mounted) {
+          Navigator.pop(context);
+        }
+      },
+      child: Scaffold(
       backgroundColor: isDark
           ? AppThemeTokens.bgBackgroundDark
           : AppThemeTokens.bgBackground,
@@ -333,7 +392,14 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
             Icons.arrow_back_ios_new_rounded,
             color: isDark ? Colors.white : AppThemeTokens.textPrimary,
           ),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            if (hasData) {
+              // Trigger the PopScope handler
+              Navigator.maybePop(context);
+            } else {
+              Navigator.pop(context);
+            }
+          },
         ),
         actions: [
           IconButton(
@@ -341,7 +407,13 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
               LucideIcons.x,
               color: isDark ? Colors.white70 : AppThemeTokens.textSecondary,
             ),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              if (hasData) {
+                Navigator.maybePop(context);
+              } else {
+                Navigator.pop(context);
+              }
+            },
             tooltip: 'Cancel',
           ),
         ],
@@ -378,14 +450,12 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
               Container(
                 padding: const EdgeInsets.all(AppThemeTokens.spaceMd),
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? AppThemeTokens.bgSurfaceDark
-                      : Colors.white,
+                  color: isDark ? AppThemeTokens.bgSurfaceDark : Colors.white,
                   borderRadius: BorderRadius.circular(AppThemeTokens.radiusLg),
                   border: Border.all(
                     color: isDark
                         ? Colors.white.withValues(alpha: 0.1)
-                        : const Color(0xFFE5E7EB),
+                        : AppThemeTokens.borderLight,
                   ),
                 ),
                 child: Column(
@@ -395,8 +465,9 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                       unit: 'g',
                       controller: _carbsCtrl,
                       icon: LucideIcons.wheat,
-                      accentColor: const Color(0xFFFFB703),
+                      accentColor: AppThemeTokens.accentCarbs,
                       isDark: isDark,
+                      isRequired: true,
                       onChanged: (val) => viewModel.updateMealMacros(
                         carbs: double.tryParse(val),
                         fiber: state.pendingFiber,
@@ -428,6 +499,7 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                       icon: LucideIcons.egg,
                       accentColor: AppThemeTokens.brandAccent,
                       isDark: isDark,
+                      isRequired: true,
                       onChanged: (val) => viewModel.updateMealMacros(
                         carbs: state.pendingCarbs,
                         fiber: state.pendingFiber,
@@ -441,8 +513,9 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                       unit: 'g',
                       controller: _fatsCtrl,
                       icon: LucideIcons.droplet,
-                      accentColor: const Color(0xFFE63946),
+                      accentColor: AppThemeTokens.accentFat,
                       isDark: isDark,
+                      isRequired: true,
                       onChanged: (val) => viewModel.updateMealMacros(
                         carbs: state.pendingCarbs,
                         fiber: state.pendingFiber,
@@ -458,31 +531,35 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
 
               // ── Advanced Trackers ─────────────────────────────────
               Theme(
-                data: Theme.of(context).copyWith(
-                  dividerColor: Colors.transparent,
-                ),
+                data: Theme.of(
+                  context,
+                ).copyWith(dividerColor: Colors.transparent),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: isDark
-                        ? AppThemeTokens.bgSurfaceDark
-                        : Colors.white,
-                    borderRadius: BorderRadius.circular(AppThemeTokens.radiusLg),
+                    color: isDark ? AppThemeTokens.bgSurfaceDark : Colors.white,
+                    borderRadius: BorderRadius.circular(
+                      AppThemeTokens.radiusLg,
+                    ),
                     border: Border.all(
                       color: isDark
                           ? Colors.white.withValues(alpha: 0.1)
-                          : const Color(0xFFE5E7EB),
+                          : AppThemeTokens.borderLight,
                     ),
                   ),
                   child: ExpansionTile(
-                    leading: Icon(LucideIcons.settings,
-                        color: isDark
-                            ? Colors.white54
-                            : AppThemeTokens.textSecondary,
-                        size: 20),
+                    leading: Icon(
+                      LucideIcons.settings,
+                      color: isDark
+                          ? Colors.white54
+                          : AppThemeTokens.textSecondary,
+                      size: 20,
+                    ),
                     title: Text(
                       'Advanced Prediction Modifiers',
                       style: TextStyle(
-                        color: isDark ? Colors.white : AppThemeTokens.textPrimary,
+                        color: isDark
+                            ? Colors.white
+                            : AppThemeTokens.textPrimary,
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
                       ),
@@ -490,7 +567,9 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                     subtitle: Text(
                       'Alcohol, caffeine, and food form affect glucose',
                       style: TextStyle(
-                        color: isDark ? Colors.white54 : AppThemeTokens.textSecondary,
+                        color: isDark
+                            ? Colors.white54
+                            : AppThemeTokens.textSecondary,
                         fontSize: 14,
                       ),
                     ),
@@ -577,30 +656,40 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                                 _FoodFormChip(
                                   label: 'Standard',
                                   icon: LucideIcons.utensils,
-                                  isSelected: state.foodFormFactor == 'standard',
+                                  isSelected:
+                                      state.foodFormFactor == 'standard',
                                   isDark: isDark,
-                                  onTap: () => viewModel.updateFoodFormFactor('standard'),
+                                  onTap: () => viewModel.updateFoodFormFactor(
+                                    'standard',
+                                  ),
                                 ),
                                 _FoodFormChip(
                                   label: 'Liquid',
                                   icon: LucideIcons.glassWater,
                                   isSelected: state.foodFormFactor == 'liquid',
                                   isDark: isDark,
-                                  onTap: () => viewModel.updateFoodFormFactor('liquid'),
+                                  onTap: () =>
+                                      viewModel.updateFoodFormFactor('liquid'),
                                 ),
                                 _FoodFormChip(
                                   label: 'Whole Grain',
                                   icon: LucideIcons.wheat,
-                                  isSelected: state.foodFormFactor == 'highFiber',
+                                  isSelected:
+                                      state.foodFormFactor == 'highFiber',
                                   isDark: isDark,
-                                  onTap: () => viewModel.updateFoodFormFactor('highFiber'),
+                                  onTap: () => viewModel.updateFoodFormFactor(
+                                    'highFiber',
+                                  ),
                                 ),
                                 _FoodFormChip(
                                   label: 'Processed',
                                   icon: LucideIcons.cookie,
-                                  isSelected: state.foodFormFactor == 'processed',
+                                  isSelected:
+                                      state.foodFormFactor == 'processed',
                                   isDark: isDark,
-                                  onTap: () => viewModel.updateFoodFormFactor('processed'),
+                                  onTap: () => viewModel.updateFoodFormFactor(
+                                    'processed',
+                                  ),
                                 ),
                               ],
                             ),
@@ -617,21 +706,27 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
               // ── Error message ─────────────────────────────────────
               if (state.error != null)
                 Padding(
-                  padding:
-                      const EdgeInsets.only(bottom: AppThemeTokens.spaceMd),
+                  padding: const EdgeInsets.only(
+                    bottom: AppThemeTokens.spaceMd,
+                  ),
                   child: Container(
                     padding: const EdgeInsets.all(AppThemeTokens.spaceMd),
                     decoration: BoxDecoration(
                       color: AppThemeTokens.error.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
+                      borderRadius: BorderRadius.circular(
+                        AppThemeTokens.radiusMd,
+                      ),
                       border: Border.all(
                         color: AppThemeTokens.error.withValues(alpha: 0.4),
                       ),
                     ),
                     child: Row(
                       children: [
-                        const Icon(LucideIcons.alertCircle,
-                            color: AppThemeTokens.error, size: 18),
+                        const Icon(
+                          LucideIcons.alertCircle,
+                          color: AppThemeTokens.error,
+                          size: 18,
+                        ),
                         const SizedBox(width: AppThemeTokens.spaceSm),
                         Expanded(
                           child: Text(
@@ -651,11 +746,11 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                 child: ElevatedButton(
                   onPressed: canSave
                       ? () async {
-                          final data =
-                              await viewModel.saveMealWithProjection(
+                          final data = await viewModel.saveMealWithProjection(
                             weightKg: _weightKg,
                           );
-                          if (data != null && context.mounted) {
+                          if (!context.mounted) return;
+                          if (data != null) {
                             context.pushReplacement(
                               Routes.logMealProjection,
                               extra: ProjectionRouteArgs(
@@ -664,21 +759,40 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                                 mealCount: (data['mealCount'] ?? 0) as int,
                               ),
                             );
+                          } else {
+                            // Show explicit feedback so the user knows
+                            // the save failed rather than appearing to do
+                            // nothing. The error field in state is also
+                            // shown in the inline error container above.
+                            final errorMsg = ref
+                                .read(loggingWizardProvider)
+                                .error;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  errorMsg ??
+                                      'Could not save meal. Please check all fields are filled.',
+                                ),
+                                backgroundColor: AppThemeTokens.error,
+                                duration: const Duration(seconds: 4),
+                              ),
+                            );
                           }
                         }
                       : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppThemeTokens.brandSecondary,
                     foregroundColor: Colors.white,
-                    disabledBackgroundColor:
-                        AppThemeTokens.brandSecondary.withValues(alpha: 0.4),
+                    disabledBackgroundColor: AppThemeTokens.brandSecondary
+                        .withValues(alpha: 0.4),
                     disabledForegroundColor: Colors.white54,
                     padding: const EdgeInsets.symmetric(
                       vertical: AppThemeTokens.spaceLg,
                     ),
                     shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(AppThemeTokens.radiusLg),
+                      borderRadius: BorderRadius.circular(
+                        AppThemeTokens.radiusLg,
+                      ),
                     ),
                     elevation: canSave ? 4 : 0,
                   ),
@@ -694,11 +808,19 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                       : Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(LucideIcons.trendingUp, size: 20),
+                            Icon(
+                              canSave ? LucideIcons.trendingUp : LucideIcons.info,
+                              size: 20,
+                            ),
                             const SizedBox(width: AppThemeTokens.spaceSm),
-                            const Text(
-                              'Save & Calculate Glucose Prediction',
-                              style: TextStyle(
+                            Text(
+                              canSave
+                                  ? 'Save & Calculate Glucose Prediction'
+                                  : (state.preMealGlucose == null ||
+                                          state.preMealGlucose! <= 0)
+                                      ? 'Enter glucose reading first'
+                                      : 'Enter carbs, protein & fat',
+                              style: const TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -708,19 +830,37 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                 ),
               ),
 
-              // Hint if button is disabled
               if (!canSave && !state.isSubmitting)
                 Padding(
                   padding: const EdgeInsets.only(top: AppThemeTokens.spaceSm),
-                  child: Text(
-                    state.preMealGlucose == null
-                        ? 'Enter your pre-meal glucose to continue'
-                        : 'Enter carbs, protein and fat values to continue',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: isDark ? Colors.white38 : AppThemeTokens.textSecondary,
-                    ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        (state.preMealGlucose == null ||
+                                state.preMealGlucose! <= 0)
+                            ? LucideIcons.heartPulse
+                            : LucideIcons.info,
+                        size: 14,
+                        color: isDark
+                            ? Colors.white38
+                            : AppThemeTokens.textSecondary,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        (state.preMealGlucose == null ||
+                                state.preMealGlucose! <= 0)
+                            ? 'Enter your pre-meal glucose above to continue'
+                            : 'Enter carbs, protein and fat values to continue',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: isDark
+                              ? Colors.white38
+                              : AppThemeTokens.textSecondary,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
 
@@ -729,6 +869,7 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
           ),
         ),
       ),
+    ),
     );
   }
 }
@@ -752,9 +893,13 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon,
-            size: 16,
-            color: isDark ? AppThemeTokens.brandAccent : AppThemeTokens.brandSecondary),
+        Icon(
+          icon,
+          size: 16,
+          color: isDark
+              ? AppThemeTokens.brandAccent
+              : AppThemeTokens.brandSecondary,
+        ),
         const SizedBox(width: 6),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -794,6 +939,7 @@ class _MacroInputRow extends StatelessWidget {
   final Color accentColor;
   final bool isDark;
   final bool optional;
+  final bool isRequired;
 
   const _MacroInputRow({
     required this.label,
@@ -804,6 +950,7 @@ class _MacroInputRow extends StatelessWidget {
     required this.accentColor,
     required this.isDark,
     this.optional = false,
+    this.isRequired = false,
   });
 
   @override
@@ -842,20 +989,36 @@ class _MacroInputRow extends StatelessWidget {
                     'Optional',
                     style: TextStyle(
                       fontSize: 14,
-                      color: isDark ? Colors.white38 : AppThemeTokens.textSecondary,
+                      color: isDark
+                          ? Colors.white38
+                          : AppThemeTokens.textSecondary,
+                    ),
+                  ),
+                if (isRequired)
+                  Text(
+                    'Required',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: AppThemeTokens.brandAccent,
                     ),
                   ),
               ],
             ),
           ),
-          SizedBox(
-            width: 90,
+          Semantics(
+            label: '$label input',
+            child: SizedBox(
+            width: 110,
             child: TextFormField(
               controller: controller,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'^\d{0,4}\.?\d{0,1}')),
+                FilteringTextInputFormatter.allow(
+                  RegExp(r'^\d{0,4}\.?\d{0,1}'),
+                ),
               ],
               textAlign: TextAlign.right,
               style: TextStyle(
@@ -864,14 +1027,16 @@ class _MacroInputRow extends StatelessWidget {
                 fontWeight: FontWeight.w700,
               ),
               decoration: InputDecoration(
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppThemeTokens.radiusSm),
                   borderSide: BorderSide(
                     color: isDark
                         ? Colors.white.withValues(alpha: 0.2)
-                        : const Color(0xFFD1D5DB),
+                        : AppThemeTokens.border,
                   ),
                 ),
                 enabledBorder: OutlineInputBorder(
@@ -879,7 +1044,7 @@ class _MacroInputRow extends StatelessWidget {
                   borderSide: BorderSide(
                     color: isDark
                         ? Colors.white.withValues(alpha: 0.2)
-                        : const Color(0xFFD1D5DB),
+                        : AppThemeTokens.border,
                   ),
                 ),
                 focusedBorder: OutlineInputBorder(
@@ -899,6 +1064,7 @@ class _MacroInputRow extends StatelessWidget {
               ),
               onChanged: onChanged,
             ),
+          ),
           ),
         ],
       ),
@@ -934,15 +1100,15 @@ class _FoodFormChip extends StatelessWidget {
           color: isSelected
               ? AppThemeTokens.brandPrimary.withValues(alpha: 0.15)
               : isDark
-                  ? Colors.white.withValues(alpha: 0.05)
-                  : Colors.grey.shade100,
+              ? Colors.white.withValues(alpha: 0.05)
+              : Colors.grey.shade100,
           borderRadius: BorderRadius.circular(AppThemeTokens.radiusFull),
           border: Border.all(
             color: isSelected
                 ? AppThemeTokens.brandPrimary
                 : isDark
-                    ? Colors.white.withValues(alpha: 0.15)
-                    : Colors.grey.shade300,
+                ? Colors.white.withValues(alpha: 0.15)
+                : Colors.grey.shade300,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -955,8 +1121,8 @@ class _FoodFormChip extends StatelessWidget {
               color: isSelected
                   ? AppThemeTokens.brandPrimary
                   : isDark
-                      ? Colors.white54
-                      : AppThemeTokens.textSecondary,
+                  ? Colors.white54
+                  : AppThemeTokens.textSecondary,
             ),
             const SizedBox(width: 6),
             Text(
@@ -967,8 +1133,8 @@ class _FoodFormChip extends StatelessWidget {
                 color: isSelected
                     ? AppThemeTokens.brandPrimary
                     : isDark
-                        ? Colors.white70
-                        : AppThemeTokens.textPrimary,
+                    ? Colors.white70
+                    : AppThemeTokens.textPrimary,
               ),
             ),
           ],

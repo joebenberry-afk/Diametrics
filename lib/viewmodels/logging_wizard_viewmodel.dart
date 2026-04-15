@@ -11,6 +11,13 @@ import '../services/ekf_tuning_service.dart';
 import '../services/glucose_projection_service.dart';
 import 'health_data_viewmodel.dart';
 
+/// Sentinel used to explicitly set a nullable [copyWith] field to `null`.
+///
+/// The standard `??` pattern inside [copyWith] cannot distinguish between
+/// "caller didn't pass a value" (keep old) and "caller wants to clear the
+/// value" (set to null). Passing [_clearValue] signals the latter.
+const String _clearValue = '__clear__';
+
 // A state class to hold the temporary data during wizard entry
 class LoggingWizardState {
   // Glucose Wizard
@@ -66,6 +73,10 @@ class LoggingWizardState {
     this.error,
   });
 
+  /// Creates a copy of this state with the given fields replaced.
+  ///
+  /// For the [error] field, pass [_clearValue] to explicitly clear it to
+  /// `null`. Passing `null` (or omitting it) retains the previous value.
   LoggingWizardState copyWith({
     double? pendingGlucoseValue,
     String? glucoseUnit,
@@ -110,7 +121,8 @@ class LoggingWizardState {
       medicationType: medicationType ?? this.medicationType,
       postExercise: postExercise ?? this.postExercise,
       isSubmitting: isSubmitting ?? this.isSubmitting,
-      error: error ?? this.error,
+      // Sentinel pattern: pass _clearValue to explicitly clear error to null.
+      error: error == _clearValue ? null : (error ?? this.error),
     );
   }
 }
@@ -243,7 +255,7 @@ class LoggingWizardViewModel extends Notifier<LoggingWizardState> {
   Future<bool> saveGlucoseLog() async {
     if (state.pendingGlucoseValue == null) return false;
 
-    state = state.copyWith(isSubmitting: true, error: null);
+    state = state.copyWith(isSubmitting: true, error: _clearValue);
     try {
       final log = GlucoseLog(
         id: _uuid.v4(),
@@ -284,7 +296,7 @@ class LoggingWizardViewModel extends Notifier<LoggingWizardState> {
       return null;
     }
 
-    state = state.copyWith(isSubmitting: true, error: null);
+    state = state.copyWith(isSubmitting: true, error: _clearValue);
     try {
       final repo = ref.read(healthDataRepositoryProvider);
 
@@ -308,10 +320,12 @@ class LoggingWizardViewModel extends Notifier<LoggingWizardState> {
       }
 
       // Calculate fallback calories if not explicitly provided by AI
-      final computedCalories = (state.pendingCarbs! * 4.0) +
+      final computedCalories =
+          (state.pendingCarbs! * 4.0) +
           (state.pendingProteins! * 4.0) +
           (state.pendingFats! * 9.0);
-      final finalCalories = (state.pendingCalories != null && state.pendingCalories! > 0)
+      final finalCalories =
+          (state.pendingCalories != null && state.pendingCalories! > 0)
           ? state.pendingCalories!
           : computedCalories;
 
@@ -337,7 +351,7 @@ class LoggingWizardViewModel extends Notifier<LoggingWizardState> {
       final iob = await _calculateIOB();
       final unit = preMealUnit;
       final mealCount = profile?.tuningMealCount ?? 0;
-      
+
       // Normalize baseline to mg/dL for the projection service math
       double normalizedBaseline = state.preMealGlucose!;
       if (unit == 'mmol/L') {
@@ -365,13 +379,19 @@ class LoggingWizardViewModel extends Notifier<LoggingWizardState> {
         mealName: state.mealName,
       );
 
+      // 4. Persist projection for history
+      await repo.addProjectionLog(
+        id: _uuid.v4(),
+        mealLogId: mealLog.id,
+        timestamp: DateTime.now(),
+        baselineGlucose: normalizedBaseline,
+        result: result,
+      );
+      ref.invalidate(projectionLogsProvider);
+
       // Reset wizard state
       state = LoggingWizardState();
-      return {
-        'result': result,
-        'unit': unit,
-        'mealCount': mealCount,
-      };
+      return {'result': result, 'unit': unit, 'mealCount': mealCount};
     } catch (e) {
       state = state.copyWith(isSubmitting: false, error: e.toString());
       return null;
@@ -410,12 +430,14 @@ class LoggingWizardViewModel extends Notifier<LoggingWizardState> {
       return false;
     }
 
-    state = state.copyWith(isSubmitting: true, error: null);
+    state = state.copyWith(isSubmitting: true, error: _clearValue);
     try {
-      final computedCalories = (state.pendingCarbs! * 4.0) +
+      final computedCalories =
+          (state.pendingCarbs! * 4.0) +
           (state.pendingProteins! * 4.0) +
           (state.pendingFats! * 9.0);
-      final finalCalories = (state.pendingCalories != null && state.pendingCalories! > 0)
+      final finalCalories =
+          (state.pendingCalories != null && state.pendingCalories! > 0)
           ? state.pendingCalories!
           : computedCalories;
 
@@ -447,13 +469,15 @@ class LoggingWizardViewModel extends Notifier<LoggingWizardState> {
   Future<bool> saveMedicationLog() async {
     if (state.pendingMedicationUnits == null) return false;
 
-    state = state.copyWith(isSubmitting: true, error: null);
+    state = state.copyWith(isSubmitting: true, error: _clearValue);
     try {
       final log = MedicationLog(
         id: _uuid.v4(),
         timestamp: DateTime.now(),
         medicationType: state.medicationType,
-        insulinType: state.medicationType == 'rapid_acting_insulin' ? 'Humalog / NovoLog' : 'N/A', // Auto-set generic for now, the UI can pass it later.
+        insulinType: state.medicationType == 'rapid_acting_insulin'
+            ? 'Humalog / NovoLog'
+            : 'N/A', // Auto-set generic for now, the UI can pass it later.
         units: state.pendingMedicationUnits!,
       );
 
