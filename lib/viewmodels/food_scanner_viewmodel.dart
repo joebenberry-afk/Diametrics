@@ -91,9 +91,20 @@ class FoodScannerNotifier extends AutoDisposeNotifier<FoodScannerState> {
         items: result.items,
       );
     } catch (e) {
+      final raw = e.toString();
+      String friendly;
+      if (raw.contains('network') || raw.contains('SocketException') || raw.contains('timeout')) {
+        friendly = 'Could not connect. Please check your internet and try again.';
+      } else if (raw.contains('format') || raw.contains('parse')) {
+        friendly = 'Could not read the image. Please try a clearer photo.';
+      } else if (raw.contains('API') || raw.contains('quota') || raw.contains('rate')) {
+        friendly = 'The analysis service is temporarily unavailable. Please try again shortly.';
+      } else {
+        friendly = 'Something went wrong analysing your food. Please try again or enter values manually.';
+      }
       state = state.copyWith(
         status: FoodScannerStatus.error,
-        errorMessage: e.toString().replaceFirst('Exception: ', ''),
+        errorMessage: friendly,
       );
     } finally {
       _progressSub?.cancel();
