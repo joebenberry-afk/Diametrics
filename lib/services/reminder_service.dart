@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -6,8 +9,10 @@ class ReminderService {
   static final _plugin = FlutterLocalNotificationsPlugin();
   static bool _initialized = false;
 
-  static Future<void> initialize() async {
-    if (_initialized) return;
+  /// Initialize the notification plugin and request Android 13+ permission.
+  /// Returns `true` if notifications are available, `false` otherwise.
+  static Future<bool> initialize() async {
+    if (_initialized) return true;
     tz.initializeTimeZones();
 
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -17,10 +22,41 @@ class ReminderService {
       requestSoundPermission: true,
     );
 
-    await _plugin.initialize(
+    final didInit = await _plugin.initialize(
       settings: const InitializationSettings(android: android, iOS: ios),
     );
+
+    if (didInit != true) {
+      debugPrint('ReminderService: initialization returned false');
+      return false;
+    }
+
+    // Android 13+ (API 33) requires POST_NOTIFICATIONS runtime permission.
+    if (Platform.isAndroid) {
+      final granted = await _requestAndroidNotificationPermission();
+      if (!granted) {
+        debugPrint('ReminderService: notification permission denied');
+        // Still mark as initialized so the user can grant later.
+      }
+    }
+
     _initialized = true;
+    return true;
+  }
+
+  /// Whether the service has been initialized (still usable — permission may
+  /// have been denied, but scheduling calls will silently fail on the OS side).
+  static bool get isInitialized => _initialized;
+
+  /// Request the Android POST_NOTIFICATIONS permission (API 33+).
+  static Future<bool> _requestAndroidNotificationPermission() async {
+    final androidPlugin = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    if (androidPlugin == null) return false;
+    final granted = await androidPlugin.requestNotificationsPermission();
+    return granted ?? false;
   }
 
   /// Schedule a daily medication reminder at [hour]:[minute].
@@ -32,6 +68,15 @@ class ReminderService {
     required int hour,
     required int minute,
   }) async {
+    // Ensure initialization before scheduling.
+    if (!_initialized) {
+      final ok = await initialize();
+      if (!ok) {
+        debugPrint('ReminderService: cannot schedule — init failed');
+        return;
+      }
+    }
+
     await _plugin.zonedSchedule(
       id: id,
       title: title,
