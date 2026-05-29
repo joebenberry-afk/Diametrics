@@ -101,7 +101,7 @@ class GlucoseProjectionService {
     required bool containsCaffeine,
     double weightKg = 70.0,
     double insulinOnBoard = 0.0,
-    double p1 = 0.010, // ML parameter: metabolicClearanceRate
+    double p1 = 0.025, // ML parameter: metabolicClearanceRate
     double isf = 50.0, // ML parameter: insulinSensitivityFactor
     double tMaxBase = 40.0, // ML parameter: absorptionDelayBase
     double fastingSetpoint = 90.0, // ML parameter: clearance equilibrium point
@@ -149,18 +149,23 @@ class GlucoseProjectionService {
     // ── STEP 2: Hovorka Parameters ────────────────────────────────────
     const double aG = 0.8; // Bioavailability factor
 
-    // Apply post-exercise heuristics before basic logic
-    // Enforce a realistic minimum for clearance rate to avoid artificially delayed 4-hour peaks.
-    // The old default of 0.010 was far too slow for normal physiology.
-    double effectiveP1 = max(p1, 0.025);
-    double effectiveTMax = tMaxBase;
+    // Apply post-exercise heuristics before basic logic.
+    // Numerical safety floor ONLY — must stay <= EkfTuningService._p1Min so the
+    // adaptive clearance estimate is never silently clamped away. A prior 0.025
+    // floor sat ABOVE the EKF's max bound (0.020), which neutralised every
+    // clearance-rate update the filter produced. Realistic peaks are now
+    // achieved via the profile default + EKF tuning, not a hard floor.
+    double effectiveP1 = max(p1, 0.002);
     if (postExercise) {
+      // Enhanced glucose disposal (GLUT4 uptake) only. Don't cut tMax here:
+      // faster absorption front-loads glucose before clearance ramps up
+      // (clearanceFraction = t/45) and paradoxically RAISES the peak — the
+      // opposite of the intended post-exercise effect.
       effectiveP1 *= 1.35; // 35% faster disposal
-      effectiveTMax -= 10.0; // slightly faster absorption too
     }
 
     // Time-to-maximum gut absorption in minutes (fast carb component)
-    double tMax = effectiveTMax;
+    double tMax = tMaxBase;
     if (fatGrams > 40 || proteinGrams > 25) tMax += 30.0;
     if (containsAlcohol) tMax += 20.0;
 

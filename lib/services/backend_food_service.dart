@@ -124,7 +124,7 @@ class BackendFoodService {
         );
       }
 
-      return _parseFoodAnalysisResponse(response.body);
+      return parseFoodAnalysisResponse(response.body);
     } on RateLimitException {
       rethrow;
     } on BackendUnavailableException {
@@ -166,6 +166,7 @@ class BackendFoodService {
 
       return {
         'carbs': (json['carbs'] as num).toDouble(),
+        'fiber': (json['fiber'] as num?)?.toDouble() ?? 0.0,
         'protein': (json['protein'] as num).toDouble(),
         'fat': (json['fat'] as num).toDouble(),
         'calories': (json['calories'] as num).toDouble(),
@@ -227,6 +228,7 @@ class BackendFoodService {
         'name': json['name'],
         'portion': json['portion'] ?? '1 serving',
         'carbs_g': json['carbs_g'] ?? 0.0,
+        'fiber_g': json['fiber_g'] ?? 0.0,
         'calories': json['calories'] ?? 0.0,
         'protein_g': json['protein_g'] ?? 0.0,
         'fat_g': json['fat_g'] ?? 0.0,
@@ -262,8 +264,21 @@ class BackendFoodService {
   /// The UI defences (item cap, string truncation, numeric clamping) are
   /// intentionally kept here so they apply regardless of what the backend
   /// returns.
-  static FoodAnalysisResult _parseFoodAnalysisResponse(String responseBody) {
-    final json = jsonDecode(responseBody) as Map<String, dynamic>;
+  ///
+  /// Exposed for testing: this is a pure transform (String -> result), so the
+  /// clamp/reconstruction logic can be verified without mocking the HTTP call.
+  @visibleForTesting
+  static FoodAnalysisResult parseFoodAnalysisResponse(String responseBody) {
+    var text = responseBody.trim();
+    if (text.startsWith('```')) {
+      text = text.replaceFirst(RegExp(r'^```(?:json)?\n?'), '');
+    }
+    if (text.endsWith('```')) {
+      text = text.replaceFirst(RegExp(r'\n?```$'), '');
+    }
+    text = text.trim();
+
+    final json = jsonDecode(text) as Map<String, dynamic>;
 
     var rawItems = (json['items'] as List<dynamic>? ?? [])
         .map((e) => FoodItem.fromJson(e as Map<String, dynamic>))
@@ -281,9 +296,11 @@ class BackendFoodService {
                 ? '${item.portion.substring(0, 97)}...'
                 : item.portion,
         carbsGrams: item.carbsGrams.clamp(0.0, 500.0),
+        fiberGrams: item.fiberGrams.clamp(0.0, 100.0),
         calories: item.calories.clamp(0.0, 3000.0),
         proteinGrams: item.proteinGrams.clamp(0.0, 300.0),
         fatGrams: item.fatGrams.clamp(0.0, 300.0),
+        weightG: item.weightG.clamp(0.0, 600.0),
         source: item.source,
       );
     }).toList();

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 import 'package:fl_chart/fl_chart.dart';
 
@@ -102,13 +103,7 @@ class DashboardView extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.bar_chart_rounded),
-            tooltip: 'Glucose Trends',
-            onPressed: () => context.push(Routes.glucoseTrend),
-          ),
-        ],
+        title: const Text('Home'),
       ),
       body: SafeArea(
         child: RefreshIndicator(
@@ -135,7 +130,8 @@ class DashboardView extends ConsumerWidget {
                         userName: displayName,
                         userStatus: statusText,
                         onTap: () {
-                          context.push(Routes.settings);
+                          // Switch to Profile tab in the shell.
+                          context.go(Routes.profile);
                         },
                       ),
                     ),
@@ -188,18 +184,19 @@ class DashboardView extends ConsumerWidget {
                       title: 'Glucose',
                       value: glucoseDisplay,
                       unit: profile?.preferredGlucoseUnit ?? 'mg/dL',
-                      icon: Icons.bloodtype_outlined,
+                      icon: LucideIcons.activity,
                       accentColor: glucoseColor,
                       trendData: trendData,
                       onTap: () {
-                        context.push(Routes.glucoseTrend);
+                        // Switch to Trends tab.
+                        context.go(Routes.trends);
                       },
                     ),
                     MetricCard(
                       title: 'Meals',
                       value: caloriesDisplay,
                       unit: 'kcal',
-                      icon: Icons.restaurant_outlined,
+                      icon: LucideIcons.utensils,
                       accentColor: AppThemeTokens.brandSuccess,
                       trendData: const [],
                       onTap: () {
@@ -210,7 +207,7 @@ class DashboardView extends ConsumerWidget {
                       title: 'Medication',
                       value: dosesDisplay,
                       unit: 'Doses',
-                      icon: Icons.medication_outlined,
+                      icon: LucideIcons.pill,
                       accentColor: AppThemeTokens.brandAccent,
                       onTap: () {
                         context.push(Routes.medicationHistory);
@@ -220,7 +217,7 @@ class DashboardView extends ConsumerWidget {
                       title: 'Activity',
                       value: stepsDisplay,
                       unit: 'Steps',
-                      icon: Icons.directions_walk,
+                      icon: LucideIcons.footprints,
                       accentColor: AppThemeTokens.brandSecondary,
                       trendData: const [],
                       onTap: () {
@@ -337,156 +334,8 @@ class DashboardView extends ConsumerWidget {
           ),
         ),
       ),
-
-      // ── Quick Log FAB ──────────────────────────────────────────────────
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showQuickLogSheet(context),
-        label: const Text('Add Entry'),
-        icon: const Icon(Icons.add),
-        backgroundColor: AppThemeTokens.brandPrimary,
-        foregroundColor: AppThemeTokens.textPrimaryInverse,
-      ),
-    );
-  }
-
-  void _showQuickLogSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (_) => const _QuickLogSheet(),
-    );
-  }
-}
-
-// ── Quick Log Bottom Sheet ─────────────────────────────────────────────────────
-
-class _QuickLogSheet extends StatelessWidget {
-  const _QuickLogSheet();
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? AppThemeTokens.bgSurfaceDark : Colors.white,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(AppThemeTokens.radiusLg),
-        ),
-      ),
-      padding: const EdgeInsets.fromLTRB(
-        AppThemeTokens.spaceLg,
-        AppThemeTokens.spaceMd,
-        AppThemeTokens.spaceLg,
-        AppThemeTokens.spaceXl,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: AppThemeTokens.brandAccent.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(height: AppThemeTokens.spaceMd),
-          Text(
-            'Quick Log',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: isDark ? Colors.white : AppThemeTokens.textPrimary,
-            ),
-          ),
-          const SizedBox(height: AppThemeTokens.spaceLg),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _QuickLogButton(
-                icon: Icons.bloodtype,
-                label: 'Glucose',
-                color: AppThemeTokens.brandPrimary,
-                onTap: () {
-                  Navigator.pop(context);
-                  if (context.mounted) context.push(Routes.logGlucose);
-                },
-              ),
-              _QuickLogButton(
-                icon: Icons.restaurant,
-                label: 'Meal',
-                color: AppThemeTokens.brandSuccess,
-                onTap: () {
-                  Navigator.pop(context);
-                  if (context.mounted) context.push(Routes.logMeal);
-                },
-              ),
-              _QuickLogButton(
-                icon: Icons.medication,
-                label: 'Medication',
-                color: AppThemeTokens.brandAccent,
-                onTap: () {
-                  Navigator.pop(context);
-                  if (context.mounted) context.push(Routes.logMedication);
-                },
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Quick Log Button ───────────────────────────────────────────────────────────
-
-class _QuickLogButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _QuickLogButton({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Semantics(
-      label: 'Log $label',
-      button: true,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
-        child: Container(
-          width: 100,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: isDark ? 0.15 : 0.1),
-            borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
-            border: Border.all(color: color.withValues(alpha: 0.3)),
-          ),
-          child: Column(
-            children: [
-              Icon(icon, color: color, size: 28),
-              const SizedBox(height: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                  color: isDark ? Colors.white : AppThemeTokens.textPrimary,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+      // Quick-log entry point lives in the bottom-nav "Log" tab now —
+      // FAB removed to keep the dashboard focused on at-a-glance status.
     );
   }
 }
@@ -698,6 +547,8 @@ class _SummaryStatTile extends StatelessWidget {
         children: [
           Text(
             value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w800,
@@ -706,6 +557,8 @@ class _SummaryStatTile extends StatelessWidget {
           ),
           Text(
             unit,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 12,
               color: isDark ? Colors.white54 : AppThemeTokens.textSecondary,
@@ -714,6 +567,8 @@ class _SummaryStatTile extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 12,
               color: isDark ? Colors.white54 : AppThemeTokens.textSecondary,

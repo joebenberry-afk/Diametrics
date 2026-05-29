@@ -87,6 +87,7 @@ class _FoodScannerViewState extends ConsumerState<FoodScannerView> {
     final result = FoodScannerResult(
       items: state.items,
       totalCarbs: state.totalCarbs,
+      totalFiber: state.totalFiber,
       totalProtein: state.totalProtein,
       totalFat: state.totalFat,
       totalCalories: state.totalCalories,
@@ -140,13 +141,15 @@ class _FoodScannerViewState extends ConsumerState<FoodScannerView> {
             ),
         ],
       ),
-      body: switch (state.status) {
-        FoodScannerStatus.idle => _buildSourcePicker(),
-        FoodScannerStatus.analysing => _buildAnalysing(state),
-        FoodScannerStatus.results => _buildResults(state),
-        FoodScannerStatus.barcodeNotFound => _buildBarcodeNotFound(),
-        FoodScannerStatus.error => _buildError(state),
-      },
+      body: SafeArea(
+        child: switch (state.status) {
+          FoodScannerStatus.idle => _buildSourcePicker(),
+          FoodScannerStatus.analysing => _buildAnalysing(state),
+          FoodScannerStatus.results => _buildResults(state),
+          FoodScannerStatus.barcodeNotFound => _buildBarcodeNotFound(),
+          FoodScannerStatus.error => _buildError(state),
+        },
+      ),
     );
   }
 
@@ -650,19 +653,28 @@ class _MacroInlineCell extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Text(label, style: TextStyle(color: labelColor, fontSize: 8, fontWeight: FontWeight.w700)),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: labelColor, fontSize: 8, fontWeight: FontWeight.w700),
+          ),
           const SizedBox(height: 4),
-          Text.rich(TextSpan(children: [
-            TextSpan(
-              text: value,
-              style: TextStyle(color: valueColor, fontSize: 14, fontWeight: FontWeight.w800, height: 1),
-            ),
-            if (unit.isNotEmpty)
+          Text.rich(
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            TextSpan(children: [
               TextSpan(
-                text: unit,
-                style: TextStyle(color: valueColor, fontSize: 8, fontWeight: FontWeight.w500),
+                text: value,
+                style: TextStyle(color: valueColor, fontSize: 14, fontWeight: FontWeight.w800, height: 1),
               ),
-          ])),
+              if (unit.isNotEmpty)
+                TextSpan(
+                  text: unit,
+                  style: TextStyle(color: valueColor, fontSize: 8, fontWeight: FontWeight.w500),
+                ),
+            ]),
+          ),
         ],
       ),
     );
@@ -694,26 +706,32 @@ class _TotalCell extends StatelessWidget {
         children: [
           Text(
             label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(color: labelColor, fontSize: 8, fontWeight: FontWeight.w600),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 4),
-          Text.rich(TextSpan(children: [
-            TextSpan(
-              text: value,
-              style: TextStyle(
-                color: valueColor,
-                fontSize: isCarbs ? 22 : 16,
-                fontWeight: FontWeight.w800,
-                height: 1,
-              ),
-            ),
-            if (unit.isNotEmpty)
+          Text.rich(
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            TextSpan(children: [
               TextSpan(
-                text: unit,
-                style: TextStyle(color: valueColor, fontSize: 9, fontWeight: FontWeight.w500),
+                text: value,
+                style: TextStyle(
+                  color: valueColor,
+                  fontSize: isCarbs ? 22 : 16,
+                  fontWeight: FontWeight.w800,
+                  height: 1,
+                ),
               ),
-          ])),
+              if (unit.isNotEmpty)
+                TextSpan(
+                  text: unit,
+                  style: TextStyle(color: valueColor, fontSize: 9, fontWeight: FontWeight.w500),
+                ),
+            ]),
+          ),
         ],
       ),
     );

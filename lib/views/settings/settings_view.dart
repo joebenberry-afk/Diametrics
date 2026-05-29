@@ -7,6 +7,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_tokens.dart';
+import '../../models/user_profile.dart';
 import '../../services/reminder_service.dart';
 import '../../viewmodels/profile_viewmodel.dart';
 import '../../router/route_names.dart';
@@ -70,6 +71,11 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
   bool _reminderEnabled = false;
   List<TimeOfDay> _reminderTimes = [];
   double _textScale = 1.0;
+
+  /// Drill-down state. `null` = hub menu visible. Non-null = a section's
+  /// detail page is visible. Drives the iOS-style Settings navigation
+  /// without needing extra GoRouter routes.
+  String? _activeSection;
 
   @override
   void initState() {
@@ -465,85 +471,116 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Scaffold(
-      backgroundColor: isDark
-          ? AppThemeTokens.bgBackgroundDark
-          : AppThemeTokens.bgBackground,
-      appBar: AppBar(
+    final inSection = _activeSection != null;
+    final appBarTitle = inSection ? _sectionTitle(_activeSection!) : 'Profile';
+
+    return PopScope(
+      // Intercept system back when a section is open — pop back to the hub
+      // instead of leaving the Profile tab.
+      canPop: !inSection,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && inSection) {
+          setState(() => _activeSection = null);
+        }
+      },
+      child: Scaffold(
         backgroundColor: isDark
-            ? AppThemeTokens.bgSurfaceDark
-            : AppThemeTokens.bgSurface,
-        elevation: 0,
-        title: Text(
-          'Settings',
-          style: theme.textTheme.headlineSmall?.copyWith(
-            color: isDark ? Colors.white : AppThemeTokens.textPrimary,
-            fontWeight: FontWeight.w700,
+            ? AppThemeTokens.bgBackgroundDark
+            : AppThemeTokens.bgBackground,
+        appBar: AppBar(
+          backgroundColor: isDark
+              ? AppThemeTokens.bgSurfaceDark
+              : AppThemeTokens.bgSurface,
+          elevation: 0,
+          automaticallyImplyLeading: false,
+          title: Text(
+            appBarTitle,
+            style: theme.textTheme.headlineSmall?.copyWith(
+              color: isDark ? Colors.white : AppThemeTokens.textPrimary,
+              fontWeight: FontWeight.w700,
+            ),
           ),
-        ),
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back_ios_new_rounded,
-            color: isDark ? Colors.white : AppThemeTokens.textPrimary,
-          ),
-          onPressed: () => context.pop(),
-        ),
-        actions: [
-          if (_isDirty)
-            TextButton(
-              onPressed: _isSaving ? null : _save,
-              child: Text(
-                'Save',
-                style: TextStyle(
-                  color: isDark
-                      ? AppThemeTokens.brandAccent
-                      : AppThemeTokens.brandSecondary,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 16,
+          leading: inSection
+              ? IconButton(
+                  icon: Icon(
+                    Icons.arrow_back_ios_new_rounded,
+                    color: isDark ? Colors.white : AppThemeTokens.textPrimary,
+                  ),
+                  tooltip: 'Back to Profile',
+                  onPressed: () => setState(() => _activeSection = null),
+                )
+              : null,
+          actions: [
+            if (_isDirty && inSection)
+              TextButton(
+                onPressed: _isSaving ? null : _save,
+                child: Text(
+                  'Save',
+                  style: TextStyle(
+                    color: isDark
+                        ? AppThemeTokens.brandAccent
+                        : AppThemeTokens.brandSecondary,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                  ),
                 ),
               ),
-            ),
-        ],
-      ),
-      body: profileAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Text(
-            'Could not load profile: $e',
-            style: const TextStyle(color: AppThemeTokens.error),
-          ),
+          ],
         ),
-        data: (profile) {
-          if (profile != null) {
-            if (_lastPopulatedAt == null) {
-              // First load — populate everything.
-              _lastPopulatedAt = profile.updatedAt;
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) _populateFromProfile(profile);
-              });
-            } else if (profile.updatedAt != _lastPopulatedAt && !_isDirty) {
-              // Profile was updated externally (e.g. EKF tuning).
-              // Only refresh ML parameters when the user hasn't started
-              // editing, to avoid overwriting in-progress changes.
-              _lastPopulatedAt = profile.updatedAt;
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (!mounted) return;
-                setState(() {
-                  _metabolicClearanceRate = profile.metabolicClearanceRate;
-                  _insulinSensitivityFactor = profile.insulinSensitivityFactor;
-                  _absorptionDelayBase = profile.absorptionDelayBase;
+        body: profileAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => Center(
+            child: Text(
+              'Could not load profile: $e',
+              style: const TextStyle(color: AppThemeTokens.error),
+            ),
+          ),
+          data: (profile) {
+            if (profile != null) {
+              if (_lastPopulatedAt == null) {
+                // First load — populate everything.
+                _lastPopulatedAt = profile.updatedAt;
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) _populateFromProfile(profile);
                 });
-              });
+              } else if (profile.updatedAt != _lastPopulatedAt && !_isDirty) {
+                // Profile was updated externally (e.g. EKF tuning).
+                // Only refresh ML parameters when the user hasn't started
+                // editing, to avoid overwriting in-progress changes.
+                _lastPopulatedAt = profile.updatedAt;
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (!mounted) return;
+                  setState(() {
+                    _metabolicClearanceRate = profile.metabolicClearanceRate;
+                    _insulinSensitivityFactor = profile.insulinSensitivityFactor;
+                    _absorptionDelayBase = profile.absorptionDelayBase;
+                  });
+                });
+              }
             }
-          }
-          return _buildForm(isDark, theme);
-        },
+            return inSection
+                ? _buildSectionView(_activeSection!, isDark, theme)
+                : _buildHub(isDark, theme, profile);
+          },
+        ),
+        bottomNavigationBar: _isDirty && inSection
+            ? _SaveBar(isSaving: _isSaving, onSave: _save)
+            : null,
       ),
-      bottomNavigationBar: _isDirty
-          ? _SaveBar(isSaving: _isSaving, onSave: _save)
-          : null,
     );
   }
+
+  String _sectionTitle(String id) => switch (id) {
+        'personal' => 'Personal Information',
+        'diabetes' => 'Diabetes Profile',
+        'treatment' => 'Treatment',
+        'targets' => 'Glucose Targets',
+        'reminders' => 'Medication Reminders',
+        'display' => 'Display',
+        'advanced' => 'Advanced Model Parameters',
+        'safety' => 'Safety',
+        _ => 'Profile',
+      };
 
   Widget _buildSettingsInsulinDropdown(bool isDark, ThemeData theme) {
     return ListTile(
@@ -613,22 +650,141 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
     );
   }
 
-  Widget _buildForm(bool isDark, ThemeData theme) {
+  /// Iconography for each Settings hub row.
+  IconData _sectionIcon(String id) => switch (id) {
+        'personal' => Icons.person_outline_rounded,
+        'diabetes' => Icons.medical_information_outlined,
+        'treatment' => Icons.medication_outlined,
+        'targets' => Icons.track_changes_rounded,
+        'reminders' => Icons.alarm_rounded,
+        'display' => Icons.text_fields_rounded,
+        'advanced' => Icons.warning_amber_rounded,
+        'safety' => Icons.health_and_safety_outlined,
+        _ => Icons.settings,
+      };
+
+  /// One-line description shown under each hub row. Keeps users oriented
+  /// before they drill in (iOS Settings preview pattern).
+  String _sectionPreview(String id, UserProfile? profile) {
+    if (profile == null) return '';
+    return switch (id) {
+      'personal' => '${profile.name.isNotEmpty ? profile.name : "Patient"} · '
+            '${profile.age}y · ${profile.gender}',
+      'diabetes' => profile.diabetesType.isEmpty
+          ? 'Not set'
+          : '${profile.diabetesType} · ${profile.preferredGlucoseUnit}',
+      'treatment' => _treatmentPreview(profile),
+      'targets' => _targetsPreview(profile),
+      'reminders' =>
+          _reminderEnabled ? '${_reminderTimes.length} time(s)' : 'Off',
+      'display' => 'Text scale ${_textScale.toStringAsFixed(2)}×',
+      'advanced' => 'Auto-tuned model parameters',
+      'safety' => 'Emergency contacts, SOS dialer',
+      _ => '',
+    };
+  }
+
+  String _treatmentPreview(UserProfile p) {
+    final parts = <String>[];
+    if (p.usesInsulin) parts.add('Insulin');
+    if (p.usesPills) parts.add('Pills');
+    if (p.usesCgm) parts.add('CGM');
+    return parts.isEmpty ? 'None set' : parts.join(' · ');
+  }
+
+  String _targetsPreview(UserProfile p) {
+    final unit = p.preferredGlucoseUnit;
+    final factor = unit == 'mmol/L' ? 1 / 18.0182 : 1.0;
+    final dp = unit == 'mmol/L' ? 1 : 0;
+    return '${(p.targetGlucoseMin * factor).toStringAsFixed(dp)}'
+        '–${(p.targetGlucoseMax * factor).toStringAsFixed(dp)} $unit';
+  }
+
+  /// Renders the Settings landing screen — Profile header + drill-down list.
+  Widget _buildHub(bool isDark, ThemeData theme, UserProfile? profile) {
+    const sections = [
+      ('personal', 'Personal Information'),
+      ('diabetes', 'Diabetes Profile'),
+      ('treatment', 'Treatment'),
+      ('targets', 'Glucose Targets'),
+      ('reminders', 'Medication Reminders'),
+      ('display', 'Display'),
+      ('advanced', 'Advanced Model'),
+      ('safety', 'Safety'),
+    ];
+
+    return ListView(
+      padding: const EdgeInsets.all(AppThemeTokens.spaceLg),
+      children: [
+        _ProfileHeader(nameCtrl: _nameCtrl, gender: _gender),
+        const SizedBox(height: AppThemeTokens.spaceLg),
+        Container(
+          decoration: BoxDecoration(
+            color: isDark ? AppThemeTokens.bgSurfaceDark : Colors.white,
+            borderRadius: BorderRadius.circular(AppThemeTokens.radiusLg),
+            border: Border.all(
+              color: isDark
+                  ? AppThemeTokens.brandSecondary.withValues(alpha: 0.25)
+                  : const Color(0xFFE5E7EB),
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            children: [
+              for (var i = 0; i < sections.length; i++) ...[
+                if (i > 0) const Divider(height: 1),
+                _HubTile(
+                  icon: _sectionIcon(sections[i].$1),
+                  title: sections[i].$2,
+                  subtitle: _sectionPreview(sections[i].$1, profile),
+                  warning: sections[i].$1 == 'advanced',
+                  onTap: () => setState(() => _activeSection = sections[i].$1),
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: AppThemeTokens.spaceXl),
+      ],
+    );
+  }
+
+  /// Renders a single Settings section as its own scrollable form.
+  Widget _buildSectionView(String id, bool isDark, ThemeData theme) {
+    final children = switch (id) {
+      'personal' => _personalChildren(isDark, theme),
+      'diabetes' => _diabetesChildren(isDark, theme),
+      'treatment' => _treatmentChildren(isDark, theme),
+      'targets' => _targetsChildren(isDark, theme),
+      'reminders' => _remindersChildren(isDark, theme),
+      'display' => _displayChildren(isDark, theme),
+      'advanced' => _advancedChildren(isDark, theme),
+      'safety' => _safetyChildren(isDark, theme),
+      _ => <Widget>[],
+    };
     return Form(
       key: _formKey,
       onChanged: _markDirty,
       child: ListView(
         padding: const EdgeInsets.all(AppThemeTokens.spaceLg),
         children: [
-          _ProfileHeader(nameCtrl: _nameCtrl, gender: _gender),
-          const SizedBox(height: AppThemeTokens.spaceLg),
+          ...children,
+          const SizedBox(height: AppThemeTokens.spaceXl),
+        ],
+      ),
+    );
+  }
 
-          // ── Personal Information ───────────────────────────────────────
-          _SectionCard(
-            title: 'Personal Information',
-            icon: Icons.person_outline_rounded,
-            isDark: isDark,
-            children: [
+  // ── Section content builders (extracted from the legacy single-page form
+  // so each section can be rendered on its own drill-down screen).
+
+  List<Widget> _personalChildren(bool isDark, ThemeData theme) {
+    return [
+      _SectionCard(
+        title: 'Personal Information',
+        icon: Icons.person_outline_rounded,
+        isDark: isDark,
+        children: [
               _SettingsTextField(
                 controller: _nameCtrl,
                 label: 'Full Name',
@@ -776,11 +932,12 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
               ),
             ],
           ),
+    ];
+  }
 
-          const SizedBox(height: AppThemeTokens.spaceMd),
-
-          // ── Diabetes Profile ───────────────────────────────────────────
-          _SectionCard(
+  List<Widget> _diabetesChildren(bool isDark, ThemeData theme) {
+    return [
+      _SectionCard(
             title: 'Diabetes Profile',
             icon: Icons.medical_information_outlined,
             isDark: isDark,
@@ -821,11 +978,12 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
               ),
             ],
           ),
+    ];
+  }
 
-          const SizedBox(height: AppThemeTokens.spaceMd),
-
-          // ── Treatment ─────────────────────────────────────────────────
-          _SectionCard(
+  List<Widget> _treatmentChildren(bool isDark, ThemeData theme) {
+    return [
+      _SectionCard(
             title: 'Treatment',
             icon: Icons.medication_outlined,
             isDark: isDark,
@@ -866,11 +1024,12 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
               ),
             ],
           ),
+    ];
+  }
 
-          const SizedBox(height: AppThemeTokens.spaceMd),
-
-          // ── Glucose Targets ────────────────────────────────────────────
-          _SectionCard(
+  List<Widget> _targetsChildren(bool isDark, ThemeData theme) {
+    return [
+      _SectionCard(
             title: 'Glucose Targets',
             icon: Icons.track_changes_rounded,
             isDark: isDark,
@@ -958,11 +1117,12 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
               ),
             ],
           ),
+    ];
+  }
 
-          const SizedBox(height: AppThemeTokens.spaceMd),
-
-          // ── Medication Reminders ───────────────────────────────────────
-          _SectionCard(
+  List<Widget> _remindersChildren(bool isDark, ThemeData theme) {
+    return [
+      _SectionCard(
             title: 'Medication Reminders',
             icon: Icons.alarm_rounded,
             isDark: isDark,
@@ -1033,11 +1193,12 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
               ],
             ],
           ),
+    ];
+  }
 
-          const SizedBox(height: AppThemeTokens.spaceMd),
-
-          // ── Display Settings ──────────────────────────────────────────
-          _SectionCard(
+  List<Widget> _displayChildren(bool isDark, ThemeData theme) {
+    return [
+      _SectionCard(
             title: 'Display',
             icon: Icons.text_fields_rounded,
             isDark: isDark,
@@ -1073,11 +1234,12 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
               ),
             ],
           ),
+    ];
+  }
 
-          const SizedBox(height: AppThemeTokens.spaceMd),
-
-          // ── Advanced Model Parameters ──────────────────────────────────
-          ClipRRect(
+  List<Widget> _advancedChildren(bool isDark, ThemeData theme) {
+    return [
+      ClipRRect(
             borderRadius: BorderRadius.circular(AppThemeTokens.radiusLg),
             child: Theme(
               data: Theme.of(
@@ -1169,49 +1331,139 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
             ),
           ),
 
-          const SizedBox(height: AppThemeTokens.spaceMd),
+    ];
+  }
 
-          _SectionCard(
-            title: 'Safety',
-            icon: Icons.health_and_safety_outlined,
-            isDark: isDark,
+  List<Widget> _safetyChildren(bool isDark, ThemeData theme) {
+    return [
+      _SectionCard(
+        title: 'Safety',
+        icon: Icons.health_and_safety_outlined,
+        isDark: isDark,
+        children: [
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(
+              LucideIcons.phoneCall,
+              color: AppThemeTokens.error,
+            ),
+            title: Text(
+              'Emergency Contacts',
+              style: TextStyle(
+                color: isDark ? Colors.white : AppThemeTokens.textPrimary,
+                fontWeight: FontWeight.w600,
+                fontSize: 15,
+              ),
+            ),
+            subtitle: Text(
+              'Manage who to call in an emergency',
+              style: TextStyle(
+                color: isDark
+                    ? Colors.white60
+                    : AppThemeTokens.textSecondary,
+                fontSize: 14,
+              ),
+            ),
+            trailing: const Icon(
+              Icons.chevron_right_rounded,
+              color: AppThemeTokens.textSecondary,
+            ),
+            onTap: () {
+              context.push(Routes.settingsEmergencyContacts);
+            },
+          ),
+        ],
+      ),
+    ];
+  }
+}
+
+/// Single drill-down row used on the Settings hub list.
+class _HubTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final bool warning;
+  final VoidCallback onTap;
+
+  const _HubTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+    this.warning = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accent = warning
+        ? const Color(0xFFD97706)
+        : AppThemeTokens.brandPrimary;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppThemeTokens.spaceLg,
+            vertical: AppThemeTokens.spaceMd,
+          ),
+          child: Row(
             children: [
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(
-                  LucideIcons.phoneCall,
-                  color: AppThemeTokens.error,
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.12),
+                  borderRadius:
+                      BorderRadius.circular(AppThemeTokens.radiusSm),
                 ),
-                title: Text(
-                  'Emergency Contacts',
-                  style: TextStyle(
-                    color: isDark ? Colors.white : AppThemeTokens.textPrimary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15,
-                  ),
+                child: Icon(icon, color: accent, size: 20),
+              ),
+              const SizedBox(width: AppThemeTokens.spaceMd),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: isDark
+                            ? Colors.white
+                            : AppThemeTokens.textPrimary,
+                      ),
+                    ),
+                    if (subtitle.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: isDark
+                              ? Colors.white60
+                              : AppThemeTokens.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-                subtitle: Text(
-                  'Manage who to call in an emergency',
-                  style: TextStyle(
-                    color: isDark
-                        ? Colors.white60
-                        : AppThemeTokens.textSecondary,
-                    fontSize: 14,
-                  ),
-                ),
-                trailing: const Icon(
-                  Icons.chevron_right_rounded,
-                  color: AppThemeTokens.textSecondary,
-                ),
-                onTap: () {
-                  context.push(Routes.settingsEmergencyContacts);
-                },
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: isDark
+                    ? Colors.white38
+                    : AppThemeTokens.textSecondary,
               ),
             ],
           ),
-
-          const SizedBox(height: AppThemeTokens.spaceXl),
-        ],
+        ),
       ),
     );
   }
@@ -1261,6 +1513,8 @@ class _ProfileHeader extends StatelessWidget {
               children: [
                 Text(
                   displayName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 20,
@@ -1270,6 +1524,8 @@ class _ProfileHeader extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   'Tap a field below to edit your profile',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.75),
                     fontSize: 14,
@@ -1445,37 +1701,44 @@ class _GenderSelector extends StatelessWidget {
             return Expanded(
               child: Padding(
                 padding: EdgeInsets.only(right: g != options.last ? 8 : 0),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
-                  onTap: () => onChanged(g),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    decoration: BoxDecoration(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AppThemeTokens.brandSecondary
+                        : (isDark
+                              ? Colors.white.withValues(alpha: 0.10)
+                              : AppThemeTokens.brandPrimary.withValues(
+                                  alpha: 0.06,
+                                )),
+                    borderRadius: BorderRadius.circular(
+                      AppThemeTokens.radiusMd,
+                    ),
+                    border: Border.all(
                       color: isSelected
                           ? AppThemeTokens.brandSecondary
-                          : (isDark
-                                ? Colors.white.withValues(alpha: 0.10)
-                                : AppThemeTokens.brandPrimary.withValues(
-                                    alpha: 0.06,
-                                  )),
-                      borderRadius: BorderRadius.circular(
-                        AppThemeTokens.radiusMd,
-                      ),
-                      border: Border.all(
-                        color: isSelected
-                            ? AppThemeTokens.brandSecondary
-                            : AppThemeTokens.brandAccent.withValues(alpha: 0.5),
-                        width: isSelected ? 2 : 1,
-                      ),
+                          : AppThemeTokens.brandAccent.withValues(alpha: 0.5),
+                      width: isSelected ? 2 : 1,
                     ),
-                    child: Center(
-                      child: Text(
-                        g,
-                        style: TextStyle(
-                          color: isSelected ? Colors.white : inactiveText,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
+                  ),
+                  // Material+InkWell INSIDE AnimatedContainer so the ripple
+                  // paints on top of the colored fill (otherwise hidden).
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
+                      onTap: () => onChanged(g),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        child: Center(
+                          child: Text(
+                            g,
+                            style: TextStyle(
+                              color: isSelected ? Colors.white : inactiveText,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -1592,35 +1855,38 @@ class _DiabetesTypeSelector extends StatelessWidget {
           physics: const NeverScrollableScrollPhysics(),
           children: _types.map((t) {
             final isSelected = selected == t;
-            return InkWell(
-              borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
-              onTap: () => onChanged(t),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 150),
-                decoration: BoxDecoration(
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? AppThemeTokens.brandSecondary
+                    : (isDark
+                          ? Colors.white.withValues(alpha: 0.10)
+                          : AppThemeTokens.brandPrimary.withValues(
+                              alpha: 0.06,
+                            )),
+                borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
+                border: Border.all(
                   color: isSelected
                       ? AppThemeTokens.brandSecondary
-                      : (isDark
-                            ? Colors.white.withValues(alpha: 0.10)
-                            : AppThemeTokens.brandPrimary.withValues(
-                                alpha: 0.06,
-                              )),
-                  borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
-                  border: Border.all(
-                    color: isSelected
-                        ? AppThemeTokens.brandSecondary
-                        : AppThemeTokens.brandAccent.withValues(alpha: 0.5),
-                    width: isSelected ? 2 : 1,
-                  ),
+                      : AppThemeTokens.brandAccent.withValues(alpha: 0.5),
+                  width: isSelected ? 2 : 1,
                 ),
-                child: Center(
-                  child: Text(
-                    t,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: isSelected ? Colors.white : inactiveText,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
+                  onTap: () => onChanged(t),
+                  child: Center(
+                    child: Text(
+                      t,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: isSelected ? Colors.white : inactiveText,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
                     ),
                   ),
                 ),
@@ -1714,37 +1980,42 @@ class _GlucoseUnitToggle extends StatelessWidget {
             return Expanded(
               child: Padding(
                 padding: EdgeInsets.only(right: unit == 'mg/dL' ? 8 : 0),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
-                  onTap: () => onChanged(unit),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    decoration: BoxDecoration(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AppThemeTokens.brandSecondary
+                        : (isDark
+                              ? Colors.white.withValues(alpha: 0.08)
+                              : AppThemeTokens.brandPrimary.withValues(
+                                  alpha: 0.06,
+                                )),
+                    borderRadius: BorderRadius.circular(
+                      AppThemeTokens.radiusMd,
+                    ),
+                    border: Border.all(
                       color: isSelected
                           ? AppThemeTokens.brandSecondary
-                          : (isDark
-                                ? Colors.white.withValues(alpha: 0.08)
-                                : AppThemeTokens.brandPrimary.withValues(
-                                    alpha: 0.06,
-                                  )),
-                      borderRadius: BorderRadius.circular(
-                        AppThemeTokens.radiusMd,
-                      ),
-                      border: Border.all(
-                        color: isSelected
-                            ? AppThemeTokens.brandSecondary
-                            : AppThemeTokens.brandAccent.withValues(alpha: 0.4),
-                        width: isSelected ? 2 : 1,
-                      ),
+                          : AppThemeTokens.brandAccent.withValues(alpha: 0.4),
+                      width: isSelected ? 2 : 1,
                     ),
-                    child: Center(
-                      child: Text(
-                        unit,
-                        style: TextStyle(
-                          color: isSelected ? Colors.white : inactiveText,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 15,
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
+                      onTap: () => onChanged(unit),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        child: Center(
+                          child: Text(
+                            unit,
+                            style: TextStyle(
+                              color: isSelected ? Colors.white : inactiveText,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15,
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -2120,23 +2391,26 @@ class _MetabolicParamsSectionState extends State<_MetabolicParamsSection> {
                 ),
               ),
               // Lock / Unlock toggle chip
-              InkWell(
-                borderRadius: BorderRadius.circular(AppThemeTokens.radiusFull),
-                onTap: _unlocked
-                    ? () => setState(() => _unlocked = false)
-                    : _requestUnlock,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 250),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                decoration: BoxDecoration(
+                  color: _unlocked ? const Color(0xFFD1FAE5) : amberLight,
+                  borderRadius: BorderRadius.circular(
+                    AppThemeTokens.radiusFull,
                   ),
-                  decoration: BoxDecoration(
-                    color: _unlocked ? const Color(0xFFD1FAE5) : amberLight,
-                    borderRadius: BorderRadius.circular(
-                      AppThemeTokens.radiusFull,
-                    ),
-                  ),
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(AppThemeTokens.radiusFull),
+                    onTap: _unlocked
+                        ? () => setState(() => _unlocked = false)
+                        : _requestUnlock,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -2155,6 +2429,8 @@ class _MetabolicParamsSectionState extends State<_MetabolicParamsSection> {
                         ),
                       ),
                     ],
+                  ),
+                    ),
                   ),
                 ),
               ),

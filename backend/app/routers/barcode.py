@@ -33,7 +33,7 @@ async def barcode_lookup(
 
     Returns:
         { "found": true, "name": "...", "portion": "...",
-          "carbs_g": 24.5, "protein_g": 2.6, "fat_g": 0.3,
+          "carbs_g": 24.5, "fiber_g": 1.8, "protein_g": 2.6, "fat_g": 0.3,
           "calories": 114.0, "source": "Open Food Facts" }
         or
         { "found": false }
@@ -89,18 +89,21 @@ def _parse_product(product: dict) -> dict | None:
     protein = _nutriment(nutriments, "proteins")
     fat = _nutriment(nutriments, "fat")
     calories = _nutriment(nutriments, "energy-kcal")
+    fiber = _nutriment(nutriments, "fiber")
 
     if carbs == 0 and protein == 0 and fat == 0:
         carbs_100 = _nutriment(nutriments, "carbohydrates_100g")
         protein_100 = _nutriment(nutriments, "proteins_100g")
         fat_100 = _nutriment(nutriments, "fat_100g")
         cal_100 = _nutriment(nutriments, "energy-kcal_100g")
+        fiber_100 = _nutriment(nutriments, "fiber_100g")
         grams = _parse_serving_grams(serving_size)
         scale = grams / 100.0 if grams > 0 else 1.0
         carbs = carbs_100 * scale
         protein = protein_100 * scale
         fat = fat_100 * scale
         calories = cal_100 * scale
+        fiber = fiber_100 * scale
 
     # Safety clamp (UI defence — mirrors Flutter's original clamping)
     return {
@@ -108,6 +111,7 @@ def _parse_product(product: dict) -> dict | None:
         "name": name,
         "portion": serving_size,
         "carbs_g": min(max(carbs, 0.0), 500.0),
+        "fiber_g": min(max(fiber, 0.0), 100.0),
         "protein_g": min(max(protein, 0.0), 300.0),
         "fat_g": min(max(fat, 0.0), 300.0),
         "calories": min(max(calories, 0.0), 3000.0),

@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:diametrics/services/backend_food_service.dart';
 import 'package:diametrics/src/domain/entities/food_item.dart';
 import 'package:diametrics/src/domain/entities/food_scanner_result.dart';
 import 'package:diametrics/src/domain/entities/food_analysis_result.dart';
@@ -69,6 +72,7 @@ void main() {
       final result = FoodScannerResult(
         items: state.items,
         totalCarbs: state.totalCarbs,
+        totalFiber: state.totalFiber,
         totalProtein: state.totalProtein,
         totalFat: state.totalFat,
         totalCalories: state.totalCalories,
@@ -115,6 +119,61 @@ void main() {
           reason: 'weightG preserved for item 0');
       expect(state.items[1].weightG, 100.0,
           reason: 'weightG preserved for item 1');
+    });
+  });
+
+  // The backend-proxy AI path (BackendFoodService.analyzeImage) reconstructs
+  // each FoodItem with UI-defence clamps in parseFoodAnalysisResponse. This is
+  // the only path that previously dropped weightG; the on-device Gemini path
+  // uses FoodItem.fromJson directly and was unaffected.
+  group('parseFoodAnalysisResponse —', () {
+    String backendBody(Map<String, dynamic> item) => jsonEncode({
+          'items': [item],
+          'summary': 'Meal analyzed',
+        });
+
+    test('weightG survives the backend clamp-reconstruction path', () {
+      final result = BackendFoodService.parseFoodAnalysisResponse(backendBody({
+        'name': 'Basmati Rice',
+        'portion': '1 cup cooked',
+        'carbs_g': 45.6,
+        'fiber_g': 0.6,
+        'protein_g': 4.2,
+        'fat_g': 0.4,
+        'calories': 202.0,
+        'weight_g': 186.0,
+        'source': 'AI Estimate',
+      }));
+
+      expect(result.items.first.weightG, 186.0,
+          reason:
+              'weightG must not be dropped by parseFoodAnalysisResponse — '
+              'FoodRagService.enrichWithLocalData relies on it for portion scaling');
+    });
+
+    test('weightG is clamped to the 0..600 ceiling', () {
+      final result = BackendFoodService.parseFoodAnalysisResponse(backendBody({
+        'name': 'Giant Plate',
+        'portion': '1 serving',
+        'carbs_g': 10.0,
+        'weight_g': 999.0,
+        'source': 'AI Estimate',
+      }));
+
+      expect(result.items.first.weightG, 600.0,
+          reason: 'weightG ceiling must match RAG servingG clamp (10..600)');
+    });
+
+    test('missing weight_g defaults to 0.0 (portion-string fallback path)', () {
+      final result = BackendFoodService.parseFoodAnalysisResponse(backendBody({
+        'name': 'Mystery Snack',
+        'portion': '2 pieces',
+        'carbs_g': 30.0,
+        'source': 'AI Estimate',
+      }));
+
+      expect(result.items.first.weightG, 0.0,
+          reason: 'no AI weight estimate -> 0.0 so RAG uses quantity parsing');
     });
   });
 }

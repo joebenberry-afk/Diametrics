@@ -98,7 +98,7 @@ class ProjectionResultView extends ConsumerWidget {
                 child: result.points.isEmpty
                     ? const Center(child: Text('No projection data available'))
                     : LineChart(
-                        _buildChartData(result.points, _riskColor(), targetMin, targetMax),
+                        _buildChartData(result.points, _riskColor(), targetMin, targetMax, isDark),
                       ),
               ),
 
@@ -291,7 +291,13 @@ class ProjectionResultView extends ConsumerWidget {
     Color riskColor,
     double targetMinMgdl,
     double targetMaxMgdl,
+    bool isDark,
   ) {
+    // Theme-aware axis label color — Colors.grey is invisible on dark surfaces.
+    final axisColor = isDark ? Colors.white70 : Colors.grey.shade700;
+    final gridColor = isDark
+        ? Colors.white.withValues(alpha: 0.12)
+        : Colors.grey.withValues(alpha: 0.2);
     if (points.isEmpty) return LineChartData();
 
     final userPoints = points.map((p) => FlSpot(p.timeMinutes.toDouble(), _toUser(p.glucoseValue))).toList();
@@ -402,11 +408,11 @@ class ProjectionResultView extends ConsumerWidget {
         horizontalInterval: interval,
         verticalInterval: 60,
         getDrawingHorizontalLine: (value) => FlLine(
-          color: Colors.grey.withValues(alpha: 0.2),
+          color: gridColor,
           strokeWidth: 1,
         ),
         getDrawingVerticalLine: (value) => FlLine(
-          color: Colors.grey.withValues(alpha: 0.2),
+          color: gridColor,
           strokeWidth: 1,
         ),
       ),
@@ -422,7 +428,7 @@ class ProjectionResultView extends ConsumerWidget {
             getTitlesWidget: (value, meta) {
               return Text(
                 _isMmol ? value.toStringAsFixed(1) : value.toInt().toString(),
-                style: const TextStyle(color: Colors.grey, fontSize: 12),
+                style: TextStyle(color: axisColor, fontSize: 12),
                 textAlign: TextAlign.right,
               );
             },
@@ -434,12 +440,12 @@ class ProjectionResultView extends ConsumerWidget {
             interval: 60,
             reservedSize: 30,
             getTitlesWidget: (value, meta) {
-              if (value == 0) return const Text('0', style: TextStyle(color: Colors.grey, fontSize: 12));
+              if (value == 0) return Text('0', style: TextStyle(color: axisColor, fontSize: 12));
               return Padding(
                 padding: const EdgeInsets.only(top: 8.0),
                 child: Text(
                   '${(value / 60).toInt()}hr',
-                  style: const TextStyle(color: Colors.grey, fontSize: 12),
+                  style: TextStyle(color: axisColor, fontSize: 12),
                 ),
               );
             },

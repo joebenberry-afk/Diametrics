@@ -113,6 +113,10 @@ class _SplashScreenState extends State<SplashScreen>
               ),
               child: Image.asset(
                 'assets/icons/app_icon.png',
+                // Source bitmap is 329×309 — declaring scale 2.0 tells Flutter
+                // to treat it as a 2x asset so the renderer downsamples cleanly
+                // instead of upscaling at a 160px display target.
+                scale: 2.0,
                 width: 160,
                 height: 160,
                 fit: BoxFit.contain,

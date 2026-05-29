@@ -139,6 +139,7 @@ def _build_gemini_request(image_base64: str, mime_type: str) -> dict:
                             '      "name": "Doubles",\n'
                             '      "portion": "6 doubles",\n'
                             '      "carbs_g": 210.0,\n'
+                            '      "fiber_g": 18.0,\n'
                             '      "calories": 1050,\n'
                             '      "protein_g": 30.0,\n'
                             '      "fat_g": 42.0\n'
@@ -184,6 +185,7 @@ def _build_gemini_request(image_base64: str, mime_type: str) -> dict:
                                 "name": {"type": "STRING"},
                                 "portion": {"type": "STRING"},
                                 "carbs_g": {"type": "NUMBER"},
+                                "fiber_g": {"type": "NUMBER"},
                                 "calories": {"type": "NUMBER"},
                                 "protein_g": {"type": "NUMBER"},
                                 "fat_g": {"type": "NUMBER"},
@@ -192,6 +194,7 @@ def _build_gemini_request(image_base64: str, mime_type: str) -> dict:
                                 "name",
                                 "portion",
                                 "carbs_g",
+                                "fiber_g",
                                 "calories",
                                 "protein_g",
                                 "fat_g",
@@ -258,6 +261,7 @@ def _parse_gemini_response(response_text: str) -> dict:
         name = str(item.get("name", ""))[:100]
         portion = str(item.get("portion", ""))[:100]
         carbs_g = float(item.get("carbs_g") or 0)
+        fiber_g = float(item.get("fiber_g") or 0)
         calories = float(item.get("calories") or 0)
         protein_g = float(item.get("protein_g") or 0)
         fat_g = float(item.get("fat_g") or 0)
@@ -266,6 +270,7 @@ def _parse_gemini_response(response_text: str) -> dict:
             "name": name,
             "portion": portion,
             "carbs_g": carbs_g,
+            "fiber_g": fiber_g,
             "calories": calories,
             "protein_g": protein_g,
             "fat_g": fat_g,

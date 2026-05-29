@@ -67,6 +67,14 @@ void main() {
     expect(state.totalCarbs, 60.0);
   });
 
+  test('totalFiber sums fiberGrams across all items', () {
+    const state = FoodScannerState(items: [
+      FoodItem(name: 'Black Beans', carbsGrams: 30.0, fiberGrams: 9.0),
+      FoodItem(name: 'Whole Wheat Bread', carbsGrams: 24.0, fiberGrams: 2.5),
+    ]);
+    expect(state.totalFiber, closeTo(11.5, 0.001));
+  });
+
   test('submitManualEntry transitions to results', () {
     const manual = FoodItem(
       name: 'Bread',

@@ -86,6 +86,8 @@ class AccountCard extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         userStatus,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: AppThemeTokens.brandSuccess,
                           fontWeight: FontWeight.w600,

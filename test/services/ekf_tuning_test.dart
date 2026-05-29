@@ -78,6 +78,8 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(_testProfile());
+    // Needed so any() can match the DateTime arg of the windowed repo queries.
+    registerFallbackValue(DateTime(2024, 1, 1));
   });
 
   setUp(() {
@@ -188,7 +190,7 @@ void main() {
       when(() => mockUserRepo.getProfile())
           .thenAnswer((_) async => _testProfile());
       // No meal logs at all
-      when(() => mockDataRepo.getMealLogs()).thenAnswer((_) async => []);
+      when(() => mockDataRepo.getMealLogsSince(any())).thenAnswer((_) async => []);
 
       final glucoseLog = GlucoseLog(
         id: 'gl-4',
@@ -221,10 +223,10 @@ void main() {
       final mealTime = DateTime(2024, 6, 1, 12, 0);
       when(() => mockUserRepo.getProfile())
           .thenAnswer((_) async => _testProfile());
-      when(() => mockDataRepo.getMealLogs())
+      when(() => mockDataRepo.getMealLogsSince(any()))
           .thenAnswer((_) async => [_testMeal(timestamp: mealTime)]);
       // Only a fasting reading 2 hours before -- outside 30-min window
-      when(() => mockDataRepo.getGlucoseLogs()).thenAnswer((_) async => [
+      when(() => mockDataRepo.getGlucoseLogsSince(any())).thenAnswer((_) async => [
         GlucoseLog(
           id: 'gl-wrong',
           timestamp: mealTime.subtract(const Duration(hours: 2)),
@@ -265,13 +267,13 @@ void main() {
           .thenAnswer((_) async => _testProfile());
 
       // 3 overlapping meals between mealTime and readingTime (> _maxSuperpositionMeals=2)
-      when(() => mockDataRepo.getMealLogs()).thenAnswer((_) async => [
+      when(() => mockDataRepo.getMealLogsSince(any())).thenAnswer((_) async => [
         _testMeal(id: 'meal-0', timestamp: mealTime),
         _testMeal(id: 'meal-1', timestamp: mealTime.add(const Duration(minutes: 30))),
         _testMeal(id: 'meal-2', timestamp: mealTime.add(const Duration(minutes: 60))),
         _testMeal(id: 'meal-3', timestamp: mealTime.add(const Duration(minutes: 90))),
       ]);
-      when(() => mockDataRepo.getGlucoseLogs()).thenAnswer((_) async => [
+      when(() => mockDataRepo.getGlucoseLogsSince(any())).thenAnswer((_) async => [
         _preMealGlucose(mealTime: mealTime),
       ]);
 
@@ -310,9 +312,9 @@ void main() {
 
       when(() => mockUserRepo.getProfile())
           .thenAnswer((_) async => _testProfile());
-      when(() => mockDataRepo.getMealLogs())
+      when(() => mockDataRepo.getMealLogsSince(any()))
           .thenAnswer((_) async => [_testMeal(timestamp: mealTime)]);
-      when(() => mockDataRepo.getGlucoseLogs()).thenAnswer((_) async => [
+      when(() => mockDataRepo.getGlucoseLogsSince(any())).thenAnswer((_) async => [
         _preMealGlucose(mealTime: mealTime),
       ]);
     });
@@ -468,9 +470,9 @@ void main() {
 
       when(() => mockUserRepo.getProfile())
           .thenAnswer((_) async => _testProfile());
-      when(() => mockDataRepo.getMealLogs())
+      when(() => mockDataRepo.getMealLogsSince(any()))
           .thenAnswer((_) async => [_testMeal(timestamp: mealTime)]);
-      when(() => mockDataRepo.getGlucoseLogs()).thenAnswer((_) async => [
+      when(() => mockDataRepo.getGlucoseLogsSince(any())).thenAnswer((_) async => [
         _preMealGlucose(mealTime: mealTime),
       ]);
     });
@@ -704,7 +706,7 @@ void main() {
       createdAt: DateTime(2024, 1, 1),
       updatedAt: DateTime(2024, 1, 1),
       // Parameters close to upper bounds
-      metabolicClearanceRate: 0.0199,
+      metabolicClearanceRate: 0.0299,
       insulinSensitivityFactor: 149.0,
       absorptionDelayBase: 89.0,
       ekfCovP1: 100.0,
@@ -715,9 +717,9 @@ void main() {
 
     setUp(() {
       mealTime = DateTime(2024, 6, 1, 12, 0);
-      when(() => mockDataRepo.getMealLogs())
+      when(() => mockDataRepo.getMealLogsSince(any()))
           .thenAnswer((_) async => [_testMeal(timestamp: mealTime)]);
-      when(() => mockDataRepo.getGlucoseLogs()).thenAnswer((_) async => [
+      when(() => mockDataRepo.getGlucoseLogsSince(any())).thenAnswer((_) async => [
         _preMealGlucose(mealTime: mealTime),
       ]);
     });
@@ -756,11 +758,11 @@ void main() {
       expect(mcr, greaterThanOrEqualTo(0.002));
     });
 
-    test('p1 never exceeds 0.020', () async {
+    test('p1 never exceeds 0.030', () async {
       when(() => mockUserRepo.getProfile())
           .thenAnswer((_) async => nearUpperBound());
 
-      // Large negative innovation -> p1 wants to increase above 0.020 -> clamped
+      // Large negative innovation -> p1 wants to increase above 0.030 -> clamped
       final glucoseLog = _postMealGlucose(
         mealTime: mealTime,
         minutesAfter: 120,
@@ -787,7 +789,7 @@ void main() {
       )).captured;
       final mcr = captured[0] as double;
 
-      expect(mcr, lessThanOrEqualTo(0.020));
+      expect(mcr, lessThanOrEqualTo(0.030));
     });
 
     test('ISF never falls below 20.0', () async {

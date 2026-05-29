@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 
+import '../services/backend_food_service.dart'
+    show RateLimitException, BackendUnavailableException;
 import '../services/food_rag_service.dart';
 import '../src/domain/entities/food_item.dart';
 import '../src/domain/repositories/food_analyzer_repository.dart';
@@ -36,6 +38,8 @@ class FoodScannerState {
 
   double get totalCarbs =>
       items.fold(0.0, (s, i) => s + i.carbsGrams);
+  double get totalFiber =>
+      items.fold(0.0, (s, i) => s + i.fiberGrams);
   double get totalProtein =>
       items.fold(0.0, (s, i) => s + i.proteinGrams);
   double get totalFat =>
@@ -91,16 +95,17 @@ class FoodScannerNotifier extends AutoDisposeNotifier<FoodScannerState> {
         items: result.items,
       );
     } catch (e) {
-      final raw = e.toString();
-      String friendly;
-      if (raw.contains('network') || raw.contains('SocketException') || raw.contains('timeout')) {
-        friendly = 'Could not connect. Please check your internet and try again.';
-      } else if (raw.contains('format') || raw.contains('parse')) {
-        friendly = 'Could not read the image. Please try a clearer photo.';
-      } else if (raw.contains('API') || raw.contains('quota') || raw.contains('rate')) {
-        friendly = 'The analysis service is temporarily unavailable. Please try again shortly.';
+      // Prefer typed exceptions from the backend service over fragile string
+      // matching. RateLimit/BackendUnavailable already carry user-ready text.
+      final String friendly;
+      if (e is RateLimitException || e is BackendUnavailableException) {
+        friendly = e.toString();
+      } else if (e is FormatException) {
+        friendly =
+            'The AI returned an invalid response format. Please try scanning again.';
       } else {
-        friendly = 'Something went wrong analysing your food. Please try again or enter values manually.';
+        friendly =
+            'Something went wrong analysing your food. Please try again or enter values manually.';
       }
       state = state.copyWith(
         status: FoodScannerStatus.error,

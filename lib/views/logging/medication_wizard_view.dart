@@ -194,50 +194,52 @@ class _MedicationWizardViewState extends ConsumerState<MedicationWizardView> {
                     final option = typeOptions[index];
                     final isSelected = state.medicationType == option['value'];
 
-                    return InkWell(
-                      onTap: () =>
-                          viewModel.updateMedicationType(option['value']!),
-                      borderRadius: BorderRadius.circular(
-                        AppThemeTokens.radiusMd,
-                      ),
-                      child: Container(
-                        padding: const EdgeInsets.all(AppThemeTokens.spaceMd),
-                        decoration: BoxDecoration(
+                    return Ink(
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AppThemeTokens.brandAccent.withValues(
+                                alpha: 0.1,
+                              )
+                            : Colors.transparent,
+                        border: Border.all(
                           color: isSelected
-                              ? AppThemeTokens.brandAccent.withValues(
-                                  alpha: 0.1,
-                                )
-                              : Colors.transparent,
-                          border: Border.all(
-                            color: isSelected
-                                ? AppThemeTokens.brandAccent
-                                : AppThemeTokens.border.withValues(alpha: 0.8),
-                            width: isSelected ? 2 : 1,
-                          ),
-                          borderRadius: BorderRadius.circular(
-                            AppThemeTokens.radiusMd,
-                          ),
+                              ? AppThemeTokens.brandAccent
+                              : AppThemeTokens.border.withValues(alpha: 0.8),
+                          width: isSelected ? 2 : 1,
                         ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              isSelected
-                                  ? Icons.radio_button_checked
-                                  : Icons.radio_button_unchecked,
-                              color: isSelected
-                                  ? AppThemeTokens.brandAccent
-                                  : Colors.grey,
-                            ),
-                            const SizedBox(width: AppThemeTokens.spaceMd),
-                            Text(
-                              option['label']!,
-                              style: theme.textTheme.bodyLarge?.copyWith(
-                                fontWeight: isSelected
-                                    ? FontWeight.w600
-                                    : FontWeight.normal,
+                        borderRadius: BorderRadius.circular(
+                          AppThemeTokens.radiusMd,
+                        ),
+                      ),
+                      child: InkWell(
+                        onTap: () =>
+                            viewModel.updateMedicationType(option['value']!),
+                        borderRadius: BorderRadius.circular(
+                          AppThemeTokens.radiusMd,
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(AppThemeTokens.spaceMd),
+                          child: Row(
+                            children: [
+                              Icon(
+                                isSelected
+                                    ? Icons.radio_button_checked
+                                    : Icons.radio_button_unchecked,
+                                color: isSelected
+                                    ? AppThemeTokens.brandAccent
+                                    : Colors.grey,
                               ),
-                            ),
-                          ],
+                              const SizedBox(width: AppThemeTokens.spaceMd),
+                              Text(
+                                option['label']!,
+                                style: theme.textTheme.bodyLarge?.copyWith(
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.normal,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     );
@@ -257,10 +259,23 @@ class _MedicationWizardViewState extends ConsumerState<MedicationWizardView> {
                   ),
                 ),
 
-              // Save Button
-              ElevatedButton(
-                onPressed:
-                    (state.isSubmitting ||
+              const SizedBox(height: AppThemeTokens.spaceLg),
+            ],
+          ),
+        ),
+      ),
+      // Sticky save button — stays visible no matter the scroll position.
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppThemeTokens.spaceLg,
+            AppThemeTokens.spaceSm,
+            AppThemeTokens.spaceLg,
+            AppThemeTokens.spaceMd,
+          ),
+          child: ElevatedButton(
+            onPressed:
+                (state.isSubmitting ||
                         state.medicationType.isEmpty ||
                         state.pendingMedicationUnits == null)
                     ? null
@@ -270,7 +285,9 @@ class _MedicationWizardViewState extends ConsumerState<MedicationWizardView> {
                         if (success) {
                           context.pop();
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Medication logged!')),
+                            const SnackBar(
+                              content: Text('Medication logged!'),
+                            ),
                           );
                         } else {
                           final errorMsg = ref
@@ -288,35 +305,32 @@ class _MedicationWizardViewState extends ConsumerState<MedicationWizardView> {
                           );
                         }
                       },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppThemeTokens.brandAccent,
-                  foregroundColor: AppThemeTokens.textPrimaryInverse,
-                  disabledBackgroundColor: AppThemeTokens.brandAccent
-                      .withValues(alpha: 0.4),
-                  disabledForegroundColor: Colors.white54,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: AppThemeTokens.spaceLg,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(
-                      AppThemeTokens.radiusLg,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppThemeTokens.brandAccent,
+              foregroundColor: AppThemeTokens.textPrimaryInverse,
+              disabledBackgroundColor: AppThemeTokens.brandAccent
+                  .withValues(alpha: 0.4),
+              disabledForegroundColor: Colors.white54,
+              padding: const EdgeInsets.symmetric(
+                vertical: AppThemeTokens.spaceLg,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(
+                  AppThemeTokens.radiusLg,
+                ),
+              ),
+            ),
+            child: state.isSubmitting
+                ? const CircularProgressIndicator(color: Colors.white)
+                : Text(
+                    state.pendingMedicationUnits == null
+                        ? 'Enter dosage to save'
+                        : 'Save Medication',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-                child: state.isSubmitting
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : Text(
-                        state.pendingMedicationUnits == null
-                            ? 'Enter dosage to save'
-                            : 'Save Medication',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-              ),
-              const SizedBox(height: AppThemeTokens.spaceLg),
-            ],
           ),
         ),
       ),

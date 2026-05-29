@@ -7,7 +7,6 @@ import '../../repositories/user_repository.dart';
 import '../../src/domain/entities/food_scanner_result.dart';
 import '../../viewmodels/logging_wizard_viewmodel.dart';
 import 'package:go_router/go_router.dart';
-import '../../models/projection_result.dart';
 import '../../router/projection_route_args.dart';
 import '../../router/route_names.dart';
 
@@ -72,12 +71,14 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
         .read(loggingWizardProvider.notifier)
         .updateMealMacros(
           carbs: result.totalCarbs,
+          fiber: result.totalFiber,
           proteins: result.totalProtein,
           fats: result.totalFat,
           calories: result.totalCalories,
         );
 
     _carbsCtrl.text = result.totalCarbs.toStringAsFixed(1);
+    _fiberCtrl.text = result.totalFiber.toStringAsFixed(1);
     _proteinCtrl.text = result.totalProtein.toStringAsFixed(1);
     _fatsCtrl.text = result.totalFat.toStringAsFixed(1);
 
@@ -779,7 +780,24 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                   ),
                 ),
 
-              // ── Save & Project Button ─────────────────────────────
+              const SizedBox(height: AppThemeTokens.spaceLg),
+            ],
+          ),
+        ),
+      ),
+      // Sticky primary CTA — single dominant action visible while the user
+      // scrolls (per "one primary action per screen" UX rule).
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppThemeTokens.spaceLg,
+            AppThemeTokens.spaceSm,
+            AppThemeTokens.spaceLg,
+            AppThemeTokens.spaceMd,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
               AnimatedOpacity(
                 opacity: canSave ? 1.0 : 0.5,
                 duration: const Duration(milliseconds: 200),
@@ -794,16 +812,12 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                             context.pushReplacement(
                               Routes.logMealProjection,
                               extra: ProjectionRouteArgs(
-                                result: data['result'] as ProjectionResult,
-                                unit: data['unit'] as String,
-                                mealCount: (data['mealCount'] ?? 0) as int,
+                                result: data.result,
+                                unit: data.unit,
+                                mealCount: data.mealCount,
                               ),
                             );
                           } else {
-                            // Show explicit feedback so the user knows
-                            // the save failed rather than appearing to do
-                            // nothing. The error field in state is also
-                            // shown in the inline error container above.
                             final errorMsg = ref
                                 .read(loggingWizardProvider)
                                 .error;
@@ -849,27 +863,32 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
-                              canSave ? LucideIcons.trendingUp : LucideIcons.info,
+                              canSave
+                                  ? LucideIcons.trendingUp
+                                  : LucideIcons.info,
                               size: 20,
                             ),
                             const SizedBox(width: AppThemeTokens.spaceSm),
-                            Text(
-                              canSave
-                                  ? 'Save & Calculate Glucose Prediction'
-                                  : (state.preMealGlucose == null ||
-                                          state.preMealGlucose! <= 0)
-                                      ? 'Enter glucose reading first'
-                                      : 'Enter carbs, protein & fat',
-                              style: const TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
+                            Flexible(
+                              child: Text(
+                                canSave
+                                    ? 'Save & Calculate Glucose Prediction'
+                                    : (state.preMealGlucose == null ||
+                                              state.preMealGlucose! <= 0)
+                                          ? 'Enter glucose reading first'
+                                          : 'Enter carbs, protein & fat',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ],
                         ),
                 ),
               ),
-
               if (!canSave && !state.isSubmitting)
                 Padding(
                   padding: const EdgeInsets.only(top: AppThemeTokens.spaceSm),
@@ -887,24 +906,26 @@ class _MealWizardViewState extends ConsumerState<MealWizardView> {
                             : AppThemeTokens.textSecondary,
                       ),
                       const SizedBox(width: 4),
-                      Text(
-                        (state.preMealGlucose == null ||
-                                state.preMealGlucose! <= 0)
-                            ? 'Enter your pre-meal glucose above to continue'
-                            : 'Enter carbs, protein and fat values to continue',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: isDark
-                              ? Colors.white38
-                              : AppThemeTokens.textSecondary,
+                      Flexible(
+                        child: Text(
+                          (state.preMealGlucose == null ||
+                                  state.preMealGlucose! <= 0)
+                              ? 'Enter your pre-meal glucose above'
+                              : 'Enter carbs, protein and fat values',
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: isDark
+                                ? Colors.white38
+                                : AppThemeTokens.textSecondary,
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
-
-              const SizedBox(height: AppThemeTokens.spaceLg),
             ],
           ),
         ),
@@ -1130,54 +1151,59 @@ class _FoodFormChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(AppThemeTokens.radiusFull),
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 150),
+      decoration: BoxDecoration(
+        color: isSelected
+            ? AppThemeTokens.brandPrimary.withValues(alpha: 0.15)
+            : isDark
+            ? Colors.white.withValues(alpha: 0.05)
+            : Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(AppThemeTokens.radiusFull),
+        border: Border.all(
           color: isSelected
-              ? AppThemeTokens.brandPrimary.withValues(alpha: 0.15)
+              ? AppThemeTokens.brandPrimary
               : isDark
-              ? Colors.white.withValues(alpha: 0.05)
-              : Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(AppThemeTokens.radiusFull),
-          border: Border.all(
-            color: isSelected
-                ? AppThemeTokens.brandPrimary
-                : isDark
-                ? Colors.white.withValues(alpha: 0.15)
-                : Colors.grey.shade300,
-            width: isSelected ? 2 : 1,
-          ),
+              ? Colors.white.withValues(alpha: 0.15)
+              : Colors.grey.shade300,
+          width: isSelected ? 2 : 1,
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 14,
-              color: isSelected
-                  ? AppThemeTokens.brandPrimary
-                  : isDark
-                  ? Colors.white54
-                  : AppThemeTokens.textSecondary,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppThemeTokens.radiusFull),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  size: 14,
+                  color: isSelected
+                      ? AppThemeTokens.brandPrimary
+                      : isDark
+                      ? Colors.white54
+                      : AppThemeTokens.textSecondary,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                    color: isSelected
+                        ? AppThemeTokens.brandPrimary
+                        : isDark
+                        ? Colors.white70
+                        : AppThemeTokens.textPrimary,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                color: isSelected
-                    ? AppThemeTokens.brandPrimary
-                    : isDark
-                    ? Colors.white70
-                    : AppThemeTokens.textPrimary,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

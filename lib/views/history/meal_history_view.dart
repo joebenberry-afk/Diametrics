@@ -568,6 +568,8 @@ class _MealHistoryTile extends ConsumerWidget {
       ),
       title: Text(
         log.name?.isNotEmpty == true ? log.name! : defaultTitle,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
         style: const TextStyle(fontWeight: FontWeight.w600),
       ),
       subtitle: Column(
@@ -576,6 +578,8 @@ class _MealHistoryTile extends ConsumerWidget {
           const SizedBox(height: 4),
           Text(
             '${log.carbohydrates.toStringAsFixed(0)}g carbs • ${log.proteins.toStringAsFixed(0)}g protein • ${log.fats.toStringAsFixed(0)}g fat',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: isDark ? Colors.white70 : AppThemeTokens.textPrimary,
               fontSize: 14,

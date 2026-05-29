@@ -58,6 +58,14 @@ Food Database/
 
 # Internal development & research (not relevant to app operation)
 Documentation/
+
+# Editor / tooling caches & generated artifacts
+.vs/
+__pycache__/
+graphify-out/
+
+# Obsidian notes vault (not app code)
+Diametrics/
 Design Issues/
 docs/
 CLAUDE.md

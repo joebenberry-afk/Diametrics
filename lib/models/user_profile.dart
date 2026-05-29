@@ -37,7 +37,10 @@ abstract class UserProfile with _$UserProfile {
     @Default(90.0) double fastingSetpoint,
 
     // ML Metabolic Parameters (Local Adaptive Tuning Constants)
-    @Default(0.010) double metabolicClearanceRate,
+    // Default 0.025 is the realistic clearance operating point the projection
+    // was calibrated around (previously enforced by a hard floor that silently
+    // disabled EKF p1 tuning). EKF refines this per-user within [0.002, 0.030].
+    @Default(0.025) double metabolicClearanceRate,
     @Default(50.0) double insulinSensitivityFactor,
     @Default(40.0) double absorptionDelayBase,
     @Default(0) int tuningMealCount, // Tracks meals used for adaptive tuning

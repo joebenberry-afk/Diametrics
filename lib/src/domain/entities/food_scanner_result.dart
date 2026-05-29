@@ -12,6 +12,7 @@ abstract class FoodScannerResult with _$FoodScannerResult {
   const factory FoodScannerResult({
     required List<FoodItem> items,
     required double totalCarbs,
+    required double totalFiber,
     required double totalProtein,
     required double totalFat,
     required double totalCalories,

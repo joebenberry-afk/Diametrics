@@ -23,6 +23,9 @@ mixin _$UserProfile {
  String get insulinCategory; double get insulinDiaMinutes;// Duration of Insulin Action
 // Targets
  double get targetGlucoseMin; double get targetGlucoseMax; double get fastingSetpoint;// ML Metabolic Parameters (Local Adaptive Tuning Constants)
+// Default 0.025 is the realistic clearance operating point the projection
+// was calibrated around (previously enforced by a hard floor that silently
+// disabled EKF p1 tuning). EKF refines this per-user within [0.002, 0.030].
  double get metabolicClearanceRate; double get insulinSensitivityFactor; double get absorptionDelayBase; int get tuningMealCount;// Tracks meals used for adaptive tuning
 // EKF Covariance State (diagonal elements of P matrix)
 // These store the Kalman filter's uncertainty in each metabolic parameter.
@@ -252,7 +255,7 @@ return $default(_that.id,_that.name,_that.age,_that.gender,_that.heightCm,_that.
 @JsonSerializable()
 
 class _UserProfile implements UserProfile {
-  const _UserProfile({required this.id, this.name = '', required this.age, required this.gender, required this.heightCm, required this.weightKg, this.targetWeightKg, required this.diabetesType, required this.diagnosisYear, this.preferredGlucoseUnit = 'mg/dL', this.usesInsulin = false, this.usesPills = false, this.usesCgm = false, this.insulinCategory = 'standard_rapid', this.insulinDiaMinutes = 240.0, this.targetGlucoseMin = 70.0, this.targetGlucoseMax = 180.0, this.fastingSetpoint = 90.0, this.metabolicClearanceRate = 0.010, this.insulinSensitivityFactor = 50.0, this.absorptionDelayBase = 40.0, this.tuningMealCount = 0, this.ekfCovP1 = 1.0, this.ekfCovISF = 1.0, this.ekfCovTMax = 1.0, this.hasAgreedToDisclaimer = false, required this.createdAt, required this.updatedAt});
+  const _UserProfile({required this.id, this.name = '', required this.age, required this.gender, required this.heightCm, required this.weightKg, this.targetWeightKg, required this.diabetesType, required this.diagnosisYear, this.preferredGlucoseUnit = 'mg/dL', this.usesInsulin = false, this.usesPills = false, this.usesCgm = false, this.insulinCategory = 'standard_rapid', this.insulinDiaMinutes = 240.0, this.targetGlucoseMin = 70.0, this.targetGlucoseMax = 180.0, this.fastingSetpoint = 90.0, this.metabolicClearanceRate = 0.025, this.insulinSensitivityFactor = 50.0, this.absorptionDelayBase = 40.0, this.tuningMealCount = 0, this.ekfCovP1 = 1.0, this.ekfCovISF = 1.0, this.ekfCovTMax = 1.0, this.hasAgreedToDisclaimer = false, required this.createdAt, required this.updatedAt});
   factory _UserProfile.fromJson(Map<String, dynamic> json) => _$UserProfileFromJson(json);
 
 @override final  String id;
@@ -281,6 +284,9 @@ class _UserProfile implements UserProfile {
 @override@JsonKey() final  double targetGlucoseMax;
 @override@JsonKey() final  double fastingSetpoint;
 // ML Metabolic Parameters (Local Adaptive Tuning Constants)
+// Default 0.025 is the realistic clearance operating point the projection
+// was calibrated around (previously enforced by a hard floor that silently
+// disabled EKF p1 tuning). EKF refines this per-user within [0.002, 0.030].
 @override@JsonKey() final  double metabolicClearanceRate;
 @override@JsonKey() final  double insulinSensitivityFactor;
 @override@JsonKey() final  double absorptionDelayBase;

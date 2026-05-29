@@ -26,7 +26,7 @@ _UserProfile _$UserProfileFromJson(Map<String, dynamic> json) => _UserProfile(
   targetGlucoseMax: (json['targetGlucoseMax'] as num?)?.toDouble() ?? 180.0,
   fastingSetpoint: (json['fastingSetpoint'] as num?)?.toDouble() ?? 90.0,
   metabolicClearanceRate:
-      (json['metabolicClearanceRate'] as num?)?.toDouble() ?? 0.010,
+      (json['metabolicClearanceRate'] as num?)?.toDouble() ?? 0.025,
   insulinSensitivityFactor:
       (json['insulinSensitivityFactor'] as num?)?.toDouble() ?? 50.0,
   absorptionDelayBase:

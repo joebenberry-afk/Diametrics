@@ -33,9 +33,13 @@ import 'glucose_projection_service.dart';
 ///   seasonal insulin resistance changes).
 ///
 /// Safety constraints (per ADA/Hovorka guidance):
-///   - metabolicClearanceRate   : [0.002, 0.020]
+///   - metabolicClearanceRate   : [0.002, 0.030]
 ///   - insulinSensitivityFactor : [20.0, 150.0]
 ///   - absorptionDelayBase      : [20.0, 90.0]
+///
+/// NOTE: the upper p1 bound (0.030) must remain >= the projection's realistic
+/// operating point (~0.025). A previous 0.020 cap sat below the projection's
+/// hard clearance floor, so every p1 estimate was discarded downstream.
 class EkfTuningService {
   EkfTuningService._();
 
@@ -56,7 +60,7 @@ class EkfTuningService {
 
   /// Physiological clamp bounds for each parameter.
   static const double _p1Min = 0.002;
-  static const double _p1Max = 0.020;
+  static const double _p1Max = 0.030;
   static const double _isfMin = 20.0;
   static const double _isfMax = 150.0;
   static const double _tMaxMin = 20.0;
@@ -89,8 +93,13 @@ class EkfTuningService {
       final profile = await userRepo.getProfile();
       if (profile == null) return;
 
+      // Fetch candidate meals ONCE, windowed to the lookback horizon, rather
+      // than two separate full-table scans (was: getMealLogs() x2 per tune).
+      final mealWindowStart = glucoseLog.timestamp.subtract(_mealLookback);
+      final recentMeals = await dataRepo.getMealLogsSince(mealWindowStart);
+
       // Find the most recent meal logged before this glucose reading
-      final meal = await _findAssociatedMeal(glucoseLog, dataRepo);
+      final meal = _findAssociatedMeal(glucoseLog, recentMeals);
       if (meal == null) return;
 
       // Find the pre-meal glucose that preceded this meal
@@ -98,7 +107,7 @@ class EkfTuningService {
       if (preMealGlucose == null) return;
 
       // ── Superposition: handle overlapping meals ──────────────────────
-      final overlapping = await _findOverlappingMeals(meal, glucoseLog, dataRepo);
+      final overlapping = _findOverlappingMeals(meal, glucoseLog, recentMeals);
 
       // If more than _maxSuperpositionMeals overlap, abort — too noisy
       if (overlapping.length > _maxSuperpositionMeals) return;
@@ -294,16 +303,15 @@ class EkfTuningService {
 
   // ── Private Helpers ────────────────────────────────────────────────────────
 
-  /// Finds the most recent meal log that was saved before [glucoseLog] and
-  /// within the [_mealLookback] window.
-  static Future<MealLog?> _findAssociatedMeal(
+  /// Finds the most recent meal in [meals] saved before [glucoseLog] and within
+  /// the [_mealLookback] window. [meals] is the pre-fetched windowed list.
+  static MealLog? _findAssociatedMeal(
     GlucoseLog glucoseLog,
-    HealthDataRepository dataRepo,
-  ) async {
-    final allMeals = await dataRepo.getMealLogs();
+    List<MealLog> meals,
+  ) {
     final cutoff = glucoseLog.timestamp.subtract(_mealLookback);
     MealLog? best;
-    for (final meal in allMeals) {
+    for (final meal in meals) {
       if (meal.timestamp.isAfter(cutoff) &&
           meal.timestamp.isBefore(glucoseLog.timestamp)) {
         if (best == null || meal.timestamp.isAfter(best.timestamp)) {
@@ -314,15 +322,14 @@ class EkfTuningService {
     return best;
   }
 
-  /// Finds all meals logged between [candidate] and [reading] (excluding
-  /// the candidate itself). These are the overlapping meals for superposition.
-  static Future<List<MealLog>> _findOverlappingMeals(
+  /// Finds all meals in [meals] logged between [candidate] and [reading]
+  /// (excluding the candidate itself) — the overlapping meals for superposition.
+  static List<MealLog> _findOverlappingMeals(
     MealLog candidate,
     GlucoseLog reading,
-    HealthDataRepository dataRepo,
-  ) async {
-    final allMeals = await dataRepo.getMealLogs();
-    return allMeals
+    List<MealLog> meals,
+  ) {
+    return meals
         .where((m) =>
             m.timestamp.isAfter(candidate.timestamp) &&
             m.timestamp.isBefore(reading.timestamp) &&
@@ -331,14 +338,15 @@ class EkfTuningService {
   }
 
   /// Finds a pre-meal glucose reading within 30 minutes before [meal].
+  /// Uses a windowed query rather than scanning the entire glucose table.
   static Future<double?> _findPreMealGlucose(
     MealLog meal,
     HealthDataRepository dataRepo,
   ) async {
-    final allGlucose = await dataRepo.getGlucoseLogs();
     final windowStart = meal.timestamp.subtract(const Duration(minutes: 30));
+    final candidates = await dataRepo.getGlucoseLogsSince(windowStart);
     GlucoseLog? best;
-    for (final g in allGlucose) {
+    for (final g in candidates) {
       if ((g.context == 'pre_meal' || g.context == 'fasting') &&
           g.timestamp.isAfter(windowStart) &&
           g.timestamp.isBefore(meal.timestamp)) {

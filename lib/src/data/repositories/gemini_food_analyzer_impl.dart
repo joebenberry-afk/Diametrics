@@ -172,12 +172,14 @@ class GeminiFoodAnalyzerImpl implements FoodAnalyzerRepository {
               'name': Schema.string(),
               'weight_g': Schema.number(),
               'carbs_g': Schema.number(),
+              'fiber_g': Schema.number(),
               'protein_g': Schema.number(),
               'fat_g': Schema.number(),
               'calories': Schema.number(),
             },
             requiredProperties: [
-              'name', 'weight_g', 'carbs_g', 'protein_g', 'fat_g', 'calories',
+              'name', 'weight_g', 'carbs_g', 'fiber_g', 'protein_g', 'fat_g',
+              'calories',
             ],
           ),
         ),
@@ -203,10 +205,20 @@ class GeminiFoodAnalyzerImpl implements FoodAnalyzerRepository {
       Content.multi([imagePart]),
     ]);
 
-    final text = response.text;
+    var text = response.text;
     if (text == null || text.trim().isEmpty) {
       throw Exception('Gemini returned an empty response.');
     }
+
+    // Sanitize string to remove markdown wrapping if the AI included it
+    text = text.trim();
+    if (text.startsWith('```')) {
+      text = text.replaceFirst(RegExp(r'^```(?:json)?\n?'), '');
+    }
+    if (text.endsWith('```')) {
+      text = text.replaceFirst(RegExp(r'\n?```$'), '');
+    }
+    text = text.trim();
 
     try {
       final decoded = jsonDecode(text) as Map<String, dynamic>;

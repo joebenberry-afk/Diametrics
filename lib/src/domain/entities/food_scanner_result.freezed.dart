@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$FoodScannerResult {
 
- List<FoodItem> get items; double get totalCarbs; double get totalProtein; double get totalFat; double get totalCalories;
+ List<FoodItem> get items; double get totalCarbs; double get totalFiber; double get totalProtein; double get totalFat; double get totalCalories;
 /// Create a copy of FoodScannerResult
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $FoodScannerResultCopyWith<FoodScannerResult> get copyWith => _$FoodScannerResul
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FoodScannerResult&&const DeepCollectionEquality().equals(other.items, items)&&(identical(other.totalCarbs, totalCarbs) || other.totalCarbs == totalCarbs)&&(identical(other.totalProtein, totalProtein) || other.totalProtein == totalProtein)&&(identical(other.totalFat, totalFat) || other.totalFat == totalFat)&&(identical(other.totalCalories, totalCalories) || other.totalCalories == totalCalories));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FoodScannerResult&&const DeepCollectionEquality().equals(other.items, items)&&(identical(other.totalCarbs, totalCarbs) || other.totalCarbs == totalCarbs)&&(identical(other.totalFiber, totalFiber) || other.totalFiber == totalFiber)&&(identical(other.totalProtein, totalProtein) || other.totalProtein == totalProtein)&&(identical(other.totalFat, totalFat) || other.totalFat == totalFat)&&(identical(other.totalCalories, totalCalories) || other.totalCalories == totalCalories));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(items),totalCarbs,totalProtein,totalFat,totalCalories);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(items),totalCarbs,totalFiber,totalProtein,totalFat,totalCalories);
 
 @override
 String toString() {
-  return 'FoodScannerResult(items: $items, totalCarbs: $totalCarbs, totalProtein: $totalProtein, totalFat: $totalFat, totalCalories: $totalCalories)';
+  return 'FoodScannerResult(items: $items, totalCarbs: $totalCarbs, totalFiber: $totalFiber, totalProtein: $totalProtein, totalFat: $totalFat, totalCalories: $totalCalories)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $FoodScannerResultCopyWith<$Res>  {
   factory $FoodScannerResultCopyWith(FoodScannerResult value, $Res Function(FoodScannerResult) _then) = _$FoodScannerResultCopyWithImpl;
 @useResult
 $Res call({
- List<FoodItem> items, double totalCarbs, double totalProtein, double totalFat, double totalCalories
+ List<FoodItem> items, double totalCarbs, double totalFiber, double totalProtein, double totalFat, double totalCalories
 });
 
 
@@ -62,10 +62,11 @@ class _$FoodScannerResultCopyWithImpl<$Res>
 
 /// Create a copy of FoodScannerResult
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? items = null,Object? totalCarbs = null,Object? totalProtein = null,Object? totalFat = null,Object? totalCalories = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? items = null,Object? totalCarbs = null,Object? totalFiber = null,Object? totalProtein = null,Object? totalFat = null,Object? totalCalories = null,}) {
   return _then(_self.copyWith(
 items: null == items ? _self.items : items // ignore: cast_nullable_to_non_nullable
 as List<FoodItem>,totalCarbs: null == totalCarbs ? _self.totalCarbs : totalCarbs // ignore: cast_nullable_to_non_nullable
+as double,totalFiber: null == totalFiber ? _self.totalFiber : totalFiber // ignore: cast_nullable_to_non_nullable
 as double,totalProtein: null == totalProtein ? _self.totalProtein : totalProtein // ignore: cast_nullable_to_non_nullable
 as double,totalFat: null == totalFat ? _self.totalFat : totalFat // ignore: cast_nullable_to_non_nullable
 as double,totalCalories: null == totalCalories ? _self.totalCalories : totalCalories // ignore: cast_nullable_to_non_nullable
@@ -154,10 +155,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<FoodItem> items,  double totalCarbs,  double totalProtein,  double totalFat,  double totalCalories)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<FoodItem> items,  double totalCarbs,  double totalFiber,  double totalProtein,  double totalFat,  double totalCalories)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _FoodScannerResult() when $default != null:
-return $default(_that.items,_that.totalCarbs,_that.totalProtein,_that.totalFat,_that.totalCalories);case _:
+return $default(_that.items,_that.totalCarbs,_that.totalFiber,_that.totalProtein,_that.totalFat,_that.totalCalories);case _:
   return orElse();
 
 }
@@ -175,10 +176,10 @@ return $default(_that.items,_that.totalCarbs,_that.totalProtein,_that.totalFat,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<FoodItem> items,  double totalCarbs,  double totalProtein,  double totalFat,  double totalCalories)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<FoodItem> items,  double totalCarbs,  double totalFiber,  double totalProtein,  double totalFat,  double totalCalories)  $default,) {final _that = this;
 switch (_that) {
 case _FoodScannerResult():
-return $default(_that.items,_that.totalCarbs,_that.totalProtein,_that.totalFat,_that.totalCalories);case _:
+return $default(_that.items,_that.totalCarbs,_that.totalFiber,_that.totalProtein,_that.totalFat,_that.totalCalories);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -195,10 +196,10 @@ return $default(_that.items,_that.totalCarbs,_that.totalProtein,_that.totalFat,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<FoodItem> items,  double totalCarbs,  double totalProtein,  double totalFat,  double totalCalories)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<FoodItem> items,  double totalCarbs,  double totalFiber,  double totalProtein,  double totalFat,  double totalCalories)?  $default,) {final _that = this;
 switch (_that) {
 case _FoodScannerResult() when $default != null:
-return $default(_that.items,_that.totalCarbs,_that.totalProtein,_that.totalFat,_that.totalCalories);case _:
+return $default(_that.items,_that.totalCarbs,_that.totalFiber,_that.totalProtein,_that.totalFat,_that.totalCalories);case _:
   return null;
 
 }
@@ -210,7 +211,7 @@ return $default(_that.items,_that.totalCarbs,_that.totalProtein,_that.totalFat,_
 
 
 class _FoodScannerResult implements FoodScannerResult {
-  const _FoodScannerResult({required final  List<FoodItem> items, required this.totalCarbs, required this.totalProtein, required this.totalFat, required this.totalCalories}): _items = items;
+  const _FoodScannerResult({required final  List<FoodItem> items, required this.totalCarbs, required this.totalFiber, required this.totalProtein, required this.totalFat, required this.totalCalories}): _items = items;
   
 
  final  List<FoodItem> _items;
@@ -221,6 +222,7 @@ class _FoodScannerResult implements FoodScannerResult {
 }
 
 @override final  double totalCarbs;
+@override final  double totalFiber;
 @override final  double totalProtein;
 @override final  double totalFat;
 @override final  double totalCalories;
@@ -235,16 +237,16 @@ _$FoodScannerResultCopyWith<_FoodScannerResult> get copyWith => __$FoodScannerRe
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FoodScannerResult&&const DeepCollectionEquality().equals(other._items, _items)&&(identical(other.totalCarbs, totalCarbs) || other.totalCarbs == totalCarbs)&&(identical(other.totalProtein, totalProtein) || other.totalProtein == totalProtein)&&(identical(other.totalFat, totalFat) || other.totalFat == totalFat)&&(identical(other.totalCalories, totalCalories) || other.totalCalories == totalCalories));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FoodScannerResult&&const DeepCollectionEquality().equals(other._items, _items)&&(identical(other.totalCarbs, totalCarbs) || other.totalCarbs == totalCarbs)&&(identical(other.totalFiber, totalFiber) || other.totalFiber == totalFiber)&&(identical(other.totalProtein, totalProtein) || other.totalProtein == totalProtein)&&(identical(other.totalFat, totalFat) || other.totalFat == totalFat)&&(identical(other.totalCalories, totalCalories) || other.totalCalories == totalCalories));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_items),totalCarbs,totalProtein,totalFat,totalCalories);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_items),totalCarbs,totalFiber,totalProtein,totalFat,totalCalories);
 
 @override
 String toString() {
-  return 'FoodScannerResult(items: $items, totalCarbs: $totalCarbs, totalProtein: $totalProtein, totalFat: $totalFat, totalCalories: $totalCalories)';
+  return 'FoodScannerResult(items: $items, totalCarbs: $totalCarbs, totalFiber: $totalFiber, totalProtein: $totalProtein, totalFat: $totalFat, totalCalories: $totalCalories)';
 }
 
 
@@ -255,7 +257,7 @@ abstract mixin class _$FoodScannerResultCopyWith<$Res> implements $FoodScannerRe
   factory _$FoodScannerResultCopyWith(_FoodScannerResult value, $Res Function(_FoodScannerResult) _then) = __$FoodScannerResultCopyWithImpl;
 @override @useResult
 $Res call({
- List<FoodItem> items, double totalCarbs, double totalProtein, double totalFat, double totalCalories
+ List<FoodItem> items, double totalCarbs, double totalFiber, double totalProtein, double totalFat, double totalCalories
 });
 
 
@@ -272,10 +274,11 @@ class __$FoodScannerResultCopyWithImpl<$Res>
 
 /// Create a copy of FoodScannerResult
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? items = null,Object? totalCarbs = null,Object? totalProtein = null,Object? totalFat = null,Object? totalCalories = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? items = null,Object? totalCarbs = null,Object? totalFiber = null,Object? totalProtein = null,Object? totalFat = null,Object? totalCalories = null,}) {
   return _then(_FoodScannerResult(
 items: null == items ? _self._items : items // ignore: cast_nullable_to_non_nullable
 as List<FoodItem>,totalCarbs: null == totalCarbs ? _self.totalCarbs : totalCarbs // ignore: cast_nullable_to_non_nullable
+as double,totalFiber: null == totalFiber ? _self.totalFiber : totalFiber // ignore: cast_nullable_to_non_nullable
 as double,totalProtein: null == totalProtein ? _self.totalProtein : totalProtein // ignore: cast_nullable_to_non_nullable
 as double,totalFat: null == totalFat ? _self.totalFat : totalFat // ignore: cast_nullable_to_non_nullable
 as double,totalCalories: null == totalCalories ? _self.totalCalories : totalCalories // ignore: cast_nullable_to_non_nullable

@@ -220,20 +220,26 @@ class _MacroCell extends StatelessWidget {
         child: Column(children: [
           Text(
             label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(color: labelColor, fontSize: 8, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 4),
-          Text.rich(TextSpan(children: [
-            TextSpan(
-              text: value,
-              style: TextStyle(color: valueColor, fontSize: 14, fontWeight: FontWeight.w800),
-            ),
-            if (unit.isNotEmpty)
+          Text.rich(
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            TextSpan(children: [
               TextSpan(
-                text: unit,
-                style: TextStyle(color: valueColor, fontSize: 8, fontWeight: FontWeight.w500),
+                text: value,
+                style: TextStyle(color: valueColor, fontSize: 14, fontWeight: FontWeight.w800),
               ),
-          ])),
+              if (unit.isNotEmpty)
+                TextSpan(
+                  text: unit,
+                  style: TextStyle(color: valueColor, fontSize: 8, fontWeight: FontWeight.w500),
+                ),
+            ]),
+          ),
         ]),
       ),
     );

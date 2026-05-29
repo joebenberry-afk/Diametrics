@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -16,6 +17,12 @@ import 'services/reminder_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Lock to portrait — layouts (wizards, dashboard grid, onboarding PageView)
+  // are not designed for landscape. Prevents stretched/squished layouts.
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
   configureDependencies();
 
   // Essential blocking init — open & migrate the encrypted DB.
@@ -102,9 +109,13 @@ class _DiametricsAppState extends ConsumerState<DiametricsApp> {
       themeMode: ThemeMode.system,
       routerConfig: router,
       builder: (context, child) {
+        // Honor whichever is larger: OS accessibility scale or user pref.
+        // Prevents Android system font scale from being silently overridden.
+        final systemScale = MediaQuery.textScalerOf(context).scale(1.0);
+        final effective = systemScale > _textScale ? systemScale : _textScale;
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(
-            textScaler: TextScaler.linear(_textScale),
+            textScaler: TextScaler.linear(effective),
           ),
           child: child ?? const SizedBox.shrink(),
         );

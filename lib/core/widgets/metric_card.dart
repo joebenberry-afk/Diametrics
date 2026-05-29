@@ -72,6 +72,8 @@ class MetricCard extends StatelessWidget {
                 const Spacer(),
                 Text(
                   title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -81,21 +83,29 @@ class MetricCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.baseline,
                   textBaseline: TextBaseline.alphabetic,
                   children: [
-                    Text(
-                      value,
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: isDark
-                            ? AppThemeTokens.textPrimaryInverse
-                            : AppThemeTokens.textPrimary,
+                    Flexible(
+                      child: Text(
+                        value,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: isDark
+                              ? AppThemeTokens.textPrimaryInverse
+                              : AppThemeTokens.textPrimary,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 4),
-                    Text(
-                      unit,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontSize: 14,
-                        color: isDark ? Colors.white60 : AppThemeTokens.textSecondary,
+                    Flexible(
+                      child: Text(
+                        unit,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontSize: 14,
+                          color: isDark ? Colors.white60 : AppThemeTokens.textSecondary,
+                        ),
                       ),
                     ),
                   ],

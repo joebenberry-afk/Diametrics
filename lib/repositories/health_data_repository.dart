@@ -53,10 +53,30 @@ class HealthDataRepository {
     return rows.map(_glucoseFromRow).toList();
   }
 
+  /// Returns glucose logs newer than [cutoff], newest first.
+  /// Time-windowed so callers (e.g. EKF tuning) avoid full-table scans.
+  Future<List<GlucoseLog>> getGlucoseLogsSince(DateTime cutoff) async {
+    final rows = await (db.select(db.glucoseLogs)
+          ..where((t) => t.timestamp.isBiggerThanValue(cutoff))
+          ..orderBy([(t) => OrderingTerm.desc(t.timestamp)]))
+        .get();
+    return rows.map(_glucoseFromRow).toList();
+  }
+
   // ── Meals ──────────────────────────────────────────────────────────────
 
   Future<List<domain_models.MealLog>> getMealLogs() async {
     final rows = await db.select(db.mealMacroLogs).get();
+    return rows.map(_mealFromRow).toList();
+  }
+
+  /// Returns meal logs newer than [cutoff], newest first.
+  /// Time-windowed so callers (e.g. EKF tuning) avoid full-table scans.
+  Future<List<domain_models.MealLog>> getMealLogsSince(DateTime cutoff) async {
+    final rows = await (db.select(db.mealMacroLogs)
+          ..where((t) => t.timestamp.isBiggerThanValue(cutoff))
+          ..orderBy([(t) => OrderingTerm.desc(t.timestamp)]))
+        .get();
     return rows.map(_mealFromRow).toList();
   }
 

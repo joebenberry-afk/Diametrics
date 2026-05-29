@@ -26,6 +26,35 @@ _CARB_ID = 1005      # Carbohydrate, by difference
 _PROTEIN_ID = 1003   # Protein
 _FAT_ID = 1004       # Total lipid (fat)
 _CALORIE_ID = 1008   # Energy (kcal)
+_FIBER_ID = 1079     # Fiber, total dietary
+
+
+def _extract_macros(nutrients: list) -> dict:
+    """Map a USDA `foodNutrients` list to a per-100g macro dict.
+
+    Pure function (no I/O) so it can be unit-tested directly.
+    """
+    carbs = protein = fat = calories = fiber = 0.0
+    for n in nutrients:
+        nid = n.get("nutrientId", 0)
+        val = float(n.get("value", 0) or 0)
+        if nid == _CARB_ID:
+            carbs = val
+        elif nid == _PROTEIN_ID:
+            protein = val
+        elif nid == _FAT_ID:
+            fat = val
+        elif nid == _CALORIE_ID:
+            calories = val
+        elif nid == _FIBER_ID:
+            fiber = val
+    return {
+        "carbs": carbs,
+        "protein": protein,
+        "fat": fat,
+        "calories": calories,
+        "fiber": fiber,
+    }
 
 
 @router.get("/usda-search")
@@ -37,7 +66,7 @@ async def usda_search(
     Search USDA FoodData Central for per-100g macro data.
 
     Returns:
-        { "found": true, "carbs": 27.5, "protein": 3.2, "fat": 0.4, "calories": 130.0 }
+        { "found": true, "carbs": 27.5, "fiber": 1.8, "protein": 3.2, "fat": 0.4, "calories": 130.0 }
         or
         { "found": false }
     """
@@ -64,29 +93,18 @@ async def usda_search(
 
         # Use the first result
         nutrients = foods[0].get("foodNutrients", [])
-        carbs = protein = fat = calories = 0.0
+        macros = _extract_macros(nutrients)
 
-        for n in nutrients:
-            nid = n.get("nutrientId", 0)
-            val = float(n.get("value", 0) or 0)
-            if nid == _CARB_ID:
-                carbs = val
-            elif nid == _PROTEIN_ID:
-                protein = val
-            elif nid == _FAT_ID:
-                fat = val
-            elif nid == _CALORIE_ID:
-                calories = val
-
-        if carbs == 0 and protein == 0 and fat == 0:
+        if macros["carbs"] == 0 and macros["protein"] == 0 and macros["fat"] == 0:
             return {"found": False}
 
         return {
             "found": True,
-            "carbs": min(max(carbs, 0.0), 100.0),
-            "protein": min(max(protein, 0.0), 100.0),
-            "fat": min(max(fat, 0.0), 100.0),
-            "calories": min(max(calories, 0.0), 900.0),
+            "carbs": min(max(macros["carbs"], 0.0), 100.0),
+            "fiber": min(max(macros["fiber"], 0.0), 100.0),
+            "protein": min(max(macros["protein"], 0.0), 100.0),
+            "fat": min(max(macros["fat"], 0.0), 100.0),
+            "calories": min(max(macros["calories"], 0.0), 900.0),
         }
 
     except (httpx.TimeoutException, httpx.ConnectError):

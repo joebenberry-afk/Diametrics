@@ -1,7 +1,14 @@
 import 'package:drift/drift.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../database/database.dart';
 import '../database/db_instance.dart';
 import '../models/user_profile.dart';
+
+/// Riverpod handle for [UserRepository]. Lets viewmodels inject it (and
+/// override it in tests) instead of constructing it directly.
+final userRepositoryProvider = Provider<UserRepository>(
+  (ref) => UserRepository(),
+);
 
 class UserRepository {
   Future<void> saveProfile(UserProfile profile) async {

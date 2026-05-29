@@ -1,11 +1,24 @@
 import 'package:flutter/material.dart';
 
+/// Semantic design tokens for the app.
+///
+/// Color discipline: every UI element should map to one of the **four
+/// semantic roles** below — do not introduce arbitrary tints in feature
+/// code.
+///
+///   * **glucose lane** → `brandPrimary` (deep navy)
+///   * **meal lane** → `brandSuccess` (deep green)
+///   * **medication lane** → `brandAccent` (steel blue)
+///   * **danger/SOS lane** → `error` (deep red)
+///
+/// `brandSecondary` is a neutral support tint for borders and chrome.
+/// `warning`/`warningText` are reserved strictly for advisory banners.
 class AppThemeTokens {
   // Brand Colors - Professional Calm Palette
-  static const Color brandPrimary = Color(0xFF1B263B); // Deep Navy
-  static const Color brandSecondary = Color(0xFF415A77); // Slate Blue
-  static const Color brandAccent = Color(0xFF778DA9); // Steel Blue
-  static const Color brandSuccess = Color(0xFF2D6A4F); // Deep Green
+  static const Color brandPrimary = Color(0xFF1B263B);   // Deep Navy — glucose lane
+  static const Color brandSecondary = Color(0xFF415A77); // Slate Blue — chrome/neutral
+  static const Color brandAccent = Color(0xFF778DA9);    // Steel Blue — medication lane
+  static const Color brandSuccess = Color(0xFF2D6A4F);   // Deep Green — meal lane
   static const Color brandSuccessLight = Color(0xFF52B788);
 
   // Background Colors

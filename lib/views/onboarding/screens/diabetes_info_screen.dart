@@ -252,22 +252,24 @@ class _DiabetesInfoScreenState extends ConsumerState<DiabetesInfoScreen> {
     return Semantics(
       button: true,
       selected: isSelected,
-      child: InkWell(
-        onTap: () => setState(() => _selectedType = type),
-        borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
-        child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? colorScheme.primaryContainer
-                : colorScheme.surfaceContainer,
-            border: Border.all(
-              color: isSelected ? colorScheme.primary : colorScheme.outline,
-              width: 1.5,
-            ),
-            borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
+      child: Ink(
+        decoration: BoxDecoration(
+          color: isSelected
+              ? colorScheme.primaryContainer
+              : colorScheme.surfaceContainer,
+          border: Border.all(
+            color: isSelected ? colorScheme.primary : colorScheme.outline,
+            width: 1.5,
           ),
-          child: label,
+          borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
+        ),
+        child: InkWell(
+          onTap: () => setState(() => _selectedType = type),
+          borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            child: label,
+          ),
         ),
       ),
     );
@@ -283,33 +285,35 @@ class _DiabetesInfoScreenState extends ConsumerState<DiabetesInfoScreen> {
     return Semantics(
       button: true,
       selected: isSelected,
-      child: InkWell(
-        onTap: () {
-          setState(() {
-            _selectedUnit = unit;
-          });
-        },
-        borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
-        child: Container(
-          alignment: Alignment.center,
-          padding: EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? colorScheme.primaryContainer
-                : colorScheme.surfaceContainer,
-            border: Border.all(
-              color: isSelected ? colorScheme.primary : colorScheme.outline,
-              width: 1.5,
-            ),
-            borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
+      child: Ink(
+        decoration: BoxDecoration(
+          color: isSelected
+              ? colorScheme.primaryContainer
+              : colorScheme.surfaceContainer,
+          border: Border.all(
+            color: isSelected ? colorScheme.primary : colorScheme.outline,
+            width: 1.5,
           ),
-          child: Text(
-            unit,
-            style: textTheme.titleMedium?.copyWith(
-              color: isSelected
-                  ? colorScheme.onPrimaryContainer
-                  : colorScheme.onSurface,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+          borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
+        ),
+        child: InkWell(
+          onTap: () {
+            setState(() {
+              _selectedUnit = unit;
+            });
+          },
+          borderRadius: BorderRadius.circular(AppThemeTokens.radiusMd),
+          child: Container(
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Text(
+              unit,
+              style: textTheme.titleMedium?.copyWith(
+                color: isSelected
+                    ? colorScheme.onPrimaryContainer
+                    : colorScheme.onSurface,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+              ),
             ),
           ),
         ),

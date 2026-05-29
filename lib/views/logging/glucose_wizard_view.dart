@@ -201,29 +201,30 @@ class _GlucoseWizardViewState extends ConsumerState<GlucoseWizardView> {
                     final option = contextOptions[index];
                     final isSelected = state.glucoseContext == option['value'];
 
-                    return InkWell(
-                      onTap: () =>
-                          viewModel.updateGlucoseContext(option['value']!),
-                      borderRadius: BorderRadius.circular(
-                        AppThemeTokens.radiusMd,
-                      ),
-                      child: Container(
-                        padding: const EdgeInsets.all(AppThemeTokens.spaceMd),
-                        decoration: BoxDecoration(
+                    return Ink(
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AppThemeTokens.brandPrimary
+                            : Colors.transparent,
+                        border: Border.all(
                           color: isSelected
                               ? AppThemeTokens.brandPrimary
-                              : Colors.transparent,
-                          border: Border.all(
-                            color: isSelected
-                                ? AppThemeTokens.brandPrimary
-                                : AppThemeTokens.border.withValues(alpha: 0.8),
-                            width: isSelected ? 2 : 1,
-                          ),
-                          borderRadius: BorderRadius.circular(
-                            AppThemeTokens.radiusMd,
-                          ),
+                              : AppThemeTokens.border.withValues(alpha: 0.8),
+                          width: isSelected ? 2 : 1,
                         ),
-                        child: Row(
+                        borderRadius: BorderRadius.circular(
+                          AppThemeTokens.radiusMd,
+                        ),
+                      ),
+                      child: InkWell(
+                        onTap: () =>
+                            viewModel.updateGlucoseContext(option['value']!),
+                        borderRadius: BorderRadius.circular(
+                          AppThemeTokens.radiusMd,
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(AppThemeTokens.spaceMd),
+                          child: Row(
                           children: [
                             Icon(
                               isSelected
@@ -260,6 +261,7 @@ class _GlucoseWizardViewState extends ConsumerState<GlucoseWizardView> {
                               ),
                             ],
                           ],
+                        ),
                         ),
                       ),
                     );
@@ -315,10 +317,23 @@ class _GlucoseWizardViewState extends ConsumerState<GlucoseWizardView> {
                   ),
                 ),
 
-              // Save Button
-              ElevatedButton(
-                onPressed:
-                    state.isSubmitting || state.pendingGlucoseValue == null
+              const SizedBox(height: AppThemeTokens.spaceLg),
+            ],
+          ),
+        ),
+      ),
+      // Sticky save button stays visible while user scrolls/edits.
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppThemeTokens.spaceLg,
+            AppThemeTokens.spaceSm,
+            AppThemeTokens.spaceLg,
+            AppThemeTokens.spaceMd,
+          ),
+          child: ElevatedButton(
+            onPressed:
+                state.isSubmitting || state.pendingGlucoseValue == null
                     ? null
                     : () async {
                         final success = await viewModel.saveGlucoseLog();
@@ -346,35 +361,32 @@ class _GlucoseWizardViewState extends ConsumerState<GlucoseWizardView> {
                           );
                         }
                       },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppThemeTokens.brandPrimary,
-                  foregroundColor: AppThemeTokens.textPrimaryInverse,
-                  disabledBackgroundColor: AppThemeTokens.brandPrimary
-                      .withValues(alpha: 0.4),
-                  disabledForegroundColor: Colors.white54,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: AppThemeTokens.spaceLg,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(
-                      AppThemeTokens.radiusLg,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppThemeTokens.brandPrimary,
+              foregroundColor: AppThemeTokens.textPrimaryInverse,
+              disabledBackgroundColor: AppThemeTokens.brandPrimary
+                  .withValues(alpha: 0.4),
+              disabledForegroundColor: Colors.white54,
+              padding: const EdgeInsets.symmetric(
+                vertical: AppThemeTokens.spaceLg,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(
+                  AppThemeTokens.radiusLg,
+                ),
+              ),
+            ),
+            child: state.isSubmitting
+                ? const CircularProgressIndicator(color: Colors.white)
+                : Text(
+                    state.pendingGlucoseValue == null
+                        ? 'Enter a reading to save'
+                        : 'Save Reading',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-                child: state.isSubmitting
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : Text(
-                        state.pendingGlucoseValue == null
-                            ? 'Enter a reading to save'
-                            : 'Save Reading',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-              ),
-              const SizedBox(height: AppThemeTokens.spaceLg),
-            ],
           ),
         ),
       ),

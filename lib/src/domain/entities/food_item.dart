@@ -11,6 +11,7 @@ abstract class FoodItem with _$FoodItem {
     @Default('Unknown') String name,
     @Default('1 serving') String portion,
     @JsonKey(name: 'carbs_g') @Default(0.0) double carbsGrams,
+    @JsonKey(name: 'fiber_g') @Default(0.0) double fiberGrams,
     @Default(0.0) double calories,
     @JsonKey(name: 'protein_g') @Default(0.0) double proteinGrams,
     @JsonKey(name: 'fat_g') @Default(0.0) double fatGrams,
@@ -20,21 +21,4 @@ abstract class FoodItem with _$FoodItem {
 
   factory FoodItem.fromJson(Map<String, dynamic> json) =>
       _$FoodItemFromJson(json);
-
-  /// Returns a copy with full macro data from any verified source.
-  FoodItem withFullNutrition({
-    required double carbsGrams,
-    required double proteinGrams,
-    required double fatGrams,
-    required double calories,
-    required String sourceName,
-  }) {
-    return copyWith(
-      carbsGrams: carbsGrams,
-      proteinGrams: proteinGrams,
-      fatGrams: fatGrams,
-      calories: calories,
-      source: sourceName,
-    );
-  }
 }

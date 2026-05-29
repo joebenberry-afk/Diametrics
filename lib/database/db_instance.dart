@@ -1,12 +1,19 @@
 import 'dart:io';
 
 import 'package:drift/native.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import 'database.dart';
 
 AppDatabase? _db;
+
+/// Test-only seam: injects an [AppDatabase] (typically an in-memory instance)
+/// so services that read the global [db] can be exercised without a real
+/// device database.
+@visibleForTesting
+void setDbForTesting(AppDatabase database) => _db = database;
 
 /// Returns the initialized [AppDatabase]. Throws if [initDatabase] has not
 /// been called yet.

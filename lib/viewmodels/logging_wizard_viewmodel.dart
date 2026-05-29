@@ -6,6 +6,7 @@ import '../models/glucose_log.dart';
 import '../models/meal_log.dart';
 import '../models/medication_log.dart';
 import '../models/projection_result.dart';
+import '../models/user_profile.dart';
 import '../repositories/user_repository.dart';
 import '../services/ekf_tuning_service.dart';
 import '../services/glucose_projection_service.dart';
@@ -136,6 +137,21 @@ class LoggingWizardState {
   }
 }
 
+/// Result of [LoggingWizardViewModel.saveMealWithProjection]: the computed
+/// projection plus the display unit and tuning meal count the result view needs.
+/// Replaces an untyped `Map<String, dynamic>` so callers get compile-time safety.
+class MealProjectionOutcome {
+  final ProjectionResult result;
+  final String unit;
+  final int mealCount;
+
+  const MealProjectionOutcome({
+    required this.result,
+    required this.unit,
+    required this.mealCount,
+  });
+}
+
 class LoggingWizardViewModel extends Notifier<LoggingWizardState> {
   final _uuid = const Uuid();
 
@@ -254,8 +270,7 @@ class LoggingWizardViewModel extends Notifier<LoggingWizardState> {
   /// rather than per-dose, reducing cognitive load. If the user's insulin
   /// category is 'basal_only' or 'none', IOB is zero — preventing phantom
   /// bolus action from corrupting projections for non-bolus users.
-  Future<double> _calculateIOB() async {
-    final profile = await UserRepository().getProfile();
+  Future<double> _calculateIOB(UserProfile? profile) async {
     final category = profile?.insulinCategory ?? 'standard_rapid';
 
     // Guard: basal-only or non-insulin users have no mealtime IOB
@@ -347,8 +362,12 @@ class LoggingWizardViewModel extends Notifier<LoggingWizardState> {
   /// Saves the meal log, records the pre-meal glucose reading (if manually
   /// entered), then runs the Phase 1 Hovorka glucose projection.
   ///
-  /// Returns a Map with the [ProjectionResult] and user [unit] on success, or `null` on failure.
-  Future<Map<String, dynamic>?> saveMealWithProjection({
+  /// Returns a [MealProjectionOutcome] on success, or `null` on failure.
+  ///
+  /// [weightKg] is a fallback only — when a profile exists its `weightKg` is
+  /// used instead, so the projection no longer depends on the caller passing
+  /// the right body weight.
+  Future<MealProjectionOutcome?> saveMealWithProjection({
     double weightKg = 70.0,
   }) async {
     if (state.preMealGlucose == null ||
@@ -362,9 +381,11 @@ class LoggingWizardViewModel extends Notifier<LoggingWizardState> {
     try {
       final repo = ref.read(healthDataRepositoryProvider);
 
-      // Fetch profile once so the preferred unit is used consistently for
-      // the pre-meal glucose log AND for the projection normalisation below.
-      final profile = await UserRepository().getProfile();
+      // Fetch profile once so the preferred unit, body weight, and metabolic
+      // params are sourced consistently for the pre-meal glucose log AND the
+      // projection below — no reliance on a view-supplied weight that may race
+      // its own async load.
+      final profile = await ref.read(userRepositoryProvider).getProfile();
       final preMealUnit = profile?.preferredGlucoseUnit ?? 'mg/dL';
 
       // 1. Save the pre-meal glucose reading if user entered it manually
@@ -392,7 +413,7 @@ class LoggingWizardViewModel extends Notifier<LoggingWizardState> {
           : computedCalories;
 
       // 2. Calculate IOB and run the projection FIRST so we can store results on the meal.
-      final iob = await _calculateIOB();
+      final iob = await _calculateIOB(profile);
       final unit = preMealUnit;
       final mealCount = profile?.tuningMealCount ?? 0;
 
@@ -409,9 +430,9 @@ class LoggingWizardViewModel extends Notifier<LoggingWizardState> {
         fatGrams: state.pendingFats!,
         containsAlcohol: state.containsAlcohol,
         containsCaffeine: state.containsCaffeine,
-        weightKg: weightKg,
+        weightKg: profile?.weightKg ?? weightKg,
         insulinOnBoard: iob,
-        p1: profile?.metabolicClearanceRate ?? 0.010,
+        p1: profile?.metabolicClearanceRate ?? 0.025,
         isf: profile?.insulinSensitivityFactor ?? 50.0,
         tMaxBase: profile?.absorptionDelayBase ?? 40.0,
         fastingSetpoint: profile?.fastingSetpoint ?? 90.0,
@@ -465,7 +486,11 @@ class LoggingWizardViewModel extends Notifier<LoggingWizardState> {
 
       // Reset wizard state
       state = LoggingWizardState();
-      return {'result': result, 'unit': unit, 'mealCount': mealCount};
+      return MealProjectionOutcome(
+        result: result,
+        unit: unit,
+        mealCount: mealCount,
+      );
     } catch (e) {
       state = state.copyWith(isSubmitting: false, error: e.toString());
       return null;
@@ -509,7 +534,7 @@ class LoggingWizardViewModel extends Notifier<LoggingWizardState> {
     await EkfTuningService.tuneFromGlucoseLog(
       glucoseLog: glucoseLog,
       dataRepo: dataRepo,
-      userRepo: UserRepository(),
+      userRepo: ref.read(userRepositoryProvider),
     );
   }
 
